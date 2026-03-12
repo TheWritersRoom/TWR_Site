@@ -19,6 +19,9 @@ type AuthContextType = {
   login: (payload: LoginPayload) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
+  authModalOpen: boolean;
+  openAuthModal: () => void;
+  closeAuthModal: () => void;
 };
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,6 +29,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const createUserMutation = useCreateUser();
 
@@ -54,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       setUser(newUser);
       localStorage.setItem(AUTH_KEY, JSON.stringify(newUser));
+      setAuthModalOpen(false);
     } catch (error) {
       console.error("Login failed", error);
       throw error;
@@ -66,7 +71,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{
+      user,
+      login,
+      logout,
+      isLoading,
+      authModalOpen,
+      openAuthModal: () => setAuthModalOpen(true),
+      closeAuthModal: () => setAuthModalOpen(false),
+    }}>
       {children}
     </AuthContext.Provider>
   );

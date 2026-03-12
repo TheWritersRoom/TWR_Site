@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import type { UserRole } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { PenLine, Users, Layers, ChevronRight, Check } from "lucide-react";
+import { PenLine, Users, Layers, ChevronRight, Check, X } from "lucide-react";
 
 const ROLE_OPTIONS = [
   {
@@ -44,7 +44,7 @@ const GENRES = [
 ];
 
 export function AuthModal() {
-  const { user, login, isLoading } = useAuth();
+  const { user, login, isLoading, authModalOpen, closeAuthModal } = useAuth();
   const [step, setStep] = useState<1 | 2>(1);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -53,7 +53,7 @@ export function AuthModal() {
   const [mediaInterests, setMediaInterests] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (isLoading || user) return null;
+  if (isLoading || user || !authModalOpen) return null;
 
   const needsStep2 = role === "contributor" || role === "both";
 
@@ -110,6 +110,14 @@ export function AuthModal() {
           transition={{ type: "spring", bounce: 0.4 }}
           className="relative z-10 w-full max-w-md bg-card/90 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl overflow-hidden"
         >
+          {/* Close button */}
+          <button
+            onClick={closeAuthModal}
+            className="absolute top-4 right-4 z-10 p-1.5 rounded-full hover:bg-black/10 text-muted-foreground transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
           {/* Step indicator */}
           {needsStep2 && (
             <div className="flex gap-2 px-8 pt-6">
