@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -28,7 +28,17 @@ export const feedbackTable = pgTable("feedback", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const ratingsTable = pgTable("ratings", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => projectsTable.id),
+  userId: integer("user_id").notNull().references(() => usersTable.id),
+  rating: integer("rating").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+}, (t) => [uniqueIndex("ratings_project_user_idx").on(t.projectId, t.userId)]);
+
 export const insertProjectSchema = createInsertSchema(projectsTable).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Project = typeof projectsTable.$inferSelect;
 export type Feedback = typeof feedbackTable.$inferSelect;
+export type Rating = typeof ratingsTable.$inferSelect;
