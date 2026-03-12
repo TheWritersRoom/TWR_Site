@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { BookOpen, LogOut, PenTool, LayoutDashboard, UserCircle, PenLine, Users, Layers } from "lucide-react";
+import { LogOut, PenTool, LayoutDashboard, UserCircle, PenLine, Users, Layers, Search } from "lucide-react";
 import { Button } from "./ui/button";
 
 const ROLE_BADGE: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
@@ -17,10 +17,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const roleBadge = ROLE_BADGE[user.role ?? "both"] ?? ROLE_BADGE.both;
 
+  const isAuthor = user.role === "author" || user.role === "both";
+
   const navLinks = [
-    { href: "/",        label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-    { href: "/profile", label: "My Profile", icon: <UserCircle className="w-5 h-5" /> },
-  ];
+    { href: "/",             label: "Dashboard",         icon: <LayoutDashboard className="w-5 h-5" />, always: true },
+    { href: "/contributors", label: "Find Contributors", icon: <Search className="w-5 h-5" />,          always: false },
+    { href: "/profile",      label: "My Profile",        icon: <UserCircle className="w-5 h-5" />,      always: true },
+  ].filter((l) => l.always || isAuthor);
 
   return (
     <div className="flex min-h-screen w-full bg-background">

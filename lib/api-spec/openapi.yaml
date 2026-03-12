@@ -410,6 +410,12 @@ components:
         role:
           type: string
           enum: [author, contributor, both]
+        genres:
+          type: string
+          description: JSON-encoded array of genre interest strings
+        mediaInterests:
+          type: string
+          description: Free-form text of favourite authors, films and other media
         createdAt:
           type: string
           format: date-time
@@ -430,6 +436,10 @@ components:
         role:
           type: string
           enum: [author, contributor, both]
+        genres:
+          type: string
+        mediaInterests:
+          type: string
       required:
         - name
         - email

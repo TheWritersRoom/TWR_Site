@@ -22,6 +22,8 @@ export const CreateUserBody = zod.object({
   name: zod.string(),
   email: zod.string(),
   role: zod.enum(["author", "contributor", "both"]),
+  genres: zod.string().optional(),
+  mediaInterests: zod.string().optional(),
 });
 
 /**
@@ -32,6 +34,14 @@ export const GetCurrentUserResponse = zod.object({
   name: zod.string(),
   email: zod.string(),
   role: zod.enum(["author", "contributor", "both"]),
+  genres: zod
+    .string()
+    .optional()
+    .describe("JSON-encoded array of genre interest strings"),
+  mediaInterests: zod
+    .string()
+    .optional()
+    .describe("Free-form text of favourite authors, films and other media"),
   createdAt: zod.date(),
 });
 

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { db, collaboratorsTable, usersTable, projectsTable } from "@workspace/db";
 import {
   ListCollaboratorsParams,
@@ -7,6 +7,8 @@ import {
   InviteCollaboratorBody,
   RemoveCollaboratorParams,
 } from "@workspace/api-zod";
+
+const MAX_COLLABORATORS = 6;
 
 const router: IRouter = Router();
 
@@ -23,6 +25,9 @@ router.get("/projects/:id/collaborators", async (req, res): Promise<void> => {
       userId: collaboratorsTable.userId,
       name: usersTable.name,
       email: usersTable.email,
+      role: usersTable.role,
+      genres: usersTable.genres,
+      mediaInterests: usersTable.mediaInterests,
       addedAt: collaboratorsTable.addedAt,
     })
     .from(collaboratorsTable)
@@ -57,6 +62,19 @@ router.post("/projects/:id/invite", async (req, res): Promise<void> => {
 
   if (project.ownerId !== parsed.data.ownerId) {
     res.status(403).json({ error: "Only the owner can invite collaborators" });
+    return;
+  }
+
+  // Enforce 6-collaborator limit
+  const [{ total }] = await db
+    .select({ total: count(collaboratorsTable.id) })
+    .from(collaboratorsTable)
+    .where(eq(collaboratorsTable.projectId, params.data.id));
+
+  if (total >= MAX_COLLABORATORS) {
+    res.status(400).json({
+      error: `This project already has the maximum of ${MAX_COLLABORATORS} collaborators.`,
+    });
     return;
   }
 
@@ -98,6 +116,9 @@ router.post("/projects/:id/invite", async (req, res): Promise<void> => {
     userId: invitedUser.id,
     name: invitedUser.name,
     email: invitedUser.email,
+    role: invitedUser.role,
+    genres: invitedUser.genres,
+    mediaInterests: invitedUser.mediaInterests,
     addedAt: collaborator.addedAt,
   });
 });

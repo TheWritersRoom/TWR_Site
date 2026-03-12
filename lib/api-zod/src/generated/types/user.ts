@@ -12,5 +12,9 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  /** JSON-encoded array of genre interest strings */
+  genres?: string;
+  /** Free-form text of favourite authors, films and other media */
+  mediaInterests?: string;
   createdAt: Date;
 }

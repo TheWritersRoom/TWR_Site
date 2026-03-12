@@ -6,8 +6,29 @@ import { useQuery } from "@tanstack/react-query";
 import {
   CheckCircle2, Clock, XCircle, BookText, FileText,
   MessageSquareQuote, CalendarDays, PenLine, Users, Layers,
-  ArrowRight,
+  ArrowRight, Sparkles, Tag,
 } from "lucide-react";
+
+function parseGenres(raw: string | null | undefined): string[] {
+  try { return JSON.parse(raw ?? "[]"); } catch { return []; }
+}
+
+const GENRE_COLORS: Record<string, string> = {
+  "Film & TV Script":        "bg-purple-100 text-purple-700",
+  "Long-form Fiction":       "bg-blue-100 text-blue-700",
+  "Non-fiction":             "bg-teal-100 text-teal-700",
+  "Short Story":             "bg-amber-100 text-amber-700",
+  "Poetry":                  "bg-pink-100 text-pink-700",
+  "Fan Fiction":             "bg-orange-100 text-orange-700",
+  "Screenwriting":           "bg-violet-100 text-violet-700",
+  "Graphic Novel / Comics":  "bg-indigo-100 text-indigo-700",
+  "Children's Literature":   "bg-green-100 text-green-700",
+  "Literary Fiction":        "bg-cyan-100 text-cyan-700",
+  "Thriller / Mystery":      "bg-red-100 text-red-700",
+  "Romance":                 "bg-rose-100 text-rose-700",
+  "Science Fiction / Fantasy": "bg-sky-100 text-sky-700",
+  "Horror":                  "bg-stone-100 text-stone-700",
+};
 
 type ActivityItem = {
   id: number;
@@ -99,6 +120,33 @@ export default function Profile() {
               Member since {format(new Date(user.createdAt), "MMMM yyyy")}
             </span>
           </div>
+
+          {/* Genre interests */}
+          {(() => {
+            const genres = parseGenres(user.genres);
+            return genres.length > 0 ? (
+              <div className="mt-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5" /> Areas of interest
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {genres.map((g) => (
+                    <span key={g} className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${GENRE_COLORS[g] ?? "bg-muted text-muted-foreground"}`}>
+                      {g}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null;
+          })()}
+
+          {/* Media interests */}
+          {user.mediaInterests && (
+            <div className="mt-3 flex items-start gap-2 text-sm text-muted-foreground">
+              <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-primary" />
+              <p>{user.mediaInterests}</p>
+            </div>
+          )}
         </div>
       </motion.div>
 

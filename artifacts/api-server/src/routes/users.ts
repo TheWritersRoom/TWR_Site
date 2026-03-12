@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { db, usersTable, suggestionsTable, projectsTable } from "@workspace/db";
 import { CreateUserBody } from "@workspace/api-zod";
 
@@ -19,18 +19,17 @@ router.post("/users", async (req, res): Promise<void> => {
     .limit(1);
 
   if (existing.length > 0) {
-    // If user exists, update role if provided and different
     const user = existing[0];
-    if (parsed.data.role && parsed.data.role !== user.role) {
-      const [updated] = await db
-        .update(usersTable)
-        .set({ role: parsed.data.role })
-        .where(eq(usersTable.id, user.id))
-        .returning();
-      res.status(201).json(updated);
-      return;
-    }
-    res.status(201).json(user);
+    const [updated] = await db
+      .update(usersTable)
+      .set({
+        role: parsed.data.role ?? user.role,
+        genres: parsed.data.genres ?? user.genres,
+        mediaInterests: parsed.data.mediaInterests ?? user.mediaInterests,
+      })
+      .where(eq(usersTable.id, user.id))
+      .returning();
+    res.status(201).json(updated);
     return;
   }
 
@@ -40,10 +39,29 @@ router.post("/users", async (req, res): Promise<void> => {
       name: parsed.data.name,
       email: parsed.data.email,
       role: parsed.data.role,
+      genres: parsed.data.genres ?? "[]",
+      mediaInterests: parsed.data.mediaInterests ?? "",
     })
     .returning();
 
   res.status(201).json(user);
+});
+
+router.get("/users/browse", async (req, res): Promise<void> => {
+  const rows = await db
+    .select({
+      id: usersTable.id,
+      name: usersTable.name,
+      email: usersTable.email,
+      role: usersTable.role,
+      genres: usersTable.genres,
+      mediaInterests: usersTable.mediaInterests,
+      createdAt: usersTable.createdAt,
+    })
+    .from(usersTable)
+    .where(or(eq(usersTable.role, "contributor"), eq(usersTable.role, "both")));
+
+  res.json(rows);
 });
 
 router.get("/users/:id/activity", async (req, res): Promise<void> => {

@@ -22,6 +22,10 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  /** JSON-encoded array of genre interest strings */
+  genres?: string;
+  /** Free-form text of favourite authors, films and other media */
+  mediaInterests?: string;
   createdAt: string;
 }
 
@@ -38,6 +42,8 @@ export interface CreateUserBody {
   name: string;
   email: string;
   role: CreateUserBodyRole;
+  genres?: string;
+  mediaInterests?: string;
 }
 
 export type ProjectType = (typeof ProjectType)[keyof typeof ProjectType];

@@ -8,6 +8,7 @@ import { Layout } from "@/components/layout";
 import Dashboard from "@/pages/dashboard";
 import ProjectDetail from "@/pages/project-detail";
 import Profile from "@/pages/profile";
+import Contributors from "@/pages/contributors";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -26,6 +27,7 @@ function Router() {
         <Route path="/" component={Dashboard} />
         <Route path="/project/:id" component={ProjectDetail} />
         <Route path="/profile" component={Profile} />
+        <Route path="/contributors" component={Contributors} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
