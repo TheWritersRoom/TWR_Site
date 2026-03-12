@@ -4,9 +4,11 @@ import { format, formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, Users, MessageSquare, Check, X, 
-  Send, AlertCircle, Edit3, BarChart2, Trophy, Mail
+  Send, AlertCircle, Edit3, BarChart2, Trophy, Mail,
+  BookOpen, Globe, Lock, Eye, MessageCircle
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient as useQC } from "@tanstack/react-query";
+import { PublishModal } from "@/components/publish-modal";
 import { useAuth } from "@/hooks/use-auth";
 import { 
   useGetProject, 
@@ -29,7 +31,25 @@ export default function ProjectDetail() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<"suggestions" | "collaborators" | "insights">("suggestions");
+  const [activeTab, setActiveTab] = useState<"suggestions" | "collaborators" | "insights" | "feedback">("suggestions");
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [publishLoading, setPublishLoading] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+
+  type FeedbackItem = {
+    id: number;
+    projectId: number;
+    userId: number;
+    userName: string;
+    content: string;
+    createdAt: string;
+  };
+
+  const { data: feedback = [], refetch: refetchFeedback } = useQuery<FeedbackItem[]>({
+    queryKey: ["/api/projects", projectId, "feedback", user?.id],
+    enabled: !!projectId && !!user,
+    queryFn: () => fetch(`/api/projects/${projectId}/feedback?userId=${user!.id}`).then((r) => r.json()),
+  });
 
   type ContributorStat = {
     submitterId: number;
@@ -138,6 +158,55 @@ export default function ProjectDetail() {
     queryClient.invalidateQueries({ queryKey: getListCollaboratorsQueryKey(projectId) });
   };
 
+  const handlePublish = async (opts: {
+    publishVisibility: "all" | "matched" | "contributors";
+    feedbackEnabled: boolean;
+    feedbackAudience: "all" | "matched" | "contributors";
+    feedbackVisibility: "public" | "private";
+  }) => {
+    if (!user) return;
+    setPublishLoading(true);
+    try {
+      await fetch(`/api/projects/${projectId}/publish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, ...opts }),
+      });
+      queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
+      setPublishModalOpen(false);
+    } finally {
+      setPublishLoading(false);
+    }
+  };
+
+  const handleUnpublish = async () => {
+    if (!user) return;
+    setPublishLoading(true);
+    try {
+      await fetch(`/api/projects/${projectId}/unpublish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
+      setPublishModalOpen(false);
+    } finally {
+      setPublishLoading(false);
+    }
+  };
+
+  const handleSubmitFeedback = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !feedbackText.trim()) return;
+    await fetch(`/api/projects/${projectId}/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.id, content: feedbackText.trim() }),
+    });
+    setFeedbackText("");
+    refetchFeedback();
+  };
+
   // Render content with highlights for pending suggestions
   const renderContent = () => {
     if (!project?.content) return null;
@@ -187,9 +256,23 @@ export default function ProjectDetail() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+             {project.isPublished && (
+               <div className="flex items-center gap-1.5 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold border border-emerald-200">
+                 <Globe className="w-3.5 h-3.5" /> Published
+               </div>
+             )}
              <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-semibold border border-primary/20">
                {project.role}
              </div>
+             {isOwner && (
+               <button
+                 onClick={() => setPublishModalOpen(true)}
+                 className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-foreground text-background hover:bg-foreground/90 transition-colors"
+               >
+                 <BookOpen className="w-4 h-4" />
+                 {project.isPublished ? "Publishing" : "Publish"}
+               </button>
+             )}
           </div>
         </header>
 
@@ -252,6 +335,15 @@ export default function ProjectDetail() {
             >
               <BarChart2 className="w-4 h-4 mx-auto mb-1" />
               Insights
+            </button>
+          )}
+          {(isOwner || (project.isPublished && project.feedbackEnabled && (project.feedbackVisibility === "public" || isOwner || project.canGiveFeedback))) && (
+            <button 
+              className={`flex-1 py-3 text-xs font-semibold border-b-2 transition-colors ${activeTab === 'feedback' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+              onClick={() => setActiveTab('feedback')}
+            >
+              <MessageCircle className="w-4 h-4 mx-auto mb-1" />
+              Feedback
             </button>
           )}
         </div>
@@ -524,8 +616,93 @@ export default function ProjectDetail() {
               )}
             </div>
           )}
+          {activeTab === 'feedback' && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <MessageCircle className="w-4 h-4 text-primary" />
+                <h4 className="text-sm font-bold text-foreground">
+                  {isOwner ? "Reader Feedback" : "Feedback"}
+                </h4>
+                {project.feedbackVisibility === "private" && isOwner && (
+                  <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+                    <Lock className="w-3 h-3" /> Private
+                  </span>
+                )}
+              </div>
+
+              {/* Submit feedback form (non-owners who can give feedback) */}
+              {!isOwner && project.canGiveFeedback && (
+                <form onSubmit={handleSubmitFeedback} className="bg-card p-4 rounded-2xl border border-border shadow-sm mb-4">
+                  <p className="text-xs font-semibold text-muted-foreground mb-2">Share your thoughts</p>
+                  <textarea
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    placeholder="Write your feedback…"
+                    rows={3}
+                    className="w-full bg-background border border-input rounded-xl p-3 text-sm focus:outline-none focus:border-primary resize-none mb-2"
+                  />
+                  <Button type="submit" size="sm" className="w-full" disabled={!feedbackText.trim()}>
+                    <Send className="w-4 h-4 mr-2" /> Submit Feedback
+                  </Button>
+                </form>
+              )}
+
+              {/* No feedback state */}
+              {feedback.length === 0 && (
+                <div className="text-center py-10 opacity-60">
+                  <MessageCircle className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
+                  <p className="text-sm font-medium">No feedback yet.</p>
+                  {!isOwner && !project.canGiveFeedback && (
+                    <p className="text-xs mt-1">You're not in the feedback audience for this work.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Feedback list */}
+              {feedback.map((fb, i) => (
+                <motion.div
+                  key={fb.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                  className="bg-card rounded-2xl border border-border p-4 shadow-sm"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[10px] font-bold">
+                        {fb.userName.charAt(0)}
+                      </div>
+                      <span className="text-sm font-semibold">{fb.userName}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(fb.createdAt), { addSuffix: true })}
+                    </span>
+                  </div>
+                  <p className="text-sm text-foreground leading-relaxed">{fb.content}</p>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Publish Modal */}
+      {isOwner && project && (
+        <PublishModal
+          isOpen={publishModalOpen}
+          onClose={() => setPublishModalOpen(false)}
+          onPublish={handlePublish}
+          onUnpublish={handleUnpublish}
+          isPublished={project.isPublished}
+          currentSettings={project.isPublished ? {
+            publishVisibility: (project.publishVisibility ?? "all") as "all" | "matched" | "contributors",
+            feedbackEnabled: project.feedbackEnabled ?? false,
+            feedbackAudience: (project.feedbackAudience ?? "all") as "all" | "matched" | "contributors",
+            feedbackVisibility: (project.feedbackVisibility ?? "public") as "public" | "private",
+          } : undefined}
+          loading={publishLoading}
+        />
+      )}
     </div>
   );
 }

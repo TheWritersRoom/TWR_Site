@@ -5,6 +5,9 @@
  * Writers Room API
  * OpenAPI spec version: 0.1.0
  */
+import type { ProjectDetailFeedbackAudience } from "./projectDetailFeedbackAudience";
+import type { ProjectDetailFeedbackVisibility } from "./projectDetailFeedbackVisibility";
+import type { ProjectDetailPublishVisibility } from "./projectDetailPublishVisibility";
 import type { ProjectDetailRole } from "./projectDetailRole";
 import type { ProjectDetailType } from "./projectDetailType";
 
@@ -16,6 +19,13 @@ export interface ProjectDetail {
   ownerId: number;
   ownerName: string;
   role: ProjectDetailRole;
+  isPublished: boolean;
+  publishedAt?: Date | null;
+  publishVisibility: ProjectDetailPublishVisibility;
+  feedbackEnabled: boolean;
+  feedbackAudience: ProjectDetailFeedbackAudience;
+  feedbackVisibility: ProjectDetailFeedbackVisibility;
+  canGiveFeedback: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

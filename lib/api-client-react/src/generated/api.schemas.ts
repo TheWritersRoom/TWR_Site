@@ -53,12 +53,44 @@ export const ProjectType = {
   script: "script",
 } as const;
 
+export type ProjectPublishVisibility =
+  (typeof ProjectPublishVisibility)[keyof typeof ProjectPublishVisibility];
+
+export const ProjectPublishVisibility = {
+  all: "all",
+  matched: "matched",
+  contributors: "contributors",
+} as const;
+
+export type ProjectFeedbackAudience =
+  (typeof ProjectFeedbackAudience)[keyof typeof ProjectFeedbackAudience];
+
+export const ProjectFeedbackAudience = {
+  all: "all",
+  matched: "matched",
+  contributors: "contributors",
+} as const;
+
+export type ProjectFeedbackVisibility =
+  (typeof ProjectFeedbackVisibility)[keyof typeof ProjectFeedbackVisibility];
+
+export const ProjectFeedbackVisibility = {
+  public: "public",
+  private: "private",
+} as const;
+
 export interface Project {
   id: number;
   title: string;
   type: ProjectType;
   ownerId: number;
   ownerName: string;
+  isPublished: boolean;
+  publishedAt?: string | null;
+  publishVisibility: ProjectPublishVisibility;
+  feedbackEnabled: boolean;
+  feedbackAudience: ProjectFeedbackAudience;
+  feedbackVisibility: ProjectFeedbackVisibility;
   pendingSuggestionsCount: number;
   collaboratorsCount: number;
   createdAt: string;
@@ -79,6 +111,33 @@ export type ProjectDetailRole =
 export const ProjectDetailRole = {
   owner: "owner",
   collaborator: "collaborator",
+  reader: "reader",
+} as const;
+
+export type ProjectDetailPublishVisibility =
+  (typeof ProjectDetailPublishVisibility)[keyof typeof ProjectDetailPublishVisibility];
+
+export const ProjectDetailPublishVisibility = {
+  all: "all",
+  matched: "matched",
+  contributors: "contributors",
+} as const;
+
+export type ProjectDetailFeedbackAudience =
+  (typeof ProjectDetailFeedbackAudience)[keyof typeof ProjectDetailFeedbackAudience];
+
+export const ProjectDetailFeedbackAudience = {
+  all: "all",
+  matched: "matched",
+  contributors: "contributors",
+} as const;
+
+export type ProjectDetailFeedbackVisibility =
+  (typeof ProjectDetailFeedbackVisibility)[keyof typeof ProjectDetailFeedbackVisibility];
+
+export const ProjectDetailFeedbackVisibility = {
+  public: "public",
+  private: "private",
 } as const;
 
 export interface ProjectDetail {
@@ -89,8 +148,113 @@ export interface ProjectDetail {
   ownerId: number;
   ownerName: string;
   role: ProjectDetailRole;
+  isPublished: boolean;
+  publishedAt?: string | null;
+  publishVisibility: ProjectDetailPublishVisibility;
+  feedbackEnabled: boolean;
+  feedbackAudience: ProjectDetailFeedbackAudience;
+  feedbackVisibility: ProjectDetailFeedbackVisibility;
+  canGiveFeedback: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export type PublishedProjectType =
+  (typeof PublishedProjectType)[keyof typeof PublishedProjectType];
+
+export const PublishedProjectType = {
+  book: "book",
+  script: "script",
+} as const;
+
+export type PublishedProjectPublishVisibility =
+  (typeof PublishedProjectPublishVisibility)[keyof typeof PublishedProjectPublishVisibility];
+
+export const PublishedProjectPublishVisibility = {
+  all: "all",
+  matched: "matched",
+  contributors: "contributors",
+} as const;
+
+export type PublishedProjectFeedbackAudience =
+  (typeof PublishedProjectFeedbackAudience)[keyof typeof PublishedProjectFeedbackAudience];
+
+export const PublishedProjectFeedbackAudience = {
+  all: "all",
+  matched: "matched",
+  contributors: "contributors",
+} as const;
+
+export type PublishedProjectFeedbackVisibility =
+  (typeof PublishedProjectFeedbackVisibility)[keyof typeof PublishedProjectFeedbackVisibility];
+
+export const PublishedProjectFeedbackVisibility = {
+  public: "public",
+  private: "private",
+} as const;
+
+export interface PublishedProject {
+  id: number;
+  title: string;
+  type: PublishedProjectType;
+  ownerId: number;
+  ownerName: string;
+  publishedAt: string;
+  publishVisibility: PublishedProjectPublishVisibility;
+  feedbackEnabled: boolean;
+  feedbackAudience: PublishedProjectFeedbackAudience;
+  feedbackVisibility: PublishedProjectFeedbackVisibility;
+  canGiveFeedback: boolean;
+  feedbackCount: number;
+  createdAt: string;
+}
+
+export type PublishProjectBodyPublishVisibility =
+  (typeof PublishProjectBodyPublishVisibility)[keyof typeof PublishProjectBodyPublishVisibility];
+
+export const PublishProjectBodyPublishVisibility = {
+  all: "all",
+  matched: "matched",
+  contributors: "contributors",
+} as const;
+
+export type PublishProjectBodyFeedbackAudience =
+  (typeof PublishProjectBodyFeedbackAudience)[keyof typeof PublishProjectBodyFeedbackAudience];
+
+export const PublishProjectBodyFeedbackAudience = {
+  all: "all",
+  matched: "matched",
+  contributors: "contributors",
+} as const;
+
+export type PublishProjectBodyFeedbackVisibility =
+  (typeof PublishProjectBodyFeedbackVisibility)[keyof typeof PublishProjectBodyFeedbackVisibility];
+
+export const PublishProjectBodyFeedbackVisibility = {
+  public: "public",
+  private: "private",
+} as const;
+
+export interface PublishProjectBody {
+  userId: number;
+  publishVisibility: PublishProjectBodyPublishVisibility;
+  feedbackEnabled: boolean;
+  feedbackAudience: PublishProjectBodyFeedbackAudience;
+  feedbackVisibility: PublishProjectBodyFeedbackVisibility;
+}
+
+export interface FeedbackItem {
+  id: number;
+  projectId: number;
+  userId: number;
+  userName: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface CreateFeedbackBody {
+  userId: number;
+  content: string;
 }
 
 export type CreateProjectBodyType =
@@ -196,6 +360,18 @@ export interface UpdateSuggestionStatusBody {
   ownerNote?: string | null;
   userId: number;
 }
+
+export type DiscoverProjectsParams = {
+  userId: number;
+};
+
+export type UnpublishProjectBody = {
+  userId: number;
+};
+
+export type ListFeedbackParams = {
+  userId: number;
+};
 
 export type ListSuggestionsParams = {
   status?: ListSuggestionsStatus;

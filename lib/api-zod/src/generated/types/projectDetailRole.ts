@@ -12,4 +12,5 @@ export type ProjectDetailRole =
 export const ProjectDetailRole = {
   owner: "owner",
   collaborator: "collaborator",
+  reader: "reader",
 } as const;

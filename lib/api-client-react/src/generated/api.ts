@@ -18,15 +18,22 @@ import type {
 
 import type {
   Collaborator,
+  CreateFeedbackBody,
   CreateProjectBody,
   CreateSuggestionBody,
   CreateUserBody,
+  DiscoverProjectsParams,
+  FeedbackItem,
   HealthStatus,
   InviteCollaboratorBody,
+  ListFeedbackParams,
   ListSuggestionsParams,
   Project,
   ProjectDetail,
+  PublishProjectBody,
+  PublishedProject,
   Suggestion,
+  UnpublishProjectBody,
   UpdateProjectBody,
   UpdateSuggestionStatusBody,
   User,
@@ -438,6 +445,103 @@ export const useCreateProject = <
 };
 
 /**
+ * @summary List published projects accessible to the current user
+ */
+export const getDiscoverProjectsUrl = (params: DiscoverProjectsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/projects/discover?${stringifiedParams}`
+    : `/api/projects/discover`;
+};
+
+export const discoverProjects = async (
+  params: DiscoverProjectsParams,
+  options?: RequestInit,
+): Promise<PublishedProject[]> => {
+  return customFetch<PublishedProject[]>(getDiscoverProjectsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getDiscoverProjectsQueryKey = (
+  params?: DiscoverProjectsParams,
+) => {
+  return [`/api/projects/discover`, ...(params ? [params] : [])] as const;
+};
+
+export const getDiscoverProjectsQueryOptions = <
+  TData = Awaited<ReturnType<typeof discoverProjects>>,
+  TError = ErrorType<unknown>,
+>(
+  params: DiscoverProjectsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof discoverProjects>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDiscoverProjectsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof discoverProjects>>
+  > = ({ signal }) => discoverProjects(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof discoverProjects>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type DiscoverProjectsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof discoverProjects>>
+>;
+export type DiscoverProjectsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List published projects accessible to the current user
+ */
+
+export function useDiscoverProjects<
+  TData = Awaited<ReturnType<typeof discoverProjects>>,
+  TError = ErrorType<unknown>,
+>(
+  params: DiscoverProjectsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof discoverProjects>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getDiscoverProjectsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
  * @summary Get a single project with its content
  */
 export const getGetProjectUrl = (id: number) => {
@@ -693,6 +797,373 @@ export const useDeleteProject = <
   TContext
 > => {
   return useMutation(getDeleteProjectMutationOptions(options));
+};
+
+/**
+ * @summary Publish or update publish settings for a project (owner only)
+ */
+export const getPublishProjectUrl = (id: number) => {
+  return `/api/projects/${id}/publish`;
+};
+
+export const publishProject = async (
+  id: number,
+  publishProjectBody: PublishProjectBody,
+  options?: RequestInit,
+): Promise<ProjectDetail> => {
+  return customFetch<ProjectDetail>(getPublishProjectUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(publishProjectBody),
+  });
+};
+
+export const getPublishProjectMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof publishProject>>,
+    TError,
+    { id: number; data: BodyType<PublishProjectBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof publishProject>>,
+  TError,
+  { id: number; data: BodyType<PublishProjectBody> },
+  TContext
+> => {
+  const mutationKey = ["publishProject"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof publishProject>>,
+    { id: number; data: BodyType<PublishProjectBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return publishProject(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PublishProjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof publishProject>>
+>;
+export type PublishProjectMutationBody = BodyType<PublishProjectBody>;
+export type PublishProjectMutationError = ErrorType<void>;
+
+/**
+ * @summary Publish or update publish settings for a project (owner only)
+ */
+export const usePublishProject = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof publishProject>>,
+    TError,
+    { id: number; data: BodyType<PublishProjectBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof publishProject>>,
+  TError,
+  { id: number; data: BodyType<PublishProjectBody> },
+  TContext
+> => {
+  return useMutation(getPublishProjectMutationOptions(options));
+};
+
+/**
+ * @summary Unpublish a project (owner only)
+ */
+export const getUnpublishProjectUrl = (id: number) => {
+  return `/api/projects/${id}/unpublish`;
+};
+
+export const unpublishProject = async (
+  id: number,
+  unpublishProjectBody: UnpublishProjectBody,
+  options?: RequestInit,
+): Promise<ProjectDetail> => {
+  return customFetch<ProjectDetail>(getUnpublishProjectUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(unpublishProjectBody),
+  });
+};
+
+export const getUnpublishProjectMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof unpublishProject>>,
+    TError,
+    { id: number; data: BodyType<UnpublishProjectBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof unpublishProject>>,
+  TError,
+  { id: number; data: BodyType<UnpublishProjectBody> },
+  TContext
+> => {
+  const mutationKey = ["unpublishProject"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof unpublishProject>>,
+    { id: number; data: BodyType<UnpublishProjectBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return unpublishProject(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UnpublishProjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof unpublishProject>>
+>;
+export type UnpublishProjectMutationBody = BodyType<UnpublishProjectBody>;
+export type UnpublishProjectMutationError = ErrorType<void>;
+
+/**
+ * @summary Unpublish a project (owner only)
+ */
+export const useUnpublishProject = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof unpublishProject>>,
+    TError,
+    { id: number; data: BodyType<UnpublishProjectBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof unpublishProject>>,
+  TError,
+  { id: number; data: BodyType<UnpublishProjectBody> },
+  TContext
+> => {
+  return useMutation(getUnpublishProjectMutationOptions(options));
+};
+
+/**
+ * @summary List feedback for a published project
+ */
+export const getListFeedbackUrl = (id: number, params: ListFeedbackParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/projects/${id}/feedback?${stringifiedParams}`
+    : `/api/projects/${id}/feedback`;
+};
+
+export const listFeedback = async (
+  id: number,
+  params: ListFeedbackParams,
+  options?: RequestInit,
+): Promise<FeedbackItem[]> => {
+  return customFetch<FeedbackItem[]>(getListFeedbackUrl(id, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListFeedbackQueryKey = (
+  id: number,
+  params?: ListFeedbackParams,
+) => {
+  return [`/api/projects/${id}/feedback`, ...(params ? [params] : [])] as const;
+};
+
+export const getListFeedbackQueryOptions = <
+  TData = Awaited<ReturnType<typeof listFeedback>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  params: ListFeedbackParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listFeedback>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListFeedbackQueryKey(id, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listFeedback>>> = ({
+    signal,
+  }) => listFeedback(id, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listFeedback>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListFeedbackQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listFeedback>>
+>;
+export type ListFeedbackQueryError = ErrorType<void>;
+
+/**
+ * @summary List feedback for a published project
+ */
+
+export function useListFeedback<
+  TData = Awaited<ReturnType<typeof listFeedback>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  params: ListFeedbackParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listFeedback>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListFeedbackQueryOptions(id, params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Submit feedback on a published project
+ */
+export const getCreateFeedbackUrl = (id: number) => {
+  return `/api/projects/${id}/feedback`;
+};
+
+export const createFeedback = async (
+  id: number,
+  createFeedbackBody: CreateFeedbackBody,
+  options?: RequestInit,
+): Promise<FeedbackItem> => {
+  return customFetch<FeedbackItem>(getCreateFeedbackUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createFeedbackBody),
+  });
+};
+
+export const getCreateFeedbackMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createFeedback>>,
+    TError,
+    { id: number; data: BodyType<CreateFeedbackBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createFeedback>>,
+  TError,
+  { id: number; data: BodyType<CreateFeedbackBody> },
+  TContext
+> => {
+  const mutationKey = ["createFeedback"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createFeedback>>,
+    { id: number; data: BodyType<CreateFeedbackBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return createFeedback(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateFeedbackMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createFeedback>>
+>;
+export type CreateFeedbackMutationBody = BodyType<CreateFeedbackBody>;
+export type CreateFeedbackMutationError = ErrorType<void>;
+
+/**
+ * @summary Submit feedback on a published project
+ */
+export const useCreateFeedback = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createFeedback>>,
+    TError,
+    { id: number; data: BodyType<CreateFeedbackBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createFeedback>>,
+  TError,
+  { id: number; data: BodyType<CreateFeedbackBody> },
+  TContext
+> => {
+  return useMutation(getCreateFeedbackMutationOptions(options));
 };
 
 /**

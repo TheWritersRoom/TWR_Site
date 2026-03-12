@@ -54,6 +54,12 @@ export const ListProjectsResponseItem = zod.object({
   type: zod.enum(["book", "script"]),
   ownerId: zod.number(),
   ownerName: zod.string(),
+  isPublished: zod.boolean(),
+  publishedAt: zod.date().nullish(),
+  publishVisibility: zod.enum(["all", "matched", "contributors"]),
+  feedbackEnabled: zod.boolean(),
+  feedbackAudience: zod.enum(["all", "matched", "contributors"]),
+  feedbackVisibility: zod.enum(["public", "private"]),
   pendingSuggestionsCount: zod.number(),
   collaboratorsCount: zod.number(),
   createdAt: zod.date(),
@@ -72,6 +78,30 @@ export const CreateProjectBody = zod.object({
 });
 
 /**
+ * @summary List published projects accessible to the current user
+ */
+export const DiscoverProjectsQueryParams = zod.object({
+  userId: zod.coerce.number(),
+});
+
+export const DiscoverProjectsResponseItem = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  type: zod.enum(["book", "script"]),
+  ownerId: zod.number(),
+  ownerName: zod.string(),
+  publishedAt: zod.date(),
+  publishVisibility: zod.enum(["all", "matched", "contributors"]),
+  feedbackEnabled: zod.boolean(),
+  feedbackAudience: zod.enum(["all", "matched", "contributors"]),
+  feedbackVisibility: zod.enum(["public", "private"]),
+  canGiveFeedback: zod.boolean(),
+  feedbackCount: zod.number(),
+  createdAt: zod.date(),
+});
+export const DiscoverProjectsResponse = zod.array(DiscoverProjectsResponseItem);
+
+/**
  * @summary Get a single project with its content
  */
 export const GetProjectParams = zod.object({
@@ -85,7 +115,14 @@ export const GetProjectResponse = zod.object({
   content: zod.string(),
   ownerId: zod.number(),
   ownerName: zod.string(),
-  role: zod.enum(["owner", "collaborator"]),
+  role: zod.enum(["owner", "collaborator", "reader"]),
+  isPublished: zod.boolean(),
+  publishedAt: zod.date().nullish(),
+  publishVisibility: zod.enum(["all", "matched", "contributors"]),
+  feedbackEnabled: zod.boolean(),
+  feedbackAudience: zod.enum(["all", "matched", "contributors"]),
+  feedbackVisibility: zod.enum(["public", "private"]),
+  canGiveFeedback: zod.boolean(),
   createdAt: zod.date(),
   updatedAt: zod.date(),
 });
@@ -109,6 +146,12 @@ export const UpdateProjectResponse = zod.object({
   type: zod.enum(["book", "script"]),
   ownerId: zod.number(),
   ownerName: zod.string(),
+  isPublished: zod.boolean(),
+  publishedAt: zod.date().nullish(),
+  publishVisibility: zod.enum(["all", "matched", "contributors"]),
+  feedbackEnabled: zod.boolean(),
+  feedbackAudience: zod.enum(["all", "matched", "contributors"]),
+  feedbackVisibility: zod.enum(["public", "private"]),
   pendingSuggestionsCount: zod.number(),
   collaboratorsCount: zod.number(),
   createdAt: zod.date(),
@@ -120,6 +163,103 @@ export const UpdateProjectResponse = zod.object({
  */
 export const DeleteProjectParams = zod.object({
   id: zod.coerce.number(),
+});
+
+/**
+ * @summary Publish or update publish settings for a project (owner only)
+ */
+export const PublishProjectParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const PublishProjectBody = zod.object({
+  userId: zod.number(),
+  publishVisibility: zod.enum(["all", "matched", "contributors"]),
+  feedbackEnabled: zod.boolean(),
+  feedbackAudience: zod.enum(["all", "matched", "contributors"]),
+  feedbackVisibility: zod.enum(["public", "private"]),
+});
+
+export const PublishProjectResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  type: zod.enum(["book", "script"]),
+  content: zod.string(),
+  ownerId: zod.number(),
+  ownerName: zod.string(),
+  role: zod.enum(["owner", "collaborator", "reader"]),
+  isPublished: zod.boolean(),
+  publishedAt: zod.date().nullish(),
+  publishVisibility: zod.enum(["all", "matched", "contributors"]),
+  feedbackEnabled: zod.boolean(),
+  feedbackAudience: zod.enum(["all", "matched", "contributors"]),
+  feedbackVisibility: zod.enum(["public", "private"]),
+  canGiveFeedback: zod.boolean(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+});
+
+/**
+ * @summary Unpublish a project (owner only)
+ */
+export const UnpublishProjectParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UnpublishProjectBody = zod.object({
+  userId: zod.number(),
+});
+
+export const UnpublishProjectResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  type: zod.enum(["book", "script"]),
+  content: zod.string(),
+  ownerId: zod.number(),
+  ownerName: zod.string(),
+  role: zod.enum(["owner", "collaborator", "reader"]),
+  isPublished: zod.boolean(),
+  publishedAt: zod.date().nullish(),
+  publishVisibility: zod.enum(["all", "matched", "contributors"]),
+  feedbackEnabled: zod.boolean(),
+  feedbackAudience: zod.enum(["all", "matched", "contributors"]),
+  feedbackVisibility: zod.enum(["public", "private"]),
+  canGiveFeedback: zod.boolean(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+});
+
+/**
+ * @summary List feedback for a published project
+ */
+export const ListFeedbackParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ListFeedbackQueryParams = zod.object({
+  userId: zod.coerce.number(),
+});
+
+export const ListFeedbackResponseItem = zod.object({
+  id: zod.number(),
+  projectId: zod.number(),
+  userId: zod.number(),
+  userName: zod.string(),
+  content: zod.string(),
+  createdAt: zod.date(),
+});
+export const ListFeedbackResponse = zod.array(ListFeedbackResponseItem);
+
+/**
+ * @summary Submit feedback on a published project
+ */
+export const CreateFeedbackParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CreateFeedbackBody = zod.object({
+  userId: zod.number(),
+  content: zod.string(),
 });
 
 /**

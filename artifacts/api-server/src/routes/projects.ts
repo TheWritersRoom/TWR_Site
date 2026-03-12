@@ -18,6 +18,15 @@ router.get("/projects", async (req, res): Promise<void> => {
     return;
   }
 
+  const publishingFields = {
+    isPublished: projectsTable.isPublished,
+    publishedAt: projectsTable.publishedAt,
+    publishVisibility: projectsTable.publishVisibility,
+    feedbackEnabled: projectsTable.feedbackEnabled,
+    feedbackAudience: projectsTable.feedbackAudience,
+    feedbackVisibility: projectsTable.feedbackVisibility,
+  };
+
   const owned = await db
     .select({
       id: projectsTable.id,
@@ -27,6 +36,7 @@ router.get("/projects", async (req, res): Promise<void> => {
       ownerName: usersTable.name,
       createdAt: projectsTable.createdAt,
       updatedAt: projectsTable.updatedAt,
+      ...publishingFields,
     })
     .from(projectsTable)
     .innerJoin(usersTable, eq(projectsTable.ownerId, usersTable.id))
@@ -41,6 +51,7 @@ router.get("/projects", async (req, res): Promise<void> => {
       ownerName: usersTable.name,
       createdAt: projectsTable.createdAt,
       updatedAt: projectsTable.updatedAt,
+      ...publishingFields,
     })
     .from(collaboratorsTable)
     .innerJoin(projectsTable, eq(collaboratorsTable.projectId, projectsTable.id))
@@ -137,6 +148,12 @@ router.get("/projects/:id", async (req, res): Promise<void> => {
       content: projectsTable.content,
       ownerId: projectsTable.ownerId,
       ownerName: usersTable.name,
+      isPublished: projectsTable.isPublished,
+      publishedAt: projectsTable.publishedAt,
+      publishVisibility: projectsTable.publishVisibility,
+      feedbackEnabled: projectsTable.feedbackEnabled,
+      feedbackAudience: projectsTable.feedbackAudience,
+      feedbackVisibility: projectsTable.feedbackVisibility,
       createdAt: projectsTable.createdAt,
       updatedAt: projectsTable.updatedAt,
     })
@@ -149,14 +166,41 @@ router.get("/projects/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  let role: "owner" | "collaborator" = "collaborator";
+  let role: "owner" | "collaborator" | "reader" = "reader";
+  let canGiveFeedback = false;
+
   if (!isNaN(userId)) {
     if (project.ownerId === userId) {
       role = "owner";
+    } else {
+      const [collab] = await db
+        .select({ id: collaboratorsTable.id })
+        .from(collaboratorsTable)
+        .where(and(eq(collaboratorsTable.projectId, params.data.id), eq(collaboratorsTable.userId, userId)));
+      if (collab) role = "collaborator";
+    }
+
+    if (project.isPublished && project.feedbackEnabled && role !== "owner") {
+      const [currentUser] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+      if (project.feedbackAudience === "all") {
+        canGiveFeedback = true;
+      } else if (project.feedbackAudience === "matched" && currentUser) {
+        try {
+          const BOOK_GENRES = ["Long-form Fiction", "Non-fiction", "Short Story", "Poetry", "Fan Fiction",
+            "Graphic Novel / Comics", "Children's Literature", "Literary Fiction",
+            "Thriller / Mystery", "Romance", "Science Fiction / Fantasy", "Horror"];
+          const SCRIPT_GENRES = ["Film & TV Script", "Screenwriting"];
+          const genres: string[] = JSON.parse(currentUser.genres ?? "[]");
+          const target = project.type === "script" ? SCRIPT_GENRES : BOOK_GENRES;
+          canGiveFeedback = genres.some(g => target.includes(g));
+        } catch { canGiveFeedback = false; }
+      } else if (project.feedbackAudience === "contributors" && role === "collaborator") {
+        canGiveFeedback = true;
+      }
     }
   }
 
-  res.json({ ...project, role });
+  res.json({ ...project, role, canGiveFeedback });
 });
 
 router.patch("/projects/:id", async (req, res): Promise<void> => {

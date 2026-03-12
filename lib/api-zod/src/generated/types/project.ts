@@ -5,6 +5,9 @@
  * Writers Room API
  * OpenAPI spec version: 0.1.0
  */
+import type { ProjectFeedbackAudience } from "./projectFeedbackAudience";
+import type { ProjectFeedbackVisibility } from "./projectFeedbackVisibility";
+import type { ProjectPublishVisibility } from "./projectPublishVisibility";
 import type { ProjectType } from "./projectType";
 
 export interface Project {
@@ -13,6 +16,12 @@ export interface Project {
   type: ProjectType;
   ownerId: number;
   ownerName: string;
+  isPublished: boolean;
+  publishedAt?: Date | null;
+  publishVisibility: ProjectPublishVisibility;
+  feedbackEnabled: boolean;
+  feedbackAudience: ProjectFeedbackAudience;
+  feedbackVisibility: ProjectFeedbackVisibility;
   pendingSuggestionsCount: number;
   collaboratorsCount: number;
   createdAt: Date;

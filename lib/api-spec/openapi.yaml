@@ -17,6 +17,8 @@ tags:
     description: Collaboration invitations
   - name: suggestions
     description: Edit suggestions from collaborators
+  - name: publishing
+    description: Publishing and public feedback
 
 paths:
   /healthz:
@@ -104,6 +106,27 @@ paths:
         "400":
           description: Bad request
 
+  /projects/discover:
+    get:
+      operationId: discoverProjects
+      tags: [publishing]
+      summary: List published projects accessible to the current user
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of published projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PublishedProject"
+
   /projects/{id}:
     get:
       operationId: getProject
@@ -168,6 +191,125 @@ paths:
       responses:
         "204":
           description: Deleted
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /projects/{id}/publish:
+    post:
+      operationId: publishProject
+      tags: [publishing]
+      summary: Publish or update publish settings for a project (owner only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PublishProjectBody"
+      responses:
+        "200":
+          description: Updated project detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectDetail"
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /projects/{id}/unpublish:
+    post:
+      operationId: unpublishProject
+      tags: [publishing]
+      summary: Unpublish a project (owner only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+              required:
+                - userId
+      responses:
+        "200":
+          description: Updated project detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectDetail"
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /projects/{id}/feedback:
+    get:
+      operationId: listFeedback
+      tags: [publishing]
+      summary: List feedback for a published project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of feedback
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FeedbackItem"
+        "403":
+          description: Forbidden
+
+    post:
+      operationId: createFeedback
+      tags: [publishing]
+      summary: Submit feedback on a published project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFeedbackBody"
+      responses:
+        "201":
+          description: Feedback submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackItem"
         "403":
           description: Forbidden
         "404":
@@ -459,6 +601,23 @@ components:
           type: integer
         ownerName:
           type: string
+        isPublished:
+          type: boolean
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        publishVisibility:
+          type: string
+          enum: [all, matched, contributors]
+        feedbackEnabled:
+          type: boolean
+        feedbackAudience:
+          type: string
+          enum: [all, matched, contributors]
+        feedbackVisibility:
+          type: string
+          enum: [public, private]
         pendingSuggestionsCount:
           type: integer
         collaboratorsCount:
@@ -475,6 +634,11 @@ components:
         - type
         - ownerId
         - ownerName
+        - isPublished
+        - publishVisibility
+        - feedbackEnabled
+        - feedbackAudience
+        - feedbackVisibility
         - pendingSuggestionsCount
         - collaboratorsCount
         - createdAt
@@ -498,7 +662,26 @@ components:
           type: string
         role:
           type: string
-          enum: [owner, collaborator]
+          enum: [owner, collaborator, reader]
+        isPublished:
+          type: boolean
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        publishVisibility:
+          type: string
+          enum: [all, matched, contributors]
+        feedbackEnabled:
+          type: boolean
+        feedbackAudience:
+          type: string
+          enum: [all, matched, contributors]
+        feedbackVisibility:
+          type: string
+          enum: [public, private]
+        canGiveFeedback:
+          type: boolean
         createdAt:
           type: string
           format: date-time
@@ -513,8 +696,122 @@ components:
         - ownerId
         - ownerName
         - role
+        - isPublished
+        - publishVisibility
+        - feedbackEnabled
+        - feedbackAudience
+        - feedbackVisibility
+        - canGiveFeedback
         - createdAt
         - updatedAt
+
+    PublishedProject:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+          enum: [book, script]
+        ownerId:
+          type: integer
+        ownerName:
+          type: string
+        publishedAt:
+          type: string
+          format: date-time
+        publishVisibility:
+          type: string
+          enum: [all, matched, contributors]
+        feedbackEnabled:
+          type: boolean
+        feedbackAudience:
+          type: string
+          enum: [all, matched, contributors]
+        feedbackVisibility:
+          type: string
+          enum: [public, private]
+        canGiveFeedback:
+          type: boolean
+        feedbackCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - type
+        - ownerId
+        - ownerName
+        - publishedAt
+        - publishVisibility
+        - feedbackEnabled
+        - feedbackAudience
+        - feedbackVisibility
+        - canGiveFeedback
+        - feedbackCount
+        - createdAt
+
+    PublishProjectBody:
+      type: object
+      properties:
+        userId:
+          type: integer
+        publishVisibility:
+          type: string
+          enum: [all, matched, contributors]
+        feedbackEnabled:
+          type: boolean
+        feedbackAudience:
+          type: string
+          enum: [all, matched, contributors]
+        feedbackVisibility:
+          type: string
+          enum: [public, private]
+      required:
+        - userId
+        - publishVisibility
+        - feedbackEnabled
+        - feedbackAudience
+        - feedbackVisibility
+
+    FeedbackItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - projectId
+        - userId
+        - userName
+        - content
+        - createdAt
+
+    CreateFeedbackBody:
+      type: object
+      properties:
+        userId:
+          type: integer
+        content:
+          type: string
+      required:
+        - userId
+        - content
 
     CreateProjectBody:
       type: object

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, PenTool, LayoutDashboard, UserCircle, PenLine, Users, Layers, Search } from "lucide-react";
+import { LogOut, PenTool, LayoutDashboard, UserCircle, PenLine, Users, Layers, Search, Telescope } from "lucide-react";
 import { Button } from "./ui/button";
 
 const ROLE_BADGE: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
@@ -19,11 +19,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const isAuthor = user.role === "author" || user.role === "both";
 
+  const isContributor = user.role === "contributor" || user.role === "both";
+
   const navLinks = [
-    { href: "/",             label: "Dashboard",         icon: <LayoutDashboard className="w-5 h-5" />, always: true },
-    { href: "/contributors", label: "Find Contributors", icon: <Search className="w-5 h-5" />,          always: false },
-    { href: "/profile",      label: "My Profile",        icon: <UserCircle className="w-5 h-5" />,      always: true },
-  ].filter((l) => l.always || isAuthor);
+    { href: "/",             label: "Dashboard",         icon: <LayoutDashboard className="w-5 h-5" />, show: true },
+    { href: "/contributors", label: "Find Contributors", icon: <Search className="w-5 h-5" />,          show: isAuthor },
+    { href: "/discover",     label: "Discover",          icon: <Telescope className="w-5 h-5" />,       show: isContributor || !isAuthor },
+    { href: "/profile",      label: "My Profile",        icon: <UserCircle className="w-5 h-5" />,      show: true },
+  ].filter((l) => l.show);
 
   return (
     <div className="flex min-h-screen w-full bg-background">
