@@ -1,15 +1,23 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Writers Room API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: users
+    description: User management
+  - name: projects
+    description: Writing projects (books/scripts)
+  - name: invitations
+    description: Collaboration invitations
+  - name: suggestions
+    description: Edit suggestions from collaborators
+
 paths:
   /healthz:
     get:
@@ -24,6 +32,362 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /users:
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create or login a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserBody"
+      responses:
+        "201":
+          description: User created or found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Bad request
+
+  /users/me:
+    get:
+      operationId: getCurrentUser
+      tags: [users]
+      summary: Get session user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: Not found
+
+  /projects:
+    get:
+      operationId: listProjects
+      tags: [projects]
+      summary: List projects for the current user (owned and collaborated)
+      responses:
+        "200":
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+
+    post:
+      operationId: createProject
+      tags: [projects]
+      summary: Create a new project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProjectBody"
+      responses:
+        "201":
+          description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "400":
+          description: Bad request
+
+  /projects/{id}:
+    get:
+      operationId: getProject
+      tags: [projects]
+      summary: Get a single project with its content
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Project detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectDetail"
+        "404":
+          description: Not found
+
+    patch:
+      operationId: updateProject
+      tags: [projects]
+      summary: Update project title or content
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProjectBody"
+      responses:
+        "200":
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "400":
+          description: Bad request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+    delete:
+      operationId: deleteProject
+      tags: [projects]
+      summary: Delete a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /projects/{id}/collaborators:
+    get:
+      operationId: listCollaborators
+      tags: [invitations]
+      summary: List collaborators on a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of collaborators
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Collaborator"
+
+  /projects/{id}/invite:
+    post:
+      operationId: inviteCollaborator
+      tags: [invitations]
+      summary: Invite a collaborator to a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteCollaboratorBody"
+      responses:
+        "201":
+          description: Collaborator invited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Collaborator"
+        "400":
+          description: Bad request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /projects/{id}/collaborators/{collaboratorId}:
+    delete:
+      operationId: removeCollaborator
+      tags: [invitations]
+      summary: Remove a collaborator from a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: collaboratorId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removed
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /projects/{id}/suggestions:
+    get:
+      operationId: listSuggestions
+      tags: [suggestions]
+      summary: List all suggestions for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending, accepted, discarded]
+      responses:
+        "200":
+          description: List of suggestions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Suggestion"
+
+    post:
+      operationId: createSuggestion
+      tags: [suggestions]
+      summary: Submit a suggestion for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSuggestionBody"
+      responses:
+        "201":
+          description: Suggestion created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Suggestion"
+        "400":
+          description: Bad request
+        "403":
+          description: Forbidden
+
+  /projects/{id}/suggestions/{suggestionId}:
+    get:
+      operationId: getSuggestion
+      tags: [suggestions]
+      summary: Get a single suggestion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: suggestionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Suggestion detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Suggestion"
+        "404":
+          description: Not found
+
+    patch:
+      operationId: updateSuggestionStatus
+      tags: [suggestions]
+      summary: Accept, discard, or add to a suggestion (owner only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: suggestionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSuggestionStatusBody"
+      responses:
+        "200":
+          description: Updated suggestion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Suggestion"
+        "400":
+          description: Bad request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+    delete:
+      operationId: deleteSuggestion
+      tags: [suggestions]
+      summary: Delete a suggestion (submitter or owner)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: suggestionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +398,233 @@ components:
       required:
         - status
 
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - createdAt
+
+    CreateUserBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+      required:
+        - name
+        - email
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+          enum: [book, script]
+        ownerId:
+          type: integer
+        ownerName:
+          type: string
+        pendingSuggestionsCount:
+          type: integer
+        collaboratorsCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - type
+        - ownerId
+        - ownerName
+        - pendingSuggestionsCount
+        - collaboratorsCount
+        - createdAt
+        - updatedAt
+
+    ProjectDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+          enum: [book, script]
+        content:
+          type: string
+        ownerId:
+          type: integer
+        ownerName:
+          type: string
+        role:
+          type: string
+          enum: [owner, collaborator]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - type
+        - content
+        - ownerId
+        - ownerName
+        - role
+        - createdAt
+        - updatedAt
+
+    CreateProjectBody:
+      type: object
+      properties:
+        title:
+          type: string
+        type:
+          type: string
+          enum: [book, script]
+        content:
+          type: string
+        userId:
+          type: integer
+      required:
+        - title
+        - type
+        - content
+        - userId
+
+    UpdateProjectBody:
+      type: object
+      properties:
+        title:
+          type: ["string", "null"]
+        content:
+          type: ["string", "null"]
+        userId:
+          type: integer
+      required:
+        - userId
+
+    Collaborator:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        addedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - name
+        - email
+        - addedAt
+
+    InviteCollaboratorBody:
+      type: object
+      properties:
+        email:
+          type: string
+        ownerId:
+          type: integer
+      required:
+        - email
+        - ownerId
+
+    Suggestion:
+      type: object
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        submitterId:
+          type: integer
+        submitterName:
+          type: string
+        originalText:
+          type: string
+        suggestedText:
+          type: string
+        comment:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, accepted, discarded]
+        ownerNote:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - projectId
+        - submitterId
+        - submitterName
+        - originalText
+        - suggestedText
+        - status
+        - createdAt
+        - updatedAt
+
+    CreateSuggestionBody:
+      type: object
+      properties:
+        originalText:
+          type: string
+        suggestedText:
+          type: string
+        comment:
+          type: ["string", "null"]
+        submitterId:
+          type: integer
+      required:
+        - originalText
+        - suggestedText
+        - submitterId
+
+    UpdateSuggestionStatusBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [accepted, discarded]
+        ownerNote:
+          type: ["string", "null"]
+        userId:
+          type: integer
+      required:
+        - status
+        - userId

@@ -1,0 +1,18 @@
+packages:
+  "framer-motion": "For smooth transitions and micro-interactions in the UI"
+  "date-fns": "For elegant date formatting"
+  "clsx": "Utility for constructing className strings conditionally"
+  "tailwind-merge": "Utility for safely merging Tailwind CSS classes"
+  "lucide-react": "Beautiful, consistent iconography"
+
+images:
+  - path: "artifacts/writers-room/public/images/auth-bg.png"
+    description: "Abstract, elegant warm editorial gradient background with subtle paper texture and soft lighting, very minimal, high-end literary aesthetic"
+    aspect_ratio: "16:9"
+  - path: "artifacts/writers-room/public/images/empty-desk.png"
+    description: "Minimalist illustration of a clean wooden writing desk with a single blank notebook and a pen, warm lighting, editorial style"
+    aspect_ratio: "4:3"
+
+notes:
+  - "Assuming customFetch handles cookies/session. We also pass userId in bodies as required by OpenAPI spec."
+  - "User state is managed primarily via localStorage to satisfy the prompt's 'no real auth' requirement, but interacts with /api/users to ensure backend has a record."

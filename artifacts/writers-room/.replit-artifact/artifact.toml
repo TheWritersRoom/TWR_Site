@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Writers Room"
+version = "1.0.0"
+id = "artifacts/writers-room"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 19438
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/writers-room run dev"
+
+[services.env]
+PORT = "19438"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/writers-room", "run", "build"]
+publicDir = "artifacts/writers-room/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
