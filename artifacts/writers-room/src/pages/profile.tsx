@@ -6,8 +6,20 @@ import { useQuery } from "@tanstack/react-query";
 import {
   CheckCircle2, Clock, XCircle, BookText, FileText,
   MessageSquareQuote, CalendarDays, PenLine, Users, Layers,
-  ArrowRight, Sparkles, Tag,
+  ArrowRight, Sparkles, Tag, Trophy, Star,
 } from "lucide-react";
+
+type CollaboratorStat = {
+  submitterId: number;
+  submitterName: string;
+  submitterEmail: string;
+  total: number;
+  accepted: number;
+  discarded: number;
+  pending: number;
+  acceptRate: number;
+  projectsTogether: { id: number; title: string }[];
+};
 
 function parseGenres(raw: string | null | undefined): string[] {
   try { return JSON.parse(raw ?? "[]"); } catch { return []; }
@@ -79,6 +91,14 @@ export default function Profile() {
     queryKey: ["/api/users", user?.id, "activity"],
     enabled: !!user,
     queryFn: () => fetch(`/api/users/${user!.id}/activity`).then((r) => r.json()),
+  });
+
+  const isAuthor = user?.role === "author" || user?.role === "both";
+
+  const { data: collabStats = [], isLoading: collabStatsLoading } = useQuery<CollaboratorStat[]>({
+    queryKey: ["/api/users", user?.id, "collaborator-stats"],
+    enabled: !!user && isAuthor,
+    queryFn: () => fetch(`/api/users/${user!.id}/collaborator-stats`).then((r) => r.json()),
   });
 
   if (!user) return null;
@@ -171,6 +191,96 @@ export default function Profile() {
           </motion.div>
         ))}
       </div>
+
+      {/* My Best Collaborators – visible to authors/both only */}
+      {isAuthor && (
+        <div className="mb-10">
+          <div className="flex items-center gap-2 mb-5">
+            <Trophy className="w-5 h-5 text-amber-500" />
+            <h2 className="text-2xl font-serif font-bold text-foreground">My Best Collaborators</h2>
+          </div>
+
+          {collabStatsLoading ? (
+            <div className="flex justify-center py-10">
+              <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-primary" />
+            </div>
+          ) : collabStats.length === 0 ? (
+            <div className="bg-card rounded-3xl border border-border p-10 text-center">
+              <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-40" />
+              <h3 className="text-base font-serif font-semibold text-foreground">No collaborator data yet</h3>
+              <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+                Once contributors suggest edits on your projects, their stats will appear here ranked by acceptance rate.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {collabStats.map((c, i) => {
+                const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+                return (
+                  <motion.div
+                    key={c.submitterId}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="bg-card rounded-2xl border border-border p-5 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center font-bold text-lg shrink-0">
+                        {c.submitterName.charAt(0)}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          {medal && <span className="text-lg leading-none">{medal}</span>}
+                          <p className="font-bold text-foreground">{c.submitterName}</p>
+                          <span className="text-xs text-muted-foreground">{c.submitterEmail}</span>
+                        </div>
+
+                        {/* Acceptance bar */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500"
+                              style={{ width: `${c.acceptRate}%` }}
+                            />
+                          </div>
+                          <span className="text-xs font-bold text-emerald-600">{c.acceptRate}% accepted</span>
+                        </div>
+
+                        {/* Projects list */}
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                          {c.projectsTogether.map((p) => (
+                            <Link
+                              key={p.id}
+                              href={`/project/${p.id}`}
+                              className="text-[11px] bg-secondary text-muted-foreground hover:text-primary hover:bg-primary/10 px-2 py-0.5 rounded-full border border-border transition-colors"
+                            >
+                              {p.title}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0 grid grid-cols-3 gap-3">
+                        {[
+                          { label: "Total", value: c.total, color: "text-foreground" },
+                          { label: "Accepted", value: c.accepted, color: "text-emerald-600" },
+                          { label: "Pending", value: c.pending, color: "text-yellow-600" },
+                        ].map((s) => (
+                          <div key={s.label} className="text-center">
+                            <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+                            <p className="text-[10px] text-muted-foreground">{s.label}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Activity list */}
       <div>

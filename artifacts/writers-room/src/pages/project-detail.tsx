@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useRoute } from "wouter";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, Users, MessageSquare, Check, X, 
-  Send, AlertCircle, Edit3, Trash2
+  Send, AlertCircle, Edit3, BarChart2, Trophy, Mail
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { 
   useGetProject, 
@@ -28,13 +29,33 @@ export default function ProjectDetail() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<"suggestions" | "collaborators">("suggestions");
+  const [activeTab, setActiveTab] = useState<"suggestions" | "collaborators" | "insights">("suggestions");
+
+  type ContributorStat = {
+    submitterId: number;
+    submitterName: string;
+    submitterEmail: string;
+    total: number;
+    accepted: number;
+    discarded: number;
+    pending: number;
+    acceptRate: number;
+    firstAt: string;
+    lastAt: string;
+  };
+
+  const { data: contributorStats = [] } = useQuery<ContributorStat[]>({
+    queryKey: ["/api/projects", projectId, "contributor-stats"],
+    enabled: !!projectId,
+    queryFn: () => fetch(`/api/projects/${projectId}/contributor-stats`).then((r) => r.json()),
+  });
   const [suggestionFilter, setSuggestionFilter] = useState<"pending" | "accepted" | "discarded">("pending");
   const [inviteEmail, setInviteEmail] = useState("");
 
   const { data: project, isLoading: projectLoading } = useGetProject(projectId, {
     request: {} as RequestInit,
     query: { 
+      queryKey: getGetProjectQueryKey(projectId),
       queryFn: () => fetch(`/api/projects/${projectId}?userId=${user?.id ?? ""}`).then(r => r.json()),
     }
   });
@@ -211,19 +232,28 @@ export default function ProjectDetail() {
       <div className="w-96 border-l border-border bg-card flex flex-col shadow-2xl z-20">
         <div className="flex border-b border-border">
           <button 
-            className={`flex-1 py-4 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'suggestions' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+            className={`flex-1 py-3 text-xs font-semibold border-b-2 transition-colors ${activeTab === 'suggestions' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
             onClick={() => setActiveTab('suggestions')}
           >
             <MessageSquare className="w-4 h-4 mx-auto mb-1" />
             Suggestions
           </button>
           <button 
-            className={`flex-1 py-4 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'collaborators' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+            className={`flex-1 py-3 text-xs font-semibold border-b-2 transition-colors ${activeTab === 'collaborators' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
             onClick={() => setActiveTab('collaborators')}
           >
             <Users className="w-4 h-4 mx-auto mb-1" />
             Collaborators
           </button>
+          {isOwner && (
+            <button 
+              className={`flex-1 py-3 text-xs font-semibold border-b-2 transition-colors ${activeTab === 'insights' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+              onClick={() => setActiveTab('insights')}
+            >
+              <BarChart2 className="w-4 h-4 mx-auto mb-1" />
+              Insights
+            </button>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto bg-secondary/30 p-4">
@@ -418,6 +448,80 @@ export default function ProjectDetail() {
                   ))}
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'insights' && isOwner && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Trophy className="w-4 h-4 text-amber-500" />
+                <h4 className="text-sm font-bold text-foreground">Contributor Leaderboard</h4>
+              </div>
+
+              {contributorStats.length === 0 ? (
+                <div className="text-center py-12 opacity-60">
+                  <BarChart2 className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
+                  <p className="text-sm font-medium">No contributor data yet.</p>
+                  <p className="text-xs mt-1">Stats appear once collaborators start submitting suggestions.</p>
+                </div>
+              ) : (
+                contributorStats.map((c, i) => {
+                  const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+                  return (
+                    <motion.div
+                      key={c.submitterId}
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.06 }}
+                      className="bg-card rounded-2xl border border-border p-4 shadow-sm"
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center font-bold text-sm shrink-0">
+                          {c.submitterName.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            {medal && <span className="text-base leading-none">{medal}</span>}
+                            <p className="text-sm font-bold text-foreground truncate">{c.submitterName}</p>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                            <Mail className="w-3 h-3" />{c.submitterEmail}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-lg font-bold text-foreground">{c.acceptRate}%</p>
+                          <p className="text-[10px] text-muted-foreground">accept rate</p>
+                        </div>
+                      </div>
+
+                      {/* Acceptance bar */}
+                      <div className="w-full h-2 bg-muted rounded-full overflow-hidden mb-3">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all"
+                          style={{ width: `${c.acceptRate}%` }}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        {[
+                          { label: "Total", value: c.total, color: "text-foreground" },
+                          { label: "Accepted", value: c.accepted, color: "text-emerald-600" },
+                          { label: "Pending", value: c.pending, color: "text-yellow-600" },
+                        ].map((s) => (
+                          <div key={s.label} className="bg-secondary/60 rounded-xl py-2">
+                            <p className={`text-base font-bold ${s.color}`}>{s.value}</p>
+                            <p className="text-[10px] text-muted-foreground">{s.label}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <p className="text-[10px] text-muted-foreground mt-2 text-right">
+                        Last active {formatDistanceToNow(new Date(c.lastAt), { addSuffix: true })}
+                      </p>
+                    </motion.div>
+                  );
+                })
+              )}
             </div>
           )}
         </div>
