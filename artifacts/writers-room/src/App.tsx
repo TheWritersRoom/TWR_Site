@@ -7,6 +7,7 @@ import { AuthModal } from "@/components/auth-modal";
 import { Layout } from "@/components/layout";
 import Dashboard from "@/pages/dashboard";
 import ProjectDetail from "@/pages/project-detail";
+import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -24,6 +25,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/project/:id" component={ProjectDetail} />
+        <Route path="/profile" component={Profile} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

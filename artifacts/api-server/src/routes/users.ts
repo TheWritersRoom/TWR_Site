@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, usersTable } from "@workspace/db";
+import { db, usersTable, suggestionsTable, projectsTable } from "@workspace/db";
 import { CreateUserBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -44,6 +44,35 @@ router.post("/users", async (req, res): Promise<void> => {
     .returning();
 
   res.status(201).json(user);
+});
+
+router.get("/users/:id/activity", async (req, res): Promise<void> => {
+  const userId = parseInt(req.params.id, 10);
+  if (isNaN(userId)) {
+    res.status(400).json({ error: "Invalid user id" });
+    return;
+  }
+
+  const rows = await db
+    .select({
+      id: suggestionsTable.id,
+      projectId: suggestionsTable.projectId,
+      projectTitle: projectsTable.title,
+      projectType: projectsTable.type,
+      originalText: suggestionsTable.originalText,
+      suggestedText: suggestionsTable.suggestedText,
+      comment: suggestionsTable.comment,
+      status: suggestionsTable.status,
+      ownerNote: suggestionsTable.ownerNote,
+      createdAt: suggestionsTable.createdAt,
+      updatedAt: suggestionsTable.updatedAt,
+    })
+    .from(suggestionsTable)
+    .innerJoin(projectsTable, eq(suggestionsTable.projectId, projectsTable.id))
+    .where(eq(suggestionsTable.submitterId, userId))
+    .orderBy(suggestionsTable.createdAt);
+
+  res.json(rows);
 });
 
 router.get("/users/me", async (req, res): Promise<void> => {
