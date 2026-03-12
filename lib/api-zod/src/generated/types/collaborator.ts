@@ -5,11 +5,13 @@
  * Writers Room API
  * OpenAPI spec version: 0.1.0
  */
+import type { CollaboratorRole } from "./collaboratorRole";
 
 export interface Collaborator {
   id: number;
   userId: number;
   name: string;
   email: string;
+  role: CollaboratorRole;
   addedAt: Date;
 }

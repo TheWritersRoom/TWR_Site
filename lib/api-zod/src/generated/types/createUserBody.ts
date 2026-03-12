@@ -5,8 +5,10 @@
  * Writers Room API
  * OpenAPI spec version: 0.1.0
  */
+import type { CreateUserBodyRole } from "./createUserBodyRole";
 
 export interface CreateUserBody {
   name: string;
   email: string;
+  role: CreateUserBodyRole;
 }

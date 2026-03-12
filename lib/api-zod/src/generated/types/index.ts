@@ -7,10 +7,12 @@
  */
 
 export * from "./collaborator";
+export * from "./collaboratorRole";
 export * from "./createProjectBody";
 export * from "./createProjectBodyType";
 export * from "./createSuggestionBody";
 export * from "./createUserBody";
+export * from "./createUserBodyRole";
 export * from "./healthStatus";
 export * from "./inviteCollaboratorBody";
 export * from "./listSuggestionsParams";
@@ -22,7 +24,9 @@ export * from "./projectDetailType";
 export * from "./projectType";
 export * from "./suggestion";
 export * from "./suggestionStatus";
+export * from "./suggestionSubmitterRole";
 export * from "./updateProjectBody";
 export * from "./updateSuggestionStatusBody";
 export * from "./updateSuggestionStatusBodyStatus";
 export * from "./user";
+export * from "./userRole";

@@ -9,16 +9,35 @@ export interface HealthStatus {
   status: string;
 }
 
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
+
+export const UserRole = {
+  author: "author",
+  contributor: "contributor",
+  both: "both",
+} as const;
+
 export interface User {
   id: number;
   name: string;
   email: string;
+  role: UserRole;
   createdAt: string;
 }
+
+export type CreateUserBodyRole =
+  (typeof CreateUserBodyRole)[keyof typeof CreateUserBodyRole];
+
+export const CreateUserBodyRole = {
+  author: "author",
+  contributor: "contributor",
+  both: "both",
+} as const;
 
 export interface CreateUserBody {
   name: string;
   email: string;
+  role: CreateUserBodyRole;
 }
 
 export type ProjectType = (typeof ProjectType)[keyof typeof ProjectType];
@@ -91,11 +110,21 @@ export interface UpdateProjectBody {
   userId: number;
 }
 
+export type CollaboratorRole =
+  (typeof CollaboratorRole)[keyof typeof CollaboratorRole];
+
+export const CollaboratorRole = {
+  author: "author",
+  contributor: "contributor",
+  both: "both",
+} as const;
+
 export interface Collaborator {
   id: number;
   userId: number;
   name: string;
   email: string;
+  role: CollaboratorRole;
   addedAt: string;
 }
 
@@ -103,6 +132,15 @@ export interface InviteCollaboratorBody {
   email: string;
   ownerId: number;
 }
+
+export type SuggestionSubmitterRole =
+  (typeof SuggestionSubmitterRole)[keyof typeof SuggestionSubmitterRole];
+
+export const SuggestionSubmitterRole = {
+  author: "author",
+  contributor: "contributor",
+  both: "both",
+} as const;
 
 export type SuggestionStatus =
   (typeof SuggestionStatus)[keyof typeof SuggestionStatus];
@@ -118,6 +156,7 @@ export interface Suggestion {
   projectId: number;
   submitterId: number;
   submitterName: string;
+  submitterRole: SuggestionSubmitterRole;
   originalText: string;
   suggestedText: string;
   /** @nullable */

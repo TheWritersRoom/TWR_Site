@@ -34,6 +34,7 @@ router.get("/projects/:id/suggestions", async (req, res): Promise<void> => {
       projectId: suggestionsTable.projectId,
       submitterId: suggestionsTable.submitterId,
       submitterName: usersTable.name,
+      submitterRole: usersTable.role,
       originalText: suggestionsTable.originalText,
       suggestedText: suggestionsTable.suggestedText,
       comment: suggestionsTable.comment,
@@ -102,13 +103,14 @@ router.post("/projects/:id/suggestions", async (req, res): Promise<void> => {
     .returning();
 
   const [submitter] = await db
-    .select({ name: usersTable.name })
+    .select({ name: usersTable.name, role: usersTable.role })
     .from(usersTable)
     .where(eq(usersTable.id, suggestion.submitterId));
 
   res.status(201).json({
     ...suggestion,
     submitterName: submitter?.name ?? "",
+    submitterRole: submitter?.role ?? "contributor",
   });
 });
 
@@ -125,6 +127,7 @@ router.get("/projects/:id/suggestions/:suggestionId", async (req, res): Promise<
       projectId: suggestionsTable.projectId,
       submitterId: suggestionsTable.submitterId,
       submitterName: usersTable.name,
+      submitterRole: usersTable.role,
       originalText: suggestionsTable.originalText,
       suggestedText: suggestionsTable.suggestedText,
       comment: suggestionsTable.comment,
@@ -212,13 +215,14 @@ router.patch("/projects/:id/suggestions/:suggestionId", async (req, res): Promis
     .returning();
 
   const [submitter] = await db
-    .select({ name: usersTable.name })
+    .select({ name: usersTable.name, role: usersTable.role })
     .from(usersTable)
     .where(eq(usersTable.id, updated.submitterId));
 
   res.json({
     ...updated,
     submitterName: submitter?.name ?? "",
+    submitterRole: submitter?.role ?? "contributor",
   });
 });
 

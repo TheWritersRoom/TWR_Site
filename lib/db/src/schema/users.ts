@@ -6,6 +6,7 @@ export const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
+  role: text("role", { enum: ["author", "contributor", "both"] }).notNull().default("both"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

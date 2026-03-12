@@ -21,6 +21,7 @@ export const HealthCheckResponse = zod.object({
 export const CreateUserBody = zod.object({
   name: zod.string(),
   email: zod.string(),
+  role: zod.enum(["author", "contributor", "both"]),
 });
 
 /**
@@ -30,6 +31,7 @@ export const GetCurrentUserResponse = zod.object({
   id: zod.number(),
   name: zod.string(),
   email: zod.string(),
+  role: zod.enum(["author", "contributor", "both"]),
   createdAt: zod.date(),
 });
 
@@ -122,6 +124,7 @@ export const ListCollaboratorsResponseItem = zod.object({
   userId: zod.number(),
   name: zod.string(),
   email: zod.string(),
+  role: zod.enum(["author", "contributor", "both"]),
   addedAt: zod.date(),
 });
 export const ListCollaboratorsResponse = zod.array(
@@ -164,6 +167,7 @@ export const ListSuggestionsResponseItem = zod.object({
   projectId: zod.number(),
   submitterId: zod.number(),
   submitterName: zod.string(),
+  submitterRole: zod.enum(["author", "contributor", "both"]),
   originalText: zod.string(),
   suggestedText: zod.string(),
   comment: zod.string().nullish(),
@@ -201,6 +205,7 @@ export const GetSuggestionResponse = zod.object({
   projectId: zod.number(),
   submitterId: zod.number(),
   submitterName: zod.string(),
+  submitterRole: zod.enum(["author", "contributor", "both"]),
   originalText: zod.string(),
   suggestedText: zod.string(),
   comment: zod.string().nullish(),
@@ -229,6 +234,7 @@ export const UpdateSuggestionStatusResponse = zod.object({
   projectId: zod.number(),
   submitterId: zod.number(),
   submitterName: zod.string(),
+  submitterRole: zod.enum(["author", "contributor", "both"]),
   originalText: zod.string(),
   suggestedText: zod.string(),
   comment: zod.string().nullish(),

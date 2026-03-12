@@ -6,12 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { SuggestionStatus } from "./suggestionStatus";
+import type { SuggestionSubmitterRole } from "./suggestionSubmitterRole";
 
 export interface Suggestion {
   id: number;
   projectId: number;
   submitterId: number;
   submitterName: string;
+  submitterRole: SuggestionSubmitterRole;
   originalText: string;
   suggestedText: string;
   /** @nullable */

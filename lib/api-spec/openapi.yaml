@@ -407,6 +407,9 @@ components:
           type: string
         email:
           type: string
+        role:
+          type: string
+          enum: [author, contributor, both]
         createdAt:
           type: string
           format: date-time
@@ -414,6 +417,7 @@ components:
         - id
         - name
         - email
+        - role
         - createdAt
 
     CreateUserBody:
@@ -423,9 +427,13 @@ components:
           type: string
         email:
           type: string
+        role:
+          type: string
+          enum: [author, contributor, both]
       required:
         - name
         - email
+        - role
 
     Project:
       type: object
@@ -539,6 +547,9 @@ components:
           type: string
         email:
           type: string
+        role:
+          type: string
+          enum: [author, contributor, both]
         addedAt:
           type: string
           format: date-time
@@ -547,6 +558,7 @@ components:
         - userId
         - name
         - email
+        - role
         - addedAt
 
     InviteCollaboratorBody:
@@ -571,6 +583,9 @@ components:
           type: integer
         submitterName:
           type: string
+        submitterRole:
+          type: string
+          enum: [author, contributor, both]
         originalText:
           type: string
         suggestedText:
@@ -593,6 +608,7 @@ components:
         - projectId
         - submitterId
         - submitterName
+        - submitterRole
         - originalText
         - suggestedText
         - status

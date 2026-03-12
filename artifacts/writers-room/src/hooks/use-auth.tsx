@@ -4,9 +4,11 @@ import type { User } from "@workspace/api-client-react";
 
 const AUTH_KEY = "writers_room_user";
 
+type UserRole = "author" | "contributor" | "both";
+
 type AuthContextType = {
   user: User | null;
-  login: (name: string, email: string) => Promise<void>;
+  login: (name: string, email: string, role: UserRole) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 };
@@ -16,7 +18,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const createUserMutation = useCreateUser();
 
   useEffect(() => {
@@ -31,10 +33,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (name: string, email: string) => {
+  const login = async (name: string, email: string, role: UserRole) => {
     try {
       const newUser = await createUserMutation.mutateAsync({
-        data: { name, email },
+        data: { name, email, role },
       });
       setUser(newUser);
       localStorage.setItem(AUTH_KEY, JSON.stringify(newUser));

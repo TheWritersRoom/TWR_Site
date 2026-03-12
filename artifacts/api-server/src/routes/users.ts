@@ -19,13 +19,28 @@ router.post("/users", async (req, res): Promise<void> => {
     .limit(1);
 
   if (existing.length > 0) {
-    res.status(201).json(existing[0]);
+    // If user exists, update role if provided and different
+    const user = existing[0];
+    if (parsed.data.role && parsed.data.role !== user.role) {
+      const [updated] = await db
+        .update(usersTable)
+        .set({ role: parsed.data.role })
+        .where(eq(usersTable.id, user.id))
+        .returning();
+      res.status(201).json(updated);
+      return;
+    }
+    res.status(201).json(user);
     return;
   }
 
   const [user] = await db
     .insert(usersTable)
-    .values({ name: parsed.data.name, email: parsed.data.email })
+    .values({
+      name: parsed.data.name,
+      email: parsed.data.email,
+      role: parsed.data.role,
+    })
     .returning();
 
   res.status(201).json(user);

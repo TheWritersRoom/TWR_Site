@@ -168,11 +168,22 @@ export default function Dashboard() {
       <header className="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h1 className="text-4xl font-serif font-bold text-foreground tracking-tight">Your Projects</h1>
-          <p className="text-muted-foreground mt-2 text-lg">
-            Continue where you left off, {user?.name.split(" ")[0]}.
+          <p className="text-muted-foreground mt-2 text-lg flex items-center gap-2">
+            {user?.role === "contributor"
+              ? `Welcome back, ${user?.name.split(" ")[0]}. You're contributing to others' projects.`
+              : `Continue where you left off, ${user?.name.split(" ")[0]}.`}
+            <span className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full ${
+              user?.role === "author"
+                ? "bg-blue-100 text-blue-700"
+                : user?.role === "contributor"
+                ? "bg-amber-100 text-amber-700"
+                : "bg-emerald-100 text-emerald-700"
+            }`}>
+              {user?.role === "author" ? "Author" : user?.role === "contributor" ? "Contributor" : "Author & Contributor"}
+            </span>
           </p>
         </div>
-        {!mode && (
+        {!mode && user?.role !== "contributor" && (
           <Button onClick={() => setMode("choose")} size="lg" className="rounded-full shadow-lg">
             <Plus className="w-5 h-5 mr-2" />
             New Project
@@ -400,14 +411,21 @@ export default function Dashboard() {
           <p className="text-muted-foreground mt-2 max-w-md mx-auto">
             Your workspace is clear. Upload a manuscript or start writing to begin collaborating.
           </p>
-          <div className="flex items-center justify-center gap-3 mt-6">
-            <Button onClick={() => setMode("upload")} variant="outline" className="rounded-full gap-2">
-              <Upload className="w-4 h-4" /> Upload file
-            </Button>
-            <Button onClick={() => setMode("write")} className="rounded-full gap-2">
-              <PenLine className="w-4 h-4" /> Start writing
-            </Button>
-          </div>
+          {user?.role !== "contributor" && (
+            <div className="flex items-center justify-center gap-3 mt-6">
+              <Button onClick={() => setMode("upload")} variant="outline" className="rounded-full gap-2">
+                <Upload className="w-4 h-4" /> Upload file
+              </Button>
+              <Button onClick={() => setMode("write")} className="rounded-full gap-2">
+                <PenLine className="w-4 h-4" /> Start writing
+              </Button>
+            </div>
+          )}
+          {user?.role === "contributor" && (
+            <p className="text-sm text-muted-foreground mt-4">
+              Ask an author to invite you to their project to get started.
+            </p>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
