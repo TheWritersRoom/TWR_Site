@@ -37,8 +37,31 @@ export const ratingsTable = pgTable("ratings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 }, (t) => [uniqueIndex("ratings_project_user_idx").on(t.projectId, t.userId)]);
 
+export const pitchesTable = pgTable("pitches", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  type: text("type", { enum: ["book", "script", "other"] }).notNull().default("other"),
+  genres: text("genres").notNull().default("[]"),
+  status: text("status", { enum: ["open", "closed"] }).notNull().default("open"),
+  ownerId: integer("owner_id").notNull().references(() => usersTable.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
+export const pitchResponsesTable = pgTable("pitch_responses", {
+  id: serial("id").primaryKey(),
+  pitchId: integer("pitch_id").notNull().references(() => pitchesTable.id),
+  userId: integer("user_id").notNull().references(() => usersTable.id),
+  type: text("type", { enum: ["feedback", "interest"] }).notNull(),
+  message: text("message").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const insertProjectSchema = createInsertSchema(projectsTable).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Project = typeof projectsTable.$inferSelect;
 export type Feedback = typeof feedbackTable.$inferSelect;
 export type Rating = typeof ratingsTable.$inferSelect;
+export type Pitch = typeof pitchesTable.$inferSelect;
+export type PitchResponse = typeof pitchResponsesTable.$inferSelect;

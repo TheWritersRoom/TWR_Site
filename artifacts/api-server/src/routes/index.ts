@@ -6,12 +6,14 @@ import collaboratorsRouter from "./collaborators";
 import suggestionsRouter from "./suggestions";
 import publishingRouter from "./publishing";
 import searchRouter from "./search";
+import pitchesRouter from "./pitches";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(usersRouter);
 router.use(searchRouter);
+router.use(pitchesRouter);
 router.use(publishingRouter);
 router.use(projectsRouter);
 router.use(collaboratorsRouter);

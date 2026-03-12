@@ -11,6 +11,8 @@ import ProjectDetail from "@/pages/project-detail";
 import Profile from "@/pages/profile";
 import Contributors from "@/pages/contributors";
 import Discover from "@/pages/discover";
+import Pitches from "@/pages/pitches";
+import PitchDetail from "@/pages/pitch-detail";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -31,6 +33,8 @@ function AuthenticatedRouter() {
         <Route path="/profile" component={Profile} />
         <Route path="/contributors" component={Contributors} />
         <Route path="/discover" component={Discover} />
+        <Route path="/pitches" component={Pitches} />
+        <Route path="/pitch/:id" component={PitchDetail} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

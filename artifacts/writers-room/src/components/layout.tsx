@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, PenTool, LayoutDashboard, UserCircle, PenLine, Users, Layers, Search, Star } from "lucide-react";
+import { LogOut, PenTool, LayoutDashboard, UserCircle, PenLine, Users, Layers, Search, Star, Lightbulb } from "lucide-react";
 import { Button } from "./ui/button";
 
 const ROLE_BADGE: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
@@ -24,6 +24,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navLinks = [
     { href: "/",             label: "Dashboard",         icon: <LayoutDashboard className="w-5 h-5" />, show: true },
     { href: "/contributors", label: "Find Contributors", icon: <Search className="w-5 h-5" />,          show: isAuthor },
+    { href: "/pitches",      label: "Pitches",            icon: <Lightbulb className="w-5 h-5" />,       show: true },
     { href: "/discover",     label: "Browse & Rate",     icon: <Star className="w-5 h-5" />,            show: true },
     { href: "/profile",      label: "My Profile",        icon: <UserCircle className="w-5 h-5" />,      show: true },
   ].filter((l) => l.show);
