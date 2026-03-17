@@ -101,6 +101,7 @@ export default function Dashboard() {
   const [newTitle, setNewTitle] = useState("");
   const [newType, setNewType] = useState<"book" | "script">("book");
   const [newContent, setNewContent] = useState("");
+  const [newLimit, setNewLimit] = useState(6);
 
   // Upload state
   const [isDragging, setIsDragging] = useState(false);
@@ -139,6 +140,7 @@ export default function Dashboard() {
     setNewTitle("");
     setNewContent("");
     setNewType("book");
+    setNewLimit(6);
     setUploadedFile(null);
     setExtractError("");
   };
@@ -148,7 +150,7 @@ export default function Dashboard() {
     if (!user || !newTitle || !newContent) return;
 
     await createProject.mutateAsync({
-      data: { title: newTitle, type: newType, content: newContent, userId: user.id },
+      data: { title: newTitle, type: newType, content: newContent, userId: user.id, collaboratorLimit: newLimit } as any,
     });
 
     queryClient.invalidateQueries({ queryKey: ["/api/projects", user?.id] });
@@ -380,6 +382,32 @@ export default function Dashboard() {
                   className="w-full px-4 py-4 rounded-xl bg-background border-2 border-input focus:border-primary outline-none font-serif text-base min-h-[240px] resize-y transition-colors"
                   required
                 />
+              </div>
+
+              {/* Room size */}
+              <div>
+                <label className="block text-sm font-semibold text-foreground mb-1.5">Room size</label>
+                <p className="text-xs text-muted-foreground mb-3">Maximum number of collaborators you can invite to this project.</p>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setNewLimit(l => Math.max(1, l - 1))}
+                    className="w-9 h-9 rounded-full border-2 border-input flex items-center justify-center hover:border-primary transition-colors disabled:opacity-40"
+                    disabled={newLimit <= 1}
+                  >
+                    <ChevronRight className="w-4 h-4 rotate-180" />
+                  </button>
+                  <span className="w-10 text-center text-xl font-bold tabular-nums">{newLimit}</span>
+                  <button
+                    type="button"
+                    onClick={() => setNewLimit(l => Math.min(50, l + 1))}
+                    className="w-9 h-9 rounded-full border-2 border-input flex items-center justify-center hover:border-primary transition-colors disabled:opacity-40"
+                    disabled={newLimit >= 50}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                  <span className="text-sm text-muted-foreground ml-1">{newLimit === 1 ? "person" : "people"}</span>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-1">

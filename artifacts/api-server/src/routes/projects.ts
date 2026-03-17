@@ -113,9 +113,12 @@ router.post("/projects", async (req, res): Promise<void> => {
 
   const { userId, ...projectData } = parsed.data;
 
+  const rawLimit = parseInt(req.body.collaboratorLimit, 10);
+  const collaboratorLimit = !isNaN(rawLimit) && rawLimit >= 1 && rawLimit <= 50 ? rawLimit : 6;
+
   const [project] = await db
     .insert(projectsTable)
-    .values({ ...projectData, ownerId: userId })
+    .values({ ...projectData, ownerId: userId, collaboratorLimit })
     .returning();
 
   const [owner] = await db
@@ -154,6 +157,7 @@ router.get("/projects/:id", async (req, res): Promise<void> => {
       feedbackEnabled: projectsTable.feedbackEnabled,
       feedbackAudience: projectsTable.feedbackAudience,
       feedbackVisibility: projectsTable.feedbackVisibility,
+      collaboratorLimit: projectsTable.collaboratorLimit,
       createdAt: projectsTable.createdAt,
       updatedAt: projectsTable.updatedAt,
     })
@@ -231,9 +235,11 @@ router.patch("/projects/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const updateData: { title?: string; content?: string } = {};
+  const updateData: { title?: string; content?: string; collaboratorLimit?: number } = {};
   if (parsed.data.title != null) updateData.title = parsed.data.title;
   if (parsed.data.content != null) updateData.content = parsed.data.content;
+  const rawLimit = parseInt(req.body.collaboratorLimit, 10);
+  if (!isNaN(rawLimit) && rawLimit >= 1 && rawLimit <= 50) updateData.collaboratorLimit = rawLimit;
 
   const [updated] = await db
     .update(projectsTable)

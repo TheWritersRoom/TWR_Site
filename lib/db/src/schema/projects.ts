@@ -9,6 +9,7 @@ export const projectsTable = pgTable("projects", {
   type: text("type", { enum: ["book", "script"] }).notNull().default("book"),
   content: text("content").notNull().default(""),
   ownerId: integer("owner_id").notNull().references(() => usersTable.id),
+  collaboratorLimit: integer("collaborator_limit").notNull().default(6),
   // Publishing
   isPublished: boolean("is_published").notNull().default(false),
   publishedAt: timestamp("published_at", { withTimezone: true }),

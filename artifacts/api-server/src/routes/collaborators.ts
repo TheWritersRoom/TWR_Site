@@ -8,8 +8,6 @@ import {
   RemoveCollaboratorParams,
 } from "@workspace/api-zod";
 
-const MAX_COLLABORATORS = 6;
-
 const router: IRouter = Router();
 
 router.get("/projects/:id/collaborators", async (req, res): Promise<void> => {
@@ -65,15 +63,15 @@ router.post("/projects/:id/invite", async (req, res): Promise<void> => {
     return;
   }
 
-  // Enforce 6-collaborator limit
+  const limit = project.collaboratorLimit ?? 6;
   const [{ total }] = await db
     .select({ total: count(collaboratorsTable.id) })
     .from(collaboratorsTable)
     .where(eq(collaboratorsTable.projectId, params.data.id));
 
-  if (total >= MAX_COLLABORATORS) {
+  if (total >= limit) {
     res.status(400).json({
-      error: `This project already has the maximum of ${MAX_COLLABORATORS} collaborators.`,
+      error: `This room is full (${limit} collaborator${limit === 1 ? "" : "s"} max). Increase the room limit to invite more.`,
     });
     return;
   }

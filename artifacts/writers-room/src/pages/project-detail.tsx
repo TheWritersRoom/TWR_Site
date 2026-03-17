@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, Users, MessageSquare, Check, X, 
   Send, AlertCircle, Edit3, BarChart2, Trophy, Mail,
-  BookOpen, Globe, Lock, Eye, MessageCircle
+  BookOpen, Globe, Lock, Eye, MessageCircle, Minus, Plus
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient as useQC } from "@tanstack/react-query";
 import { PublishModal } from "@/components/publish-modal";
@@ -71,6 +71,8 @@ export default function ProjectDetail() {
   });
   const [suggestionFilter, setSuggestionFilter] = useState<"pending" | "accepted" | "discarded">("pending");
   const [inviteEmail, setInviteEmail] = useState("");
+  const [limitDraft, setLimitDraft] = useState<number | null>(null);
+  const [isSavingLimit, setIsSavingLimit] = useState(false);
 
   const { data: project, isLoading: projectLoading } = useGetProject(projectId, {
     request: {} as RequestInit,
@@ -85,6 +87,22 @@ export default function ProjectDetail() {
   const createSuggestion = useCreateSuggestion();
   const updateSuggestion = useUpdateSuggestionStatus();
   const inviteCollab = useInviteCollaborator();
+
+  const handleSaveLimit = async () => {
+    if (limitDraft === null || !user) return;
+    setIsSavingLimit(true);
+    try {
+      await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, collaboratorLimit: limitDraft }),
+      });
+      queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
+      setLimitDraft(null);
+    } finally {
+      setIsSavingLimit(false);
+    }
+  };
 
   // Selection state for creating new suggestion
   const [selection, setSelection] = useState<{ text: string; top: number; left: number } | null>(null);
@@ -490,6 +508,71 @@ export default function ProjectDetail() {
 
           {activeTab === 'collaborators' && (
             <div className="space-y-6">
+              {/* Room size control (owner only) */}
+              {isOwner && (() => {
+                const currentLimit = (project as any).collaboratorLimit ?? 6;
+                const filled = collaborators?.length ?? 0;
+                const draft = limitDraft ?? currentLimit;
+                return (
+                  <div className="bg-card p-4 rounded-2xl border border-border shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-sm font-semibold">Room size</h4>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {filled} of {currentLimit} seat{currentLimit === 1 ? "" : "s"} filled
+                        </p>
+                      </div>
+                      {/* Fill bar */}
+                      <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full transition-all"
+                          style={{ width: `${Math.min(100, (filled / currentLimit) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setLimitDraft(Math.max(1, draft - 1))}
+                        className="w-8 h-8 rounded-full border-2 border-input flex items-center justify-center hover:border-primary transition-colors disabled:opacity-40"
+                        disabled={draft <= 1}
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="w-8 text-center text-lg font-bold tabular-nums">{draft}</span>
+                      <button
+                        type="button"
+                        onClick={() => setLimitDraft(Math.min(50, draft + 1))}
+                        className="w-8 h-8 rounded-full border-2 border-input flex items-center justify-center hover:border-primary transition-colors disabled:opacity-40"
+                        disabled={draft >= 50}
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                      {limitDraft !== null && limitDraft !== currentLimit && (
+                        <Button
+                          size="sm"
+                          className="ml-2 rounded-xl px-3 h-8 text-xs"
+                          onClick={handleSaveLimit}
+                          disabled={isSavingLimit}
+                        >
+                          {isSavingLimit ? "Saving…" : "Save"}
+                        </Button>
+                      )}
+                      {limitDraft !== null && (
+                        <button
+                          type="button"
+                          className="text-xs text-muted-foreground hover:text-foreground"
+                          onClick={() => setLimitDraft(null)}
+                        >
+                          Reset
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Invite form */}
               {isOwner && (
                 <form onSubmit={handleInvite} className="bg-card p-4 rounded-2xl border border-border shadow-sm">
                   <h4 className="text-sm font-semibold mb-3">Invite Collaborator</h4>
