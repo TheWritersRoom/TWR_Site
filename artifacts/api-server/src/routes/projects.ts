@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, or, count, sql } from "drizzle-orm";
-import { db, projectsTable, usersTable, collaboratorsTable, suggestionsTable } from "@workspace/db";
+import { db, projectsTable, usersTable, collaboratorsTable, suggestionsTable, joinRequestsTable } from "@workspace/db";
 import {
   CreateProjectBody,
   UpdateProjectBody,
@@ -204,7 +204,16 @@ router.get("/projects/:id", async (req, res): Promise<void> => {
     }
   }
 
-  res.json({ ...project, role, canGiveFeedback });
+  let myJoinRequest: { id: number; status: string } | null = null;
+  if (!isNaN(userId) && role === "reader") {
+    const [jr] = await db
+      .select({ id: joinRequestsTable.id, status: joinRequestsTable.status })
+      .from(joinRequestsTable)
+      .where(and(eq(joinRequestsTable.projectId, params.data.id), eq(joinRequestsTable.userId, userId)));
+    myJoinRequest = jr ?? null;
+  }
+
+  res.json({ ...project, role, canGiveFeedback, myJoinRequest });
 });
 
 router.patch("/projects/:id", async (req, res): Promise<void> => {

@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, Users, MessageSquare, Check, X, 
   Send, AlertCircle, Edit3, BarChart2, Trophy, Mail,
-  BookOpen, Globe, Lock, Eye, MessageCircle, Minus, Plus
+  BookOpen, Globe, Lock, Eye, MessageCircle, Minus, Plus,
+  UserPlus, Clock, CheckCircle, XCircle
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient as useQC } from "@tanstack/react-query";
 import { PublishModal } from "@/components/publish-modal";
@@ -24,6 +25,34 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+
+function JoinRequestForm({ message, setMessage, open, setOpen, onSubmit, isPending, error, label }: {
+  message: string; setMessage: (v: string) => void;
+  open: boolean; setOpen: (v: boolean) => void;
+  onSubmit: () => void; isPending: boolean; error?: string; label: string;
+}) {
+  return open ? (
+    <div className="space-y-2">
+      <textarea
+        value={message}
+        onChange={e => setMessage(e.target.value)}
+        placeholder="Optional: introduce yourself or explain why you'd like to join…"
+        className="w-full bg-background border border-input rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary min-h-[70px] resize-none"
+      />
+      {error && <p className="text-xs text-destructive">{error}</p>}
+      <div className="flex gap-2">
+        <Button size="sm" type="button" variant="ghost" className="flex-1 rounded-xl h-8 text-xs" onClick={() => setOpen(false)}>Cancel</Button>
+        <Button size="sm" type="button" className="flex-1 rounded-xl h-8 text-xs" onClick={onSubmit} disabled={isPending}>
+          {isPending ? "Sending…" : "Send"}
+        </Button>
+      </div>
+    </div>
+  ) : (
+    <Button size="sm" type="button" className="w-full rounded-xl h-9 text-xs gap-1.5" onClick={() => setOpen(true)}>
+      <UserPlus className="w-3.5 h-3.5" /> {label}
+    </Button>
+  );
+}
 
 export default function ProjectDetail() {
   const [, params] = useRoute("/project/:id");
@@ -73,6 +102,8 @@ export default function ProjectDetail() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [limitDraft, setLimitDraft] = useState<number | null>(null);
   const [isSavingLimit, setIsSavingLimit] = useState(false);
+  const [joinMessage, setJoinMessage] = useState("");
+  const [joinMessageOpen, setJoinMessageOpen] = useState(false);
 
   const { data: project, isLoading: projectLoading } = useGetProject(projectId, {
     request: {} as RequestInit,
@@ -103,6 +134,48 @@ export default function ProjectDetail() {
       setIsSavingLimit(false);
     }
   };
+
+  type JoinRequestRow = {
+    id: number; userId: number; name: string; email: string;
+    role: string; message: string; status: string; createdAt: string;
+  };
+
+  const isOwnerLoaded = !!(project && (project as any).ownerId === user?.id);
+
+  const { data: joinRequests = [], refetch: refetchJoinRequests } = useQuery<JoinRequestRow[]>({
+    queryKey: ["/api/projects", projectId, "join-requests", user?.id],
+    enabled: isOwnerLoaded,
+    queryFn: () => fetch(`/api/projects/${projectId}/join-requests?userId=${user!.id}`).then(r => r.json()),
+  });
+
+  const submitJoinRequest = useMutation({
+    mutationFn: ({ message }: { message: string }) =>
+      fetch(`/api/projects/${projectId}/join-requests`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user!.id, message }),
+      }).then(async r => { if (!r.ok) throw new Error((await r.json()).error); return r.json(); }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
+      setJoinMessageOpen(false);
+      setJoinMessage("");
+    },
+  });
+
+  const respondJoinRequest = useMutation({
+    mutationFn: ({ requestId, action }: { requestId: number; action: "accept" | "decline" }) =>
+      fetch(`/api/projects/${projectId}/join-requests/${requestId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user!.id, action }),
+      }).then(async r => { if (!r.ok) throw new Error((await r.json()).error); return r.json(); }),
+    onSuccess: () => {
+      refetchJoinRequests();
+      queryClient.invalidateQueries({ queryKey: getListCollaboratorsQueryKey(projectId) });
+    },
+  });
+
+  const pendingJoinRequests = joinRequests.filter(r => r.status === "pending");
 
   // Selection state for creating new suggestion
   const [selection, setSelection] = useState<{ text: string; top: number; left: number } | null>(null);
@@ -340,11 +413,18 @@ export default function ProjectDetail() {
             Suggestions
           </button>
           <button 
-            className={`flex-1 py-3 text-xs font-semibold border-b-2 transition-colors ${activeTab === 'collaborators' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+            className={`flex-1 py-3 text-xs font-semibold border-b-2 transition-colors relative ${activeTab === 'collaborators' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
             onClick={() => setActiveTab('collaborators')}
           >
-            <Users className="w-4 h-4 mx-auto mb-1" />
-            Collaborators
+            <div className="relative inline-flex">
+              <Users className="w-4 h-4 mb-1" />
+              {pendingJoinRequests.length > 0 && (
+                <span className="absolute -top-1.5 -right-2 w-4 h-4 bg-amber-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                  {pendingJoinRequests.length}
+                </span>
+              )}
+            </div>
+            <br />Collaborators
           </button>
           {isOwner && (
             <button 
@@ -572,6 +652,56 @@ export default function ProjectDetail() {
                 );
               })()}
 
+              {/* Pending join requests (owner only) */}
+              {isOwner && pendingJoinRequests.length > 0 && (
+                <div className="bg-card rounded-2xl border border-amber-200 shadow-sm overflow-hidden">
+                  <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border-b border-amber-200">
+                    <Clock className="w-4 h-4 text-amber-600" />
+                    <h4 className="text-sm font-semibold text-amber-800">
+                      Join Request{pendingJoinRequests.length > 1 ? "s" : ""} ({pendingJoinRequests.length})
+                    </h4>
+                  </div>
+                  <div className="divide-y divide-border">
+                    {pendingJoinRequests.map(req => (
+                      <div key={req.id} className="p-4 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">
+                            {req.name.charAt(0)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold truncate">{req.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{req.email}</p>
+                          </div>
+                          <span className="text-[10px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-full shrink-0 capitalize">{req.role}</span>
+                        </div>
+                        {req.message && (
+                          <p className="text-xs text-muted-foreground bg-secondary/60 rounded-lg px-3 py-2 italic">"{req.message}"</p>
+                        )}
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 border-red-200 text-red-600 hover:bg-red-50 rounded-xl text-xs h-8"
+                            onClick={() => respondJoinRequest.mutate({ requestId: req.id, action: "decline" })}
+                            disabled={respondJoinRequest.isPending}
+                          >
+                            <XCircle className="w-3.5 h-3.5 mr-1" /> Decline
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs h-8"
+                            onClick={() => respondJoinRequest.mutate({ requestId: req.id, action: "accept" })}
+                            disabled={respondJoinRequest.isPending}
+                          >
+                            <CheckCircle className="w-3.5 h-3.5 mr-1" /> Accept
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Invite form */}
               {isOwner && (
                 <form onSubmit={handleInvite} className="bg-card p-4 rounded-2xl border border-border shadow-sm">
@@ -623,6 +753,68 @@ export default function ProjectDetail() {
                   ))}
                 </div>
               </div>
+
+              {/* Request to join (readers only) */}
+              {!isOwner && (project as any).role === "reader" && (() => {
+                const myReq = (project as any).myJoinRequest as { id: number; status: string } | null;
+                if (myReq?.status === "accepted") return null;
+                return (
+                  <div className={`rounded-2xl border p-4 shadow-sm space-y-3 ${
+                    myReq?.status === "pending" ? "bg-amber-50 border-amber-200" :
+                    myReq?.status === "declined" ? "bg-card border-border" : "bg-card border-border"
+                  }`}>
+                    {myReq?.status === "pending" ? (
+                      <div className="flex items-center gap-3">
+                        <Clock className="w-5 h-5 text-amber-500 shrink-0" />
+                        <div>
+                          <p className="text-sm font-semibold text-amber-800">Request pending</p>
+                          <p className="text-xs text-amber-600 mt-0.5">The author will review your request.</p>
+                        </div>
+                      </div>
+                    ) : myReq?.status === "declined" ? (
+                      <>
+                        <div className="flex items-center gap-3">
+                          <XCircle className="w-5 h-5 text-muted-foreground shrink-0" />
+                          <div>
+                            <p className="text-sm font-semibold">Request declined</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">You can send another request below.</p>
+                          </div>
+                        </div>
+                        <JoinRequestForm
+                          message={joinMessage}
+                          setMessage={setJoinMessage}
+                          open={joinMessageOpen}
+                          setOpen={setJoinMessageOpen}
+                          onSubmit={() => submitJoinRequest.mutate({ message: joinMessage })}
+                          isPending={submitJoinRequest.isPending}
+                          error={submitJoinRequest.error?.message}
+                          label="Send another request"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <UserPlus className="w-4 h-4 text-primary" />
+                          <h4 className="text-sm font-semibold">Request to join</h4>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Ask the author to add you as a collaborator on this project.
+                        </p>
+                        <JoinRequestForm
+                          message={joinMessage}
+                          setMessage={setJoinMessage}
+                          open={joinMessageOpen}
+                          setOpen={setJoinMessageOpen}
+                          onSubmit={() => submitJoinRequest.mutate({ message: joinMessage })}
+                          isPending={submitJoinRequest.isPending}
+                          error={submitJoinRequest.error?.message}
+                          label="Send request"
+                        />
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
 

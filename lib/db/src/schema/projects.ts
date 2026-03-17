@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, boolean, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean, uniqueIndex, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -59,6 +59,18 @@ export const pitchResponsesTable = pgTable("pitch_responses", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const joinRequestsTable = pgTable("join_requests", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => projectsTable.id),
+  userId: integer("user_id").notNull().references(() => usersTable.id),
+  message: text("message").notNull().default(""),
+  status: text("status", { enum: ["pending", "accepted", "declined"] }).notNull().default("pending"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex("join_requests_project_user_idx").on(t.projectId, t.userId),
+  index("join_requests_project_status_idx").on(t.projectId, t.status),
+]);
+
 export const insertProjectSchema = createInsertSchema(projectsTable).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Project = typeof projectsTable.$inferSelect;
@@ -66,3 +78,4 @@ export type Feedback = typeof feedbackTable.$inferSelect;
 export type Rating = typeof ratingsTable.$inferSelect;
 export type Pitch = typeof pitchesTable.$inferSelect;
 export type PitchResponse = typeof pitchResponsesTable.$inferSelect;
+export type JoinRequest = typeof joinRequestsTable.$inferSelect;
