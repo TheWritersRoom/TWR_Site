@@ -20,8 +20,8 @@ const FEATURES = [
   },
   {
     icon: <Users className="w-6 h-6" />,
-    title: "Invite up to 6 collaborators",
-    desc: "Send targeted invites to contributors whose genre interests and media tastes align with your work.",
+    title: "Invite your collaborators",
+    desc: "Set your own room size and send targeted invites to contributors whose genre interests and media tastes align with your work.",
     color: "bg-amber-100 text-amber-600",
   },
   {
