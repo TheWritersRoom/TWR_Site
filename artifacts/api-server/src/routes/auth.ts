@@ -46,17 +46,30 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   const userRole = validRoles.includes(role) ? role : "both";
 
   const existing = await db
-    .select({ id: usersTable.id })
+    .select()
     .from(usersTable)
     .where(eq(usersTable.email, email.toLowerCase()))
     .limit(1);
 
+  const passwordHash = await hashPassword(password);
+
   if (existing.length > 0) {
-    res.status(409).json({ error: "An account with this email already exists. Please sign in." });
+    const existingUser = existing[0];
+    if (existingUser.passwordHash) {
+      // Already has a password — must sign in instead
+      res.status(409).json({ error: "An account with this email already exists. Please sign in." });
+      return;
+    }
+    // Existing account with no password — set the password now
+    const [updated] = await db
+      .update(usersTable)
+      .set({ passwordHash })
+      .where(eq(usersTable.id, existingUser.id))
+      .returning();
+    const { passwordHash: _ph, ...safeUser } = updated;
+    res.status(200).json(safeUser);
     return;
   }
-
-  const passwordHash = await hashPassword(password);
 
   const [user] = await db
     .insert(usersTable)

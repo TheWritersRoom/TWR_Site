@@ -94,14 +94,23 @@ export function AuthModal() {
     setSuGenres((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]);
   };
 
+  const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setNeedsPasswordSetup(false);
     setIsSubmitting(true);
     try {
       await signIn({ email: siEmail, password: siPassword });
     } catch (err: any) {
-      setError(err.message || "Sign in failed");
+      const msg: string = err.message || "Sign in failed";
+      if (msg.includes("before passwords were required")) {
+        setNeedsPasswordSetup(true);
+        setError("Your account doesn't have a password yet.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -252,6 +261,22 @@ export function AuthModal() {
                       {isSubmitting ? "Signing in…" : "Sign In"}
                     </Button>
                   </form>
+
+                  {needsPasswordSetup && (
+                    <div className="mt-4 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-800">
+                      <p className="font-semibold mb-1">No password on this account yet</p>
+                      <p className="text-xs text-amber-700 mb-2">Go to <strong>Create Account</strong>, enter your existing email and choose a new password — your account and projects will be kept.</p>
+                      <button
+                        onClick={() => {
+                          setSuEmail(siEmail);
+                          switchMode("signup");
+                        }}
+                        className="text-xs font-bold text-primary underline"
+                      >
+                        Set up a password →
+                      </button>
+                    </div>
+                  )}
 
                   <p className="text-center text-xs text-muted-foreground mt-5">
                     New here?{" "}
