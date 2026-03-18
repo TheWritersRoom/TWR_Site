@@ -79,6 +79,7 @@ export function AuthModal() {
   const [suRole, setSuRole] = useState<UserRole>("both");
   const [suGenres, setSuGenres] = useState<string[]>([]);
   const [suMedia, setSuMedia] = useState("");
+  const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
 
   if (isLoading || !authModalOpen) return null;
 
@@ -93,8 +94,6 @@ export function AuthModal() {
   const toggleGenre = (g: string) => {
     setSuGenres((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]);
   };
-
-  const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
