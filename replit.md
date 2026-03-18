@@ -4,6 +4,17 @@
 
 Writers Room is a collaborative writing platform where authors upload books/scripts, invite collaborators, and manage suggested edits with accept/discard workflows.
 
+## Key Features
+
+- **Fountain Script Editor**: Script-type projects have a fullscreen block-based screenplay editor (Tab cycles element types: Scene Heading, Action, Character, Dialogue, Parenthetical, Transition)
+- **Fountain Rendering**: Reading view for scripts parses and renders Fountain format with proper screenplay layout
+- **Collaborator Limit**: Owners can set a cap on collaborator count (1–50)
+- **Join Requests**: Non-collaborators can request to join; owners can accept/decline
+- **Suggestions**: Collaborators highlight text and suggest edits; owners accept/discard
+- **Pitches**: Early-stage idea pitching with responses
+- **Publishing**: Granular readership and feedback controls
+- **Browse & Rate**: Discover and rate published projects
+
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces

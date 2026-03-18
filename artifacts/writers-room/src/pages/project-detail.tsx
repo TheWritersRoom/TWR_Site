@@ -6,10 +6,12 @@ import {
   ChevronLeft, Users, MessageSquare, Check, X, 
   Send, AlertCircle, Edit3, BarChart2, Trophy, Mail,
   BookOpen, Globe, Lock, Eye, MessageCircle, Minus, Plus,
-  UserPlus, Clock, CheckCircle, XCircle
+  UserPlus, Clock, CheckCircle, XCircle, Film
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient as useQC } from "@tanstack/react-query";
 import { PublishModal } from "@/components/publish-modal";
+import { ScriptEditor } from "@/components/script-editor";
+import { parseFountain } from "@/utils/fountain";
 import { useAuth } from "@/hooks/use-auth";
 import { 
   useGetProject, 
@@ -63,6 +65,7 @@ export default function ProjectDetail() {
   const [activeTab, setActiveTab] = useState<"suggestions" | "collaborators" | "insights" | "feedback">("suggestions");
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [publishLoading, setPublishLoading] = useState(false);
+  const [scriptEditorOpen, setScriptEditorOpen] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
 
   type FeedbackItem = {
@@ -301,23 +304,69 @@ export default function ProjectDetail() {
   // Render content with highlights for pending suggestions
   const renderContent = () => {
     if (!project?.content) return null;
+
+    // Script projects: parse and render Fountain format
+    if (project.type === "script") {
+      const blocks = parseFountain(project.content);
+      return (
+        <div className="font-mono text-sm leading-relaxed space-y-0 max-w-[680px] mx-auto">
+          {blocks.map((block, i) => {
+            // Apply suggestion highlights
+            let text = block.text;
+            if (suggestions && suggestionFilter === "pending") {
+              suggestions.forEach(sug => {
+                if (sug.status === "pending") {
+                  text = text.split(sug.originalText).join(
+                    `<mark class="bg-yellow-200/40 border-b-2 border-yellow-400 text-inherit cursor-pointer rounded px-0.5 hover:bg-yellow-300/50" title="Suggestion by ${sug.submitterName}">${sug.originalText}</mark>`
+                  );
+                }
+              });
+            }
+            const inner = <span dangerouslySetInnerHTML={{ __html: text || "\u00A0" }} />;
+
+            switch (block.type) {
+              case "scene-heading":
+                return <div key={i} className="mt-6 mb-2 font-bold uppercase tracking-wide border-b border-border/40 pb-1 text-foreground">{inner}</div>;
+              case "action":
+                return <div key={i} className="my-3 text-foreground">{inner}</div>;
+              case "character":
+                return <div key={i} className="mt-5 mb-0 text-center uppercase font-semibold text-foreground">{inner}</div>;
+              case "parenthetical":
+                return <div key={i} className="my-0 text-center italic text-muted-foreground">{inner}</div>;
+              case "dialogue":
+                return <div key={i} className="my-1 mx-auto max-w-[380px] text-center text-foreground">{inner}</div>;
+              case "transition":
+                return <div key={i} className="mt-5 mb-2 text-right uppercase font-semibold text-muted-foreground">{inner}</div>;
+              default:
+                return <div key={i}>{inner}</div>;
+            }
+          })}
+        </div>
+      );
+    }
+
+    // Book projects: plain text with suggestion highlights
     let html = project.content;
-    
-    // Only highlight if we are viewing pending suggestions to avoid clutter
     if (suggestions && suggestionFilter === "pending") {
       suggestions.forEach(sug => {
         if (sug.status === "pending") {
-           // Basic string replacement. In a real app, uses exact indices.
            const mark = `<mark class="bg-yellow-200/40 border-b-2 border-yellow-400 text-inherit cursor-pointer rounded px-0.5 transition-colors hover:bg-yellow-300/50" title="Suggestion by ${sug.submitterName}">${sug.originalText}</mark>`;
            html = html.split(sug.originalText).join(mark);
         }
       });
     }
-
-    // Convert newlines to breaks for rendering plain text beautifully
-    html = html.replace(/\n/g, '<br/>');
-
+    html = html.replace(/\n/g, "<br/>");
     return <div dangerouslySetInnerHTML={{ __html: html }} />;
+  };
+
+  const handleSaveScript = async (newContent: string) => {
+    if (!user) return;
+    await fetch(`/api/projects/${projectId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.id, content: newContent }),
+    });
+    queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
   };
 
   if (projectLoading) {
@@ -355,6 +404,15 @@ export default function ProjectDetail() {
              <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-semibold border border-primary/20">
                {project.role}
              </div>
+             {isOwner && project.type === "script" && (
+               <button
+                 onClick={() => setScriptEditorOpen(true)}
+                 className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+               >
+                 <Film className="w-4 h-4" />
+                 Edit Script
+               </button>
+             )}
              {isOwner && (
                <button
                  onClick={() => setPublishModalOpen(true)}
@@ -978,6 +1036,19 @@ export default function ProjectDetail() {
           loading={publishLoading}
         />
       )}
+
+      {/* Script Editor Overlay */}
+      <AnimatePresence>
+        {scriptEditorOpen && project && isOwner && (
+          <ScriptEditor
+            key="script-editor"
+            content={project.content ?? ""}
+            projectTitle={project.title}
+            onSave={handleSaveScript}
+            onClose={() => setScriptEditorOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
