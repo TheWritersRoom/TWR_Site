@@ -1,22 +1,28 @@
 import { useState, useEffect, createContext, useContext } from "react";
-import { useCreateUser } from "@workspace/api-client-react";
 import type { User } from "@workspace/api-client-react";
 
 const AUTH_KEY = "writers_room_user";
 
 export type UserRole = "author" | "contributor" | "both";
 
-export type LoginPayload = {
+export type RegisterPayload = {
   name: string;
   email: string;
+  password: string;
   role: UserRole;
   genres?: string;
   mediaInterests?: string;
 };
 
+export type SignInPayload = {
+  email: string;
+  password: string;
+};
+
 type AuthContextType = {
   user: User | null;
-  login: (payload: LoginPayload) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
+  signIn: (payload: SignInPayload) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
   authModalOpen: boolean;
@@ -31,38 +37,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
-  const createUserMutation = useCreateUser();
-
   useEffect(() => {
     const stored = localStorage.getItem(AUTH_KEY);
     if (stored) {
       try {
         setUser(JSON.parse(stored));
-      } catch (e) {
+      } catch {
         localStorage.removeItem(AUTH_KEY);
       }
     }
     setIsLoading(false);
   }, []);
 
-  const login = async (payload: LoginPayload) => {
-    try {
-      const newUser = await createUserMutation.mutateAsync({
-        data: {
-          name: payload.name,
-          email: payload.email,
-          role: payload.role,
-          genres: payload.genres ?? "[]",
-          mediaInterests: payload.mediaInterests ?? "",
-        },
-      });
-      setUser(newUser);
-      localStorage.setItem(AUTH_KEY, JSON.stringify(newUser));
-      setAuthModalOpen(false);
-    } catch (error) {
-      console.error("Login failed", error);
-      throw error;
-    }
+  const register = async (payload: RegisterPayload) => {
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: payload.name,
+        email: payload.email,
+        password: payload.password,
+        role: payload.role,
+        genres: payload.genres ?? "[]",
+        mediaInterests: payload.mediaInterests ?? "",
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Registration failed");
+    setUser(data);
+    localStorage.setItem(AUTH_KEY, JSON.stringify(data));
+    setAuthModalOpen(false);
+  };
+
+  const signIn = async (payload: SignInPayload) => {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: payload.email, password: payload.password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Sign in failed");
+    setUser(data);
+    localStorage.setItem(AUTH_KEY, JSON.stringify(data));
+    setAuthModalOpen(false);
   };
 
   const logout = () => {
@@ -73,7 +90,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user,
-      login,
+      register,
+      signIn,
       logout,
       isLoading,
       authModalOpen,
