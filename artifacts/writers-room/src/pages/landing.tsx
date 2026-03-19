@@ -174,12 +174,6 @@ export default function Landing() {
             className="w-full object-cover"
             style={{ maxHeight: "520px", objectPosition: "center 30%" }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1A1614]/40 via-transparent to-transparent" />
-          <div className="absolute bottom-6 left-6 md:left-14 right-6 md:right-14">
-            <p className="text-[10px] uppercase tracking-[0.24em] font-bold text-[#F9F6EE]/70">
-              The original writers room &nbsp;·&nbsp; Remington Standard, c. 1920
-            </p>
-          </div>
         </motion.div>
       </section>
 
