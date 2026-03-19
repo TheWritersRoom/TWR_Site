@@ -77,7 +77,7 @@ export default function Landing() {
         <div className="px-6 md:px-14 py-2 flex items-center justify-between">
           <div className="hidden md:flex items-center gap-6">
             {["Authors", "Contributors", "Discover", "Pitches"].map((item) => (
-              <span key={item} className="text-[11px] uppercase tracking-[0.16em] text-[#1A1614] font-semibold hover:text-[#F7C5D5] transition-colors cursor-default">{item}</span>
+              <span key={item} className="text-[11px] uppercase tracking-[0.16em] text-[#1A1614] font-semibold hover:text-[#FDDCB5] transition-colors cursor-default">{item}</span>
             ))}
           </div>
           <div className="flex md:hidden">
@@ -86,13 +86,13 @@ export default function Landing() {
           <div className="flex items-center gap-4">
             <button
               onClick={openAuthModal}
-              className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#1A1614] hover:text-[#F7C5D5] transition-colors"
+              className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#1A1614] hover:text-[#FDDCB5] transition-colors"
             >
               Sign in
             </button>
             <button
               onClick={openAuthModal}
-              className="px-4 py-1.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.16em] font-bold hover:bg-[#F7C5D5] transition-colors"
+              className="px-4 py-1.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.16em] font-bold hover:bg-[#FDDCB5] transition-colors"
             >
               Subscribe
             </button>
@@ -108,7 +108,7 @@ export default function Landing() {
         <div className="bg-[#E8B84B] px-6 md:px-14 pt-14 pb-16 flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden">
 
           {/* Decorative teal accent lines */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#F7C5D5]" />
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#FDDCB5]" />
 
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -134,7 +134,7 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 onClick={openAuthModal}
-                className="flex items-center gap-2 px-8 py-3.5 bg-[#1A1614] text-[#F9F6EE] text-sm font-bold uppercase tracking-[0.12em] hover:bg-[#F7C5D5] transition-colors"
+                className="flex items-center gap-2 px-8 py-3.5 bg-[#1A1614] text-[#F9F6EE] text-sm font-bold uppercase tracking-[0.12em] hover:bg-[#FDDCB5] transition-colors"
               >
                 Start for free <ArrowRight className="w-4 h-4" />
               </button>
@@ -148,7 +148,7 @@ export default function Landing() {
           </motion.div>
 
           {/* Bottom teal accent */}
-          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-[#F7C5D5]" />
+          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-[#FDDCB5]" />
         </div>
 
         {/* Editorial standfirst strip */}
@@ -220,7 +220,7 @@ export default function Landing() {
                 {...inView(i * 0.07)}
                 className="p-6 border border-[#F9F6EE]/10 hover:bg-[#F9F6EE]/5 transition-colors group"
               >
-                <div className="w-8 h-8 rounded-sm bg-[#F7C5D5]/20 text-[#F7C5D5] flex items-center justify-center mb-4 group-hover:bg-[#E8B84B]/20 group-hover:text-[#E8B84B] transition-colors">
+                <div className="w-8 h-8 rounded-sm bg-[#FDDCB5]/20 text-[#FDDCB5] flex items-center justify-center mb-4 group-hover:bg-[#E8B84B]/20 group-hover:text-[#E8B84B] transition-colors">
                   {f.icon}
                 </div>
                 <h3 className="font-bold text-[#F9F6EE] uppercase tracking-[0.08em] text-xs mb-2">{f.title}</h3>
@@ -247,7 +247,7 @@ export default function Landing() {
               className="p-8 md:p-10 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1614]"
             >
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-[#F7C5D5] flex items-center justify-center text-[#1A1614]">
+                <div className="w-10 h-10 bg-[#FDDCB5] flex items-center justify-center text-[#1A1614]">
                   <BookOpen className="w-5 h-5" />
                 </div>
                 <div>
@@ -261,14 +261,14 @@ export default function Landing() {
               <ul className="space-y-3 mb-8">
                 {FOR_AUTHORS.map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-[#1A1614]">
-                    <Check className="w-4 h-4 text-[#F7C5D5] shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-[#FDDCB5] shrink-0 mt-0.5" />
                     {item}
                   </li>
                 ))}
               </ul>
               <button
                 onClick={openAuthModal}
-                className="w-full py-3 bg-[#1A1614] text-[#F9F6EE] font-bold text-xs uppercase tracking-[0.14em] hover:bg-[#F7C5D5] transition-colors"
+                className="w-full py-3 bg-[#1A1614] text-[#F9F6EE] font-bold text-xs uppercase tracking-[0.14em] hover:bg-[#FDDCB5] transition-colors"
               >
                 Upload your manuscript
               </button>
@@ -311,7 +311,7 @@ export default function Landing() {
       </section>
 
       {/* ── CTA BANNER ── */}
-      <section className="py-24 px-6 md:px-14 bg-[#F7C5D5] text-[#1A1614]">
+      <section className="py-24 px-6 md:px-14 bg-[#FDDCB5] text-[#1A1614]">
         <div className="max-w-3xl mx-auto text-center">
           <motion.div {...inView()}>
             <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#1A1614]/60 mb-4">Join Today</p>
