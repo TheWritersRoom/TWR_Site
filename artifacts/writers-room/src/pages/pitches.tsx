@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Lightbulb, Plus, Search, BookText, FileText, Shapes,
-  MessageCircle, HandHeart, X, ChevronRight, Check, Filter
+  MessageCircle, HandHeart, X, ChevronRight, Check
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const GENRES = [
   "Film & TV Script", "Long-form Fiction", "Non-fiction", "Short Story",
@@ -32,10 +31,12 @@ type PitchSummary = {
 };
 
 const TYPE_META = {
-  book:   { label: "Book", icon: <BookText className="w-3.5 h-3.5" />, color: "bg-blue-100 text-blue-700" },
-  script: { label: "Script", icon: <FileText className="w-3.5 h-3.5" />, color: "bg-violet-100 text-violet-700" },
-  other:  { label: "Open format", icon: <Shapes className="w-3.5 h-3.5" />, color: "bg-muted text-muted-foreground" },
+  book:   { label: "Book",        icon: <BookText className="w-3.5 h-3.5" /> },
+  script: { label: "Script",      icon: <FileText className="w-3.5 h-3.5" /> },
+  other:  { label: "Open format", icon: <Shapes className="w-3.5 h-3.5" /> },
 };
+
+const inputCls = "w-full px-4 py-3 bg-white border-2 border-[#1A1614]/20 focus:border-[#1A1614] outline-none text-sm transition-colors text-[#1A1614] placeholder:text-[#7A6B5E]";
 
 function NewPitchForm({ onClose }: { onClose: () => void }) {
   const { user } = useAuth();
@@ -75,47 +76,45 @@ function NewPitchForm({ onClose }: { onClose: () => void }) {
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
-      className="bg-card border border-border rounded-3xl p-7 mb-8 shadow-md"
+      className="bg-white border-2 border-[#1A1614] mb-8 overflow-hidden"
     >
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between px-7 pt-6 pb-5 border-b border-[#1A1614]/15">
         <div className="flex items-center gap-2">
-          <Lightbulb className="w-5 h-5 text-primary" />
-          <h2 className="text-xl font-serif font-bold text-foreground">New Pitch</h2>
+          <Lightbulb className="w-5 h-5 text-[#E8B84B]" />
+          <h2 className="text-xl font-serif font-bold text-[#1A1614]">New Pitch</h2>
         </div>
-        <button onClick={onClose} className="p-1.5 rounded-full hover:bg-accent transition-colors">
-          <X className="w-4 h-4 text-muted-foreground" />
+        <button onClick={onClose} className="p-1.5 hover:bg-[#1A1614]/5 transition-colors">
+          <X className="w-4 h-4 text-[#7A6B5E]" />
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="p-7 space-y-6">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Title</label>
+          <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-2">Title</label>
           <input
             type="text"
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="A working title for your idea…"
-            className="w-full px-4 py-2.5 rounded-xl bg-background border-2 border-input focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none text-sm"
+            className={inputCls}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">
-            Describe your idea
-          </label>
+          <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-2">Describe your idea</label>
           <textarea
             required
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={5}
-            placeholder="What's the story? What themes are you exploring? What kind of collaborator are you looking for? The more detail you give, the better the responses you'll get."
-            className="w-full px-4 py-2.5 rounded-xl bg-background border-2 border-input focus:border-primary outline-none text-sm resize-none"
+            placeholder="What's the story? What themes are you exploring? What kind of collaborator are you looking for?"
+            className={inputCls + " resize-none"}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Format</label>
+          <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-3">Format</label>
           <div className="flex gap-2">
             {(["book", "script", "other"] as const).map((t) => {
               const m = TYPE_META[t];
@@ -124,8 +123,10 @@ function NewPitchForm({ onClose }: { onClose: () => void }) {
                   key={t}
                   type="button"
                   onClick={() => setType(t)}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
-                    type === t ? "border-primary bg-primary/8 text-foreground" : "border-input bg-background text-muted-foreground hover:border-primary/30"
+                  className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] border-2 transition-all ${
+                    type === t
+                      ? "border-[#1A1614] bg-[#1A1614] text-[#F9F6EE]"
+                      : "border-[#1A1614]/20 text-[#7A6B5E] hover:border-[#1A1614]"
                   }`}
                 >
                   {m.icon} {m.label}
@@ -136,9 +137,9 @@ function NewPitchForm({ onClose }: { onClose: () => void }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
+          <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-3">
             Genre tags
-            <span className="ml-1.5 text-xs font-normal text-muted-foreground">optional</span>
+            <span className="ml-2 normal-case tracking-normal font-normal text-[#7A6B5E]">— optional</span>
           </label>
           <div className="flex flex-wrap gap-2">
             {GENRES.map((g) => {
@@ -148,8 +149,10 @@ function NewPitchForm({ onClose }: { onClose: () => void }) {
                   key={g}
                   type="button"
                   onClick={() => toggleGenre(g)}
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
-                    sel ? "bg-primary text-primary-foreground border-primary" : "bg-background border-input text-muted-foreground hover:border-primary/40"
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-semibold border transition-all ${
+                    sel
+                      ? "bg-[#1A1614] text-[#F9F6EE] border-[#1A1614]"
+                      : "bg-white border-[#1A1614]/20 text-[#7A6B5E] hover:border-[#1A1614]"
                   }`}
                 >
                   {sel && <Check className="w-3 h-3" />}
@@ -160,11 +163,21 @@ function NewPitchForm({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-2">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={!title || !description || submitting}>
+        <div className="flex justify-end gap-3 pt-2 border-t border-[#1A1614]/10">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2.5 border border-[#1A1614]/25 text-[#7A6B5E] text-[11px] uppercase tracking-[0.14em] font-bold hover:border-[#1A1614] hover:text-[#1A1614] transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!title || !description || submitting}
+            className="px-6 py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors disabled:opacity-40"
+          >
             {submitting ? "Posting…" : "Post Pitch"}
-          </Button>
+          </button>
         </div>
       </form>
     </motion.div>
@@ -203,27 +216,24 @@ export default function Pitches() {
   return (
     <div className="p-6 md:p-10 max-w-5xl mx-auto">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4"
-      >
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Lightbulb className="w-5 h-5 text-primary" />
-            </div>
-            <h1 className="text-3xl font-serif font-bold text-foreground">Pitches</h1>
+      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
+        <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">Ideas in progress</p>
+        <div className="border-t-2 border-[#1A1614] mb-3" />
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-serif font-bold text-[#1A1614]">Pitches</h1>
+            <p className="text-[#7A6B5E] mt-1">Early-stage ideas looking for feedback and collaborators</p>
           </div>
-          <p className="text-muted-foreground ml-13">
-            Early-stage ideas looking for feedback and collaborators
-          </p>
+          {isAuthor && !showForm && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 px-6 py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors shrink-0"
+            >
+              <Plus className="w-4 h-4" /> New Pitch
+            </button>
+          )}
         </div>
-        {isAuthor && !showForm && (
-          <Button onClick={() => setShowForm(true)} className="rounded-full shrink-0">
-            <Plus className="w-4 h-4 mr-2" /> New Pitch
-          </Button>
-        )}
+        <div className="border-t border-[#1A1614]/15 mt-4" />
       </motion.div>
 
       {/* New pitch form */}
@@ -234,81 +244,73 @@ export default function Pitches() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7A6B5E]" />
           <input
             type="text"
             placeholder="Search pitches…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-card border border-input rounded-xl text-sm focus:outline-none focus:border-primary"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#1A1614]/20 text-sm focus:border-[#1A1614] focus:outline-none text-[#1A1614]"
           />
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <div className="flex gap-1">
-            {(["all", "open", "closed"] as const).map((s) => (
-              <button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-all capitalize ${
-                  statusFilter === s
-                    ? s === "open" ? "bg-emerald-600 text-white border-emerald-600"
-                    : s === "closed" ? "bg-muted text-foreground border-muted-foreground"
-                    : "bg-foreground text-background border-foreground"
-                    : "bg-card text-muted-foreground border-border hover:border-foreground/30"
-                }`}
-              >
-                {s === "all" ? "All statuses" : s}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-1">
-            {(["all", "book", "script", "other"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTypeFilter(t)}
-                className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-all capitalize ${
-                  typeFilter === t
-                    ? "bg-foreground text-background border-foreground"
-                    : "bg-card text-muted-foreground border-border hover:border-foreground/30"
-                }`}
-              >
-                {t === "all" ? "All formats" : t === "other" ? "Open" : t === "book" ? "Book" : "Script"}
-              </button>
-            ))}
-          </div>
+        <div className="flex gap-1 flex-wrap">
+          {(["all", "open", "closed"] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.12em] border transition-all ${
+                statusFilter === s
+                  ? "bg-[#1A1614] text-[#F9F6EE] border-[#1A1614]"
+                  : "bg-white text-[#7A6B5E] border-[#1A1614]/20 hover:border-[#1A1614]"
+              }`}
+            >
+              {s === "all" ? "All statuses" : s}
+            </button>
+          ))}
+          {(["all", "book", "script", "other"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTypeFilter(t)}
+              className={`px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.12em] border transition-all ${
+                typeFilter === t
+                  ? "bg-[#1A1614] text-[#F9F6EE] border-[#1A1614]"
+                  : "bg-white text-[#7A6B5E] border-[#1A1614]/20 hover:border-[#1A1614]"
+              }`}
+            >
+              {t === "all" ? "All formats" : t === "other" ? "Open" : t === "book" ? "Book" : "Script"}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Results count */}
       {!isLoading && pitches.length > 0 && (
-        <p className="text-xs text-muted-foreground mb-5">
-          Showing <span className="font-semibold text-foreground">{filtered.length}</span> of{" "}
-          <span className="font-semibold text-foreground">{pitches.length}</span> pitches
+        <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-5">
+          Showing <span className="text-[#1A1614]">{filtered.length}</span> of{" "}
+          <span className="text-[#1A1614]">{pitches.length}</span> pitches
         </p>
       )}
 
-      {/* Content */}
       {isLoading ? (
         <div className="flex justify-center py-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          <div className="w-8 h-8 border-b-2 border-[#1A1614] animate-spin rounded-full" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-card rounded-3xl border border-border p-16 text-center">
-          <Lightbulb className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-40" />
-          <h3 className="text-lg font-serif font-semibold text-foreground">
-            {pitches.length === 0 ? "No pitches yet" : "No results"}
+        <div className="bg-white border border-[#1A1614]/15 p-16 text-center">
+          <Lightbulb className="w-12 h-12 text-[#7A6B5E] mx-auto mb-4 opacity-40" />
+          <h3 className="text-lg font-serif font-bold text-[#1A1614]">
+            {pitches.length === 0 ? "No pitches yet" : "No results found"}
           </h3>
-          <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">
+          <p className="text-sm text-[#7A6B5E] mt-2 max-w-sm mx-auto">
             {pitches.length === 0
               ? isAuthor
-                ? 'Be the first to share an idea. Click "New Pitch" to get started.'
+                ? 'Be the first to share an idea. Click "New Pitch" above.'
                 : "Authors will post their ideas here. Check back soon."
               : "Try adjusting your search or filters."}
           </p>
-          {isAuthor && pitches.length === 0 && (
+          {isAuthor && pitches.length === 0 && !showForm && (
             <button
               onClick={() => setShowForm(true)}
-              className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors"
+              className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors"
             >
               <Plus className="w-4 h-4" /> Post your first pitch
             </button>
@@ -326,62 +328,59 @@ export default function Pitches() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className="bg-card rounded-2xl border border-border p-5 hover:shadow-md transition-shadow flex flex-col gap-3"
+                className="bg-white border border-[#1A1614]/15 p-5 hover:border-[#E8B84B] transition-colors flex flex-col gap-3"
               >
-                {/* Header row */}
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-serif font-bold text-foreground leading-tight">{p.title}</h3>
+                  <h3 className="font-serif font-bold text-[#1A1614] leading-tight">{p.title}</h3>
                   <div className="flex gap-1.5 shrink-0">
-                    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${tm.color}`}>
+                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 border border-[#1A1614]/20 text-[#7A6B5E] uppercase tracking-[0.1em]">
                       {tm.icon} {tm.label}
                     </span>
-                    <span className={`inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                      p.status === "open" ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground"
+                    <span className={`inline-flex items-center text-[9px] font-bold px-2 py-0.5 uppercase tracking-[0.1em] ${
+                      p.status === "open"
+                        ? "bg-[#1A1614] text-[#F9F6EE]"
+                        : "border border-[#1A1614]/20 text-[#7A6B5E]"
                     }`}>
                       {p.status === "open" ? "Open" : "Closed"}
                     </span>
                   </div>
                 </div>
 
-                {/* Author */}
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-xs font-bold shrink-0">
+                  <div className="w-6 h-6 bg-[#1A1614] flex items-center justify-center text-[#F9F6EE] text-[9px] font-bold shrink-0">
                     {(p.ownerName ?? "?").charAt(0)}
                   </div>
-                  <span className="text-sm text-muted-foreground">
-                    <span className="font-semibold text-foreground">{p.ownerName}</span>
+                  <span className="text-sm text-[#7A6B5E]">
+                    <span className="font-bold text-[#1A1614]">{p.ownerName}</span>
                     {" · "}{format(new Date(p.createdAt), "d MMM yyyy")}
                   </span>
                 </div>
 
-                {/* Description preview */}
-                <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">{p.description}</p>
+                <p className="text-sm text-[#7A6B5E] line-clamp-3 leading-relaxed">{p.description}</p>
 
-                {/* Genre tags */}
                 {genres.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {genres.slice(0, 4).map((g) => (
-                      <span key={g} className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{g}</span>
+                      <span key={g} className="text-[10px] font-semibold px-2 py-0.5 border border-[#1A1614]/15 text-[#7A6B5E]">{g}</span>
                     ))}
                     {genres.length > 4 && (
-                      <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">+{genres.length - 4}</span>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 border border-[#1A1614]/15 text-[#7A6B5E]">+{genres.length - 4}</span>
                     )}
                   </div>
                 )}
 
-                {/* Response counts + CTA */}
-                <div className="mt-auto pt-3 border-t border-border flex items-center justify-between">
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <div className="mt-auto pt-3 border-t border-[#1A1614]/10 flex items-center justify-between">
+                  <div className="flex items-center gap-3 text-xs text-[#7A6B5E]">
                     <span className="flex items-center gap-1">
-                      <HandHeart className="w-3.5 h-3.5 text-rose-400" /> {p.interestCount} interested
+                      <HandHeart className="w-3.5 h-3.5 text-[#F7C5D5]" /> {p.interestCount} interested
                     </span>
                     <span className="flex items-center gap-1">
-                      <MessageCircle className="w-3.5 h-3.5 text-sky-400" /> {p.feedbackCount} feedback
+                      <MessageCircle className="w-3.5 h-3.5 text-[#E8B84B]" /> {p.feedbackCount} feedback
                     </span>
                   </div>
                   <Link
                     href={`/pitch/${p.id}`}
-                    className="flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                    className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#1A1614] hover:text-[#E8B84B] transition-colors flex items-center gap-1"
                   >
                     View <ChevronRight className="w-3.5 h-3.5" />
                   </Link>

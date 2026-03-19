@@ -1,12 +1,10 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, PenTool, LayoutDashboard, UserCircle, PenLine, Users, Layers, Search, Star, Lightbulb } from "lucide-react";
-import { Button } from "./ui/button";
 
-const ROLE_BADGE: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
-  author:      { label: "Author",               className: "bg-blue-100 text-blue-700",    icon: <PenLine className="w-3 h-3" /> },
-  contributor: { label: "Contributor",           className: "bg-amber-100 text-amber-700",  icon: <Users className="w-3 h-3" /> },
-  both:        { label: "Author & Contributor",  className: "bg-emerald-100 text-emerald-700", icon: <Layers className="w-3 h-3" /> },
+const ROLE_LABEL: Record<string, { label: string; color: string }> = {
+  author:      { label: "Author",              color: "text-[#E8B84B]" },
+  contributor: { label: "Contributor",          color: "text-[#F7C5D5]" },
+  both:        { label: "Author & Contributor", color: "text-[#F7C5D5]" },
 };
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -15,114 +13,119 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   if (!user) return <>{children}</>;
 
-  const roleBadge = ROLE_BADGE[user.role ?? "both"] ?? ROLE_BADGE.both;
-
+  const roleConf = ROLE_LABEL[user.role ?? "both"] ?? ROLE_LABEL.both;
   const isAuthor = user.role === "author" || user.role === "both";
 
-  const isContributor = user.role === "contributor" || user.role === "both";
-
   const navLinks = [
-    { href: "/",             label: "Dashboard",         icon: <LayoutDashboard className="w-5 h-5" />, show: true },
-    { href: "/contributors", label: "Find Contributors", icon: <Search className="w-5 h-5" />,          show: isAuthor },
-    { href: "/pitches",      label: "Pitches",            icon: <Lightbulb className="w-5 h-5" />,       show: true },
-    { href: "/discover",     label: "Browse & Rate",     icon: <Star className="w-5 h-5" />,            show: true },
-    { href: "/profile",      label: "My Profile",        icon: <UserCircle className="w-5 h-5" />,      show: true },
-  ].filter((l) => l.show);
+    { href: "/",             label: "Dashboard"        },
+    { href: "/contributors", label: "Find Contributors", hidden: !isAuthor },
+    { href: "/pitches",      label: "Pitches"          },
+    { href: "/discover",     label: "Browse & Rate"    },
+    { href: "/profile",      label: "My Profile"       },
+  ].filter((l) => !l.hidden);
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
-      {/* Sidebar */}
-      <aside className="hidden md:flex flex-col w-72 border-r border-border bg-card/50 backdrop-blur-sm fixed h-full z-20">
-        <div className="p-6">
-          <Link href="/" className="flex items-center gap-3 text-primary transition-opacity hover:opacity-80">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <PenTool className="w-5 h-5 text-primary" />
-            </div>
-            <span className="font-serif font-bold text-xl text-foreground tracking-tight">Writers Room</span>
+    <div className="flex min-h-screen w-full bg-[#F9F6EE]">
+
+      {/* ── SIDEBAR ── */}
+      <aside className="hidden md:flex flex-col w-60 border-r-2 border-[#1A1614] bg-[#F9F6EE] fixed h-full z-20">
+
+        {/* Masthead */}
+        <div className="px-5 pt-5 pb-3">
+          <p className="text-[9px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-1.5">
+            Collaborative Writing
+          </p>
+          <div className="border-t-2 border-[#1A1614] mb-2" />
+          <Link href="/">
+            <span className="font-serif font-bold text-xl text-[#1A1614] leading-tight block hover:text-[#E8B84B] transition-colors">
+              Writers Room
+            </span>
           </Link>
+          <div className="border-t border-[#1A1614]/20 mt-2" />
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1">
-          <div className="px-3 mb-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Navigation
-          </div>
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-4 space-y-px">
           {navLinks.map((link) => {
             const active = location === link.href;
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all ${
+                className={`block px-3 py-2.5 text-[10px] uppercase tracking-[0.16em] font-bold border-l-2 transition-all ${
                   active
-                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
-                    : "text-foreground hover:bg-accent hover:text-accent-foreground"
+                    ? "border-[#E8B84B] bg-[#E8B84B]/10 text-[#1A1614]"
+                    : "border-transparent text-[#7A6B5E] hover:text-[#1A1614] hover:border-[#1A1614]/20 hover:bg-[#1A1614]/3"
                 }`}
               >
-                {link.icon}
                 {link.label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-6 border-t border-border mt-auto">
-          <Link href="/profile" className="flex items-center gap-3 mb-4 group cursor-pointer">
-            <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center border border-border group-hover:border-primary/40 transition-colors">
-              <span className="font-bold text-sm text-foreground">
+        {/* User footer */}
+        <div className="p-4 border-t-2 border-[#1A1614]">
+          <Link href="/profile" className="flex items-center gap-3 mb-3 group">
+            <div className="w-9 h-9 bg-[#1A1614] flex items-center justify-center shrink-0">
+              <span className="font-bold text-sm text-[#F9F6EE]">
                 {user.name.charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">{user.name}</p>
-              <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${roleBadge.className}`}>
-                {roleBadge.icon}
-                {roleBadge.label}
-              </span>
+              <p className="text-sm font-bold text-[#1A1614] truncate group-hover:text-[#E8B84B] transition-colors">
+                {user.name}
+              </p>
+              <p className={`text-[9px] uppercase tracking-[0.14em] font-bold ${roleConf.color}`}>
+                {roleConf.label}
+              </p>
             </div>
           </Link>
-          <Button variant="outline" className="w-full text-muted-foreground" onClick={logout}>
-            <LogOut className="w-4 h-4 mr-2" />
+          <button
+            onClick={logout}
+            className="w-full py-1.5 border border-[#1A1614]/25 text-[#7A6B5E] text-[9px] uppercase tracking-[0.18em] font-bold hover:border-[#1A1614] hover:text-[#1A1614] transition-colors"
+          >
             Sign Out
-          </Button>
+          </button>
         </div>
       </aside>
 
-      {/* Mobile header */}
-      <header className="md:hidden fixed top-0 w-full z-30 bg-card/80 backdrop-blur-md border-b border-border px-4 py-3 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <PenTool className="w-5 h-5 text-primary" />
-          <span className="font-serif font-bold text-lg text-foreground">Writers Room</span>
+      {/* ── MOBILE HEADER ── */}
+      <header className="md:hidden fixed top-0 w-full z-30 bg-[#F9F6EE] border-b-2 border-[#1A1614] px-5 py-3 flex items-center justify-between">
+        <Link href="/">
+          <span className="font-serif font-bold text-lg text-[#1A1614]">Writers Room</span>
         </Link>
         <Link href="/profile">
-          <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center border border-border hover:border-primary/40 transition-colors">
-            <span className="font-bold text-xs text-foreground">
+          <div className="w-8 h-8 bg-[#1A1614] flex items-center justify-center">
+            <span className="font-bold text-xs text-[#F9F6EE]">
               {user.name.charAt(0).toUpperCase()}
             </span>
           </div>
         </Link>
       </header>
 
-      {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 w-full z-30 bg-card/90 backdrop-blur-md border-t border-border flex">
+      {/* ── MOBILE BOTTOM NAV ── */}
+      <nav className="md:hidden fixed bottom-0 w-full z-30 bg-[#F9F6EE] border-t-2 border-[#1A1614] flex">
         {navLinks.map((link) => {
           const active = location === link.href;
           return (
             <Link
               key={link.href}
               href={link.href}
-              className={`flex-1 flex flex-col items-center gap-1 py-3 text-xs font-medium transition-colors ${
-                active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              className={`flex-1 flex items-center justify-center py-3 text-[8px] uppercase tracking-[0.1em] font-bold transition-colors ${
+                active
+                  ? "text-[#1A1614] bg-[#E8B84B]/15"
+                  : "text-[#7A6B5E] hover:text-[#1A1614]"
               }`}
             >
-              {link.icon}
-              {link.label}
+              {link.label.split(" ")[0]}
             </Link>
           );
         })}
       </nav>
 
-      {/* Main Content */}
-      <main className="flex-1 md:ml-72 mt-14 md:mt-0 mb-16 md:mb-0 relative">
+      {/* ── MAIN ── */}
+      <main className="flex-1 md:ml-60 mt-14 md:mt-0 mb-16 md:mb-0">
         {children}
       </main>
     </div>

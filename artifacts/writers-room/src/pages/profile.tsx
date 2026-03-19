@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   CheckCircle2, Clock, XCircle, BookText, FileText,
   MessageSquareQuote, CalendarDays, PenLine, Users, Layers,
-  ArrowRight, Sparkles, Tag, Trophy, Star,
+  ArrowRight, Sparkles, Tag, Trophy,
 } from "lucide-react";
 
 type CollaboratorStat = {
@@ -26,20 +26,20 @@ function parseGenres(raw: string | null | undefined): string[] {
 }
 
 const GENRE_COLORS: Record<string, string> = {
-  "Film & TV Script":        "bg-purple-100 text-purple-700",
-  "Long-form Fiction":       "bg-blue-100 text-blue-700",
-  "Non-fiction":             "bg-teal-100 text-teal-700",
-  "Short Story":             "bg-amber-100 text-amber-700",
-  "Poetry":                  "bg-pink-100 text-pink-700",
-  "Fan Fiction":             "bg-orange-100 text-orange-700",
-  "Screenwriting":           "bg-violet-100 text-violet-700",
-  "Graphic Novel / Comics":  "bg-indigo-100 text-indigo-700",
-  "Children's Literature":   "bg-green-100 text-green-700",
-  "Literary Fiction":        "bg-cyan-100 text-cyan-700",
-  "Thriller / Mystery":      "bg-red-100 text-red-700",
-  "Romance":                 "bg-rose-100 text-rose-700",
+  "Film & TV Script":          "bg-purple-100 text-purple-700",
+  "Long-form Fiction":         "bg-blue-100 text-blue-700",
+  "Non-fiction":               "bg-teal-100 text-teal-700",
+  "Short Story":               "bg-amber-100 text-amber-700",
+  "Poetry":                    "bg-pink-100 text-pink-700",
+  "Fan Fiction":               "bg-orange-100 text-orange-700",
+  "Screenwriting":             "bg-violet-100 text-violet-700",
+  "Graphic Novel / Comics":    "bg-indigo-100 text-indigo-700",
+  "Children's Literature":     "bg-green-100 text-green-700",
+  "Literary Fiction":          "bg-cyan-100 text-cyan-700",
+  "Thriller / Mystery":        "bg-red-100 text-red-700",
+  "Romance":                   "bg-rose-100 text-rose-700",
   "Science Fiction / Fantasy": "bg-sky-100 text-sky-700",
-  "Horror":                  "bg-stone-100 text-stone-700",
+  "Horror":                    "bg-stone-100 text-stone-700",
 };
 
 type ActivityItem = {
@@ -60,24 +60,24 @@ const STATUS_CONFIG = {
   pending: {
     label: "Pending",
     icon: <Clock className="w-3.5 h-3.5" />,
-    className: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    className: "border-[#E8B84B]/50 text-[#1A1614] bg-[#E8B84B]/10",
   },
   accepted: {
     label: "Accepted",
     icon: <CheckCircle2 className="w-3.5 h-3.5" />,
-    className: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    className: "border-emerald-300 text-emerald-800 bg-emerald-50",
   },
   discarded: {
     label: "Discarded",
     icon: <XCircle className="w-3.5 h-3.5" />,
-    className: "bg-red-100 text-red-800 border-red-200",
+    className: "border-red-200 text-red-700 bg-red-50",
   },
 };
 
 const ROLE_CONFIG = {
-  author: { label: "Author", icon: <PenLine className="w-4 h-4" />, className: "bg-blue-100 text-blue-700" },
-  contributor: { label: "Contributor", icon: <Users className="w-4 h-4" />, className: "bg-amber-100 text-amber-700" },
-  both: { label: "Author & Contributor", icon: <Layers className="w-4 h-4" />, className: "bg-emerald-100 text-emerald-700" },
+  author:      { label: "Author",               icon: <PenLine className="w-4 h-4" />, color: "text-[#E8B84B]" },
+  contributor: { label: "Contributor",           icon: <Users className="w-4 h-4" />,   color: "text-[#F7C5D5]" },
+  both:        { label: "Author & Contributor",  icon: <Layers className="w-4 h-4" />,  color: "text-[#F7C5D5]" },
 };
 
 function truncate(text: string, max = 80) {
@@ -106,9 +106,9 @@ export default function Profile() {
   const roleConf = ROLE_CONFIG[user.role as keyof typeof ROLE_CONFIG] ?? ROLE_CONFIG.both;
 
   const stats = {
-    total: activity.length,
+    total:    activity.length,
     accepted: activity.filter((a) => a.status === "accepted").length,
-    pending: activity.filter((a) => a.status === "pending").length,
+    pending:  activity.filter((a) => a.status === "pending").length,
     discarded: activity.filter((a) => a.status === "discarded").length,
   };
 
@@ -116,26 +116,27 @@ export default function Profile() {
 
   return (
     <div className="p-6 md:p-10 max-w-4xl mx-auto">
-      {/* Profile Card */}
+
+      {/* Profile card */}
       <motion.div
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-card rounded-3xl border border-border shadow-sm p-8 mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-6"
+        className="bg-white border-2 border-[#1A1614] p-8 mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-6"
       >
-        <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
-          <span className="text-3xl font-serif font-bold text-primary">
+        <div className="w-20 h-20 bg-[#1A1614] flex items-center justify-center shrink-0">
+          <span className="text-3xl font-serif font-bold text-[#F9F6EE]">
             {user.name.charAt(0).toUpperCase()}
           </span>
         </div>
         <div className="flex-1 min-w-0">
-          <h1 className="text-3xl font-serif font-bold text-foreground">{user.name}</h1>
-          <p className="text-muted-foreground mt-1">{user.email}</p>
+          <h1 className="text-3xl font-serif font-bold text-[#1A1614]">{user.name}</h1>
+          <p className="text-[#7A6B5E] mt-1">{user.email}</p>
           <div className="flex flex-wrap items-center gap-2 mt-3">
-            <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${roleConf.className}`}>
+            <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 border border-[#1A1614]/20 uppercase tracking-[0.1em] ${roleConf.color}`}>
               {roleConf.icon}
               {roleConf.label}
             </span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5 text-xs text-[#7A6B5E]">
               <CalendarDays className="w-3.5 h-3.5" />
               Member since {format(new Date(user.createdAt), "MMMM yyyy")}
             </span>
@@ -146,12 +147,12 @@ export default function Profile() {
             const genres = parseGenres(user.genres);
             return genres.length > 0 ? (
               <div className="mt-4">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#7A6B5E] mb-2 flex items-center gap-1.5">
                   <Tag className="w-3.5 h-3.5" /> Areas of interest
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {genres.map((g) => (
-                    <span key={g} className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${GENRE_COLORS[g] ?? "bg-muted text-muted-foreground"}`}>
+                    <span key={g} className={`px-2.5 py-1 text-[11px] font-semibold ${GENRE_COLORS[g] ?? "bg-[#1A1614]/5 text-[#7A6B5E]"}`}>
                       {g}
                     </span>
                   ))}
@@ -160,10 +161,9 @@ export default function Profile() {
             ) : null;
           })()}
 
-          {/* Media interests */}
           {user.mediaInterests && (
-            <div className="mt-3 flex items-start gap-2 text-sm text-muted-foreground">
-              <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-primary" />
+            <div className="mt-3 flex items-start gap-2 text-sm text-[#7A6B5E]">
+              <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-[#E8B84B]" />
               <p>{user.mediaInterests}</p>
             </div>
           )}
@@ -171,105 +171,103 @@ export default function Profile() {
       </motion.div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px border border-[#1A1614]/15 mb-10 bg-[#1A1614]/10">
         {[
-          { label: "Total Edits", value: stats.total, icon: <MessageSquareQuote className="w-5 h-5" />, color: "text-primary" },
-          { label: "Accepted", value: stats.accepted, icon: <CheckCircle2 className="w-5 h-5" />, color: "text-emerald-600" },
-          { label: "Pending", value: stats.pending, icon: <Clock className="w-5 h-5" />, color: "text-yellow-600" },
-          { label: "Accept Rate", value: `${acceptRate}%`, icon: <ArrowRight className="w-5 h-5" />, color: "text-blue-600" },
+          { label: "Total Edits",  value: stats.total,     icon: <MessageSquareQuote className="w-5 h-5" />, color: "text-[#1A1614]" },
+          { label: "Accepted",     value: stats.accepted,  icon: <CheckCircle2 className="w-5 h-5" />,      color: "text-emerald-600" },
+          { label: "Pending",      value: stats.pending,   icon: <Clock className="w-5 h-5" />,              color: "text-[#E8B84B]" },
+          { label: "Accept Rate",  value: `${acceptRate}%`, icon: <ArrowRight className="w-5 h-5" />,       color: "text-blue-600" },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
-            className="bg-card rounded-2xl border border-border p-5 flex flex-col gap-2"
+            className="bg-white p-5 flex flex-col gap-2"
           >
-            <div className={`${stat.color}`}>{stat.icon}</div>
-            <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-            <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
+            <div className={stat.color}>{stat.icon}</div>
+            <p className="text-2xl font-bold text-[#1A1614]">{stat.value}</p>
+            <p className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#7A6B5E]">{stat.label}</p>
           </motion.div>
         ))}
       </div>
 
-      {/* My Best Collaborators – visible to authors/both only */}
+      {/* Best Collaborators – authors only */}
       {isAuthor && (
         <div className="mb-10">
-          <div className="flex items-center gap-2 mb-5">
-            <Trophy className="w-5 h-5 text-amber-500" />
-            <h2 className="text-2xl font-serif font-bold text-foreground">My Best Collaborators</h2>
+          <div className="mb-5">
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2 flex items-center gap-2">
+              <Trophy className="w-3.5 h-3.5 text-[#E8B84B]" /> Top Collaborators
+            </p>
+            <div className="border-t-2 border-[#1A1614] mb-2" />
+            <h2 className="text-2xl font-serif font-bold text-[#1A1614]">My Best Collaborators</h2>
+            <div className="border-t border-[#1A1614]/15 mt-3" />
           </div>
 
           {collabStatsLoading ? (
             <div className="flex justify-center py-10">
-              <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-primary" />
+              <div className="w-7 h-7 border-b-2 border-[#1A1614] animate-spin rounded-full" />
             </div>
           ) : collabStats.length === 0 ? (
-            <div className="bg-card rounded-3xl border border-border p-10 text-center">
-              <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-40" />
-              <h3 className="text-base font-serif font-semibold text-foreground">No collaborator data yet</h3>
-              <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
-                Once contributors suggest edits on your projects, their stats will appear here ranked by acceptance rate.
+            <div className="bg-white border border-[#1A1614]/15 p-10 text-center">
+              <Users className="w-10 h-10 text-[#7A6B5E] mx-auto mb-3 opacity-40" />
+              <h3 className="text-base font-serif font-bold text-[#1A1614]">No collaborator data yet</h3>
+              <p className="text-sm text-[#7A6B5E] mt-1 max-w-xs mx-auto">
+                Once contributors suggest edits on your projects, their stats will appear here.
               </p>
             </div>
           ) : (
             <div className="space-y-3">
               {collabStats.map((c, i) => {
-                const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+                const rankLabel = i === 0 ? "#1" : i === 1 ? "#2" : i === 2 ? "#3" : `#${i + 1}`;
                 return (
                   <motion.div
                     key={c.submitterId}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="bg-card rounded-2xl border border-border p-5 hover:shadow-md transition-shadow"
+                    className="bg-white border border-[#1A1614]/15 p-5 hover:border-[#E8B84B] transition-colors"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center font-bold text-lg shrink-0">
+                      <div className="w-11 h-11 bg-[#1A1614] flex items-center justify-center font-bold text-lg shrink-0 text-[#F9F6EE]">
                         {c.submitterName.charAt(0)}
                       </div>
-
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          {medal && <span className="text-lg leading-none">{medal}</span>}
-                          <p className="font-bold text-foreground">{c.submitterName}</p>
-                          <span className="text-xs text-muted-foreground">{c.submitterEmail}</span>
+                          <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#E8B84B]">{rankLabel}</span>
+                          <p className="font-bold text-[#1A1614]">{c.submitterName}</p>
+                          <span className="text-xs text-[#7A6B5E]">{c.submitterEmail}</span>
                         </div>
-
-                        {/* Acceptance bar */}
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div className="flex-1 h-1.5 bg-[#1A1614]/10 overflow-hidden">
                             <div
-                              className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500"
+                              className="h-full bg-[#E8B84B]"
                               style={{ width: `${c.acceptRate}%` }}
                             />
                           </div>
-                          <span className="text-xs font-bold text-emerald-600">{c.acceptRate}% accepted</span>
+                          <span className="text-xs font-bold text-[#1A1614]">{c.acceptRate}% accepted</span>
                         </div>
-
-                        {/* Projects list */}
-                        <div className="flex flex-wrap gap-1.5 mt-1">
+                        <div className="flex flex-wrap gap-1.5">
                           {c.projectsTogether.map((p) => (
                             <Link
                               key={p.id}
                               href={`/project/${p.id}`}
-                              className="text-[11px] bg-secondary text-muted-foreground hover:text-primary hover:bg-primary/10 px-2 py-0.5 rounded-full border border-border transition-colors"
+                              className="text-[10px] border border-[#1A1614]/15 text-[#7A6B5E] hover:border-[#E8B84B] hover:text-[#1A1614] px-2 py-0.5 transition-colors"
                             >
                               {p.title}
                             </Link>
                           ))}
                         </div>
                       </div>
-
-                      <div className="text-right shrink-0 grid grid-cols-3 gap-3">
+                      <div className="shrink-0 grid grid-cols-3 gap-3 text-center">
                         {[
-                          { label: "Total", value: c.total, color: "text-foreground" },
+                          { label: "Total",    value: c.total,    color: "text-[#1A1614]" },
                           { label: "Accepted", value: c.accepted, color: "text-emerald-600" },
-                          { label: "Pending", value: c.pending, color: "text-yellow-600" },
+                          { label: "Pending",  value: c.pending,  color: "text-[#E8B84B]" },
                         ].map((s) => (
-                          <div key={s.label} className="text-center">
+                          <div key={s.label}>
                             <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
-                            <p className="text-[10px] text-muted-foreground">{s.label}</p>
+                            <p className="text-[9px] text-[#7A6B5E] uppercase tracking-[0.1em]">{s.label}</p>
                           </div>
                         ))}
                       </div>
@@ -282,19 +280,24 @@ export default function Profile() {
         </div>
       )}
 
-      {/* Activity list */}
+      {/* Contribution history */}
       <div>
-        <h2 className="text-2xl font-serif font-bold text-foreground mb-4">Contribution History</h2>
+        <div className="mb-5">
+          <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">Your edit history</p>
+          <div className="border-t-2 border-[#1A1614] mb-2" />
+          <h2 className="text-2xl font-serif font-bold text-[#1A1614]">Contribution History</h2>
+          <div className="border-t border-[#1A1614]/15 mt-3" />
+        </div>
 
         {isLoading ? (
           <div className="flex justify-center py-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            <div className="w-8 h-8 border-b-2 border-[#1A1614] animate-spin rounded-full" />
           </div>
         ) : activity.length === 0 ? (
-          <div className="bg-card rounded-3xl border border-border p-12 text-center">
-            <MessageSquareQuote className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-40" />
-            <h3 className="text-lg font-serif font-semibold text-foreground">No contributions yet</h3>
-            <p className="text-muted-foreground mt-2 text-sm max-w-sm mx-auto">
+          <div className="bg-white border border-[#1A1614]/15 p-12 text-center">
+            <MessageSquareQuote className="w-12 h-12 text-[#7A6B5E] mx-auto mb-4 opacity-40" />
+            <h3 className="text-lg font-serif font-bold text-[#1A1614]">No contributions yet</h3>
+            <p className="text-[#7A6B5E] mt-2 text-sm max-w-sm mx-auto">
               Once you suggest edits on a project, they'll appear here with their status.
             </p>
           </div>
@@ -308,50 +311,47 @@ export default function Profile() {
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.03 }}
-                  className="bg-card rounded-2xl border border-border p-5 hover:shadow-md transition-shadow"
+                  className="bg-white border border-[#1A1614]/15 p-5 hover:border-[#E8B84B] transition-colors"
                 >
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <Link
                       href={`/project/${item.projectId}`}
-                      className="flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors group"
+                      className="flex items-center gap-2 text-sm font-bold text-[#1A1614] hover:text-[#E8B84B] transition-colors group"
                     >
                       {item.projectType === "book"
-                        ? <BookText className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
-                        : <FileText className="w-4 h-4 text-muted-foreground group-hover:text-primary" />}
+                        ? <BookText className="w-4 h-4 text-[#7A6B5E] group-hover:text-[#E8B84B]" />
+                        : <FileText className="w-4 h-4 text-[#7A6B5E] group-hover:text-[#E8B84B]" />}
                       {item.projectTitle}
                       <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </Link>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border ${conf.className}`}>
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 border uppercase tracking-[0.1em] ${conf.className}`}>
                         {conf.icon}
                         {conf.label}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-[#7A6B5E]">
                         {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
                       </span>
                     </div>
                   </div>
 
-                  {/* Diff preview */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm font-mono">
-                    <div className="bg-red-50 border border-red-100 rounded-xl px-3 py-2 text-red-700 leading-relaxed">
+                    <div className="bg-red-50 border border-red-100 px-3 py-2 text-red-700 leading-relaxed">
                       <span className="text-red-400 mr-1 select-none">−</span>
                       {truncate(item.originalText)}
                     </div>
-                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 text-emerald-800 leading-relaxed">
+                    <div className="bg-emerald-50 border border-emerald-100 px-3 py-2 text-emerald-800 leading-relaxed">
                       <span className="text-emerald-400 mr-1 select-none">+</span>
                       {truncate(item.suggestedText)}
                     </div>
                   </div>
 
                   {item.comment && (
-                    <p className="mt-2 text-xs text-muted-foreground italic">
-                      "{item.comment}"
-                    </p>
+                    <p className="mt-2 text-xs text-[#7A6B5E] italic">"{item.comment}"</p>
                   )}
                   {item.ownerNote && (
-                    <p className="mt-1.5 text-xs text-foreground bg-accent/50 rounded-lg px-3 py-1.5">
-                      <span className="font-semibold">Author note:</span> {item.ownerNote}
+                    <p className="mt-1.5 text-xs text-[#1A1614] bg-[#E8B84B]/10 px-3 py-1.5">
+                      <span className="font-bold">Author note:</span> {item.ownerNote}
                     </p>
                   )}
                 </motion.div>
