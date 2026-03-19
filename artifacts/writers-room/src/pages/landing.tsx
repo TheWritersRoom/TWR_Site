@@ -4,6 +4,7 @@ import {
   Upload, Users, MessageSquare, BarChart2, Globe, Telescope,
   ArrowRight, Check, BookOpen, Star, PenTool
 } from "lucide-react";
+import typewriterRoom from "@/assets/typewriter-room.png";
 
 const inView = (delay = 0) => ({
   initial: { opacity: 0, y: 18 },
@@ -156,6 +157,30 @@ export default function Landing() {
             "Writers Room is the platform where authors upload their manuscripts, invite genre-matched collaborators to suggest edits, and publish with total control over who reads — and who responds."
           </p>
         </div>
+      </section>
+
+      {/* ── ILLUSTRATION ── */}
+      <section className="bg-[#F9F6EE] border-b-2 border-[#1A1614]">
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="relative w-full overflow-hidden"
+        >
+          <img
+            src={typewriterRoom}
+            alt="Writers at their typewriters — the original writers room"
+            className="w-full object-cover"
+            style={{ maxHeight: "520px", objectPosition: "center 30%" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1A1614]/40 via-transparent to-transparent" />
+          <div className="absolute bottom-6 left-6 md:left-14 right-6 md:right-14">
+            <p className="text-[10px] uppercase tracking-[0.24em] font-bold text-[#F9F6EE]/70">
+              The original writers room &nbsp;·&nbsp; Remington Standard, c. 1920
+            </p>
+          </div>
+        </motion.div>
       </section>
 
       {/* ── HOW IT WORKS ── */}
