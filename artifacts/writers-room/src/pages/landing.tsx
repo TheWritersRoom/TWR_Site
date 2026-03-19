@@ -1,53 +1,24 @@
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import {
-  PenTool, Upload, Users, Star, BookOpen, MessageSquare,
-  Globe, ArrowRight, Check, Sparkles, Telescope, BarChart2
+  Upload, Users, MessageSquare, BarChart2, Globe, Telescope,
+  ArrowRight, Check, BookOpen, Star, PenTool
 } from "lucide-react";
 
-const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 24 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.55, delay, ease: "easeOut" as const },
+const inView = (delay = 0) => ({
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true },
+  transition: { duration: 0.6, delay, ease: "easeOut" as const },
 });
 
 const FEATURES = [
-  {
-    icon: <Upload className="w-6 h-6" />,
-    title: "Upload any format",
-    desc: "PDF, DOCX, TXT, Markdown, RTF — paste or upload. The manuscript lands in a clean reading view instantly.",
-    color: "bg-blue-100 text-blue-600",
-  },
-  {
-    icon: <Users className="w-6 h-6" />,
-    title: "Invite your collaborators",
-    desc: "Set your own room size and send targeted invites to contributors whose genre interests and media tastes align with your work.",
-    color: "bg-amber-100 text-amber-600",
-  },
-  {
-    icon: <MessageSquare className="w-6 h-6" />,
-    title: "Inline edit suggestions",
-    desc: "Collaborators highlight any passage and propose a replacement. Authors accept, discard, or annotate each one.",
-    color: "bg-emerald-100 text-emerald-600",
-  },
-  {
-    icon: <BarChart2 className="w-6 h-6" />,
-    title: "Track who helps most",
-    desc: "An acceptance-rate leaderboard shows you, over time, which collaborators consistently improve your work.",
-    color: "bg-violet-100 text-violet-600",
-  },
-  {
-    icon: <Globe className="w-6 h-6" />,
-    title: "Publish with fine-grained control",
-    desc: "Choose who reads your published work — all users, genre-matched readers, or contributors only — and who can comment.",
-    color: "bg-rose-100 text-rose-600",
-  },
-  {
-    icon: <Telescope className="w-6 h-6" />,
-    title: "Discover published works",
-    desc: "Browse and read works that match your interests, leave feedback, and build your reputation as a thoughtful editor.",
-    color: "bg-sky-100 text-sky-600",
-  },
+  { icon: <Upload className="w-5 h-5" />, title: "Upload any format", desc: "PDF, DOCX, TXT, Markdown, RTF — paste or upload. Lands in a clean reading view instantly." },
+  { icon: <Users className="w-5 h-5" />, title: "Invite your collaborators", desc: "Set your own room size and send targeted invites to contributors whose interests align with your work." },
+  { icon: <MessageSquare className="w-5 h-5" />, title: "Inline edit suggestions", desc: "Collaborators highlight any passage and propose a replacement. Authors accept, discard, or annotate each one." },
+  { icon: <BarChart2 className="w-5 h-5" />, title: "Track who helps most", desc: "An acceptance-rate leaderboard shows which collaborators consistently improve your work." },
+  { icon: <Globe className="w-5 h-5" />, title: "Publish with fine-grained control", desc: "Choose who reads — all users, genre-matched readers, or contributors only — and who can comment." },
+  { icon: <Telescope className="w-5 h-5" />, title: "Discover published works", desc: "Browse works that match your interests, leave feedback, and build your reputation as a thoughtful editor." },
 ];
 
 const FOR_AUTHORS = [
@@ -67,261 +38,302 @@ const FOR_CONTRIBUTORS = [
 ];
 
 const STEPS = [
-  { n: "01", title: "Create or join", desc: "Sign up as an Author, a Contributor, or both. Set your genre profile in under a minute." },
-  { n: "02", title: "Upload your manuscript", desc: "Authors upload a book or script. The platform parses it into a clean reading view." },
-  { n: "03", title: "Collaborate", desc: "Invited collaborators highlight passages and propose edits. Authors decide what to keep." },
-  { n: "04", title: "Publish & collect feedback", desc: "When ready, publish with the audience and feedback settings that work for you." },
+  { n: "I", title: "Create or join", desc: "Sign up as an Author, a Contributor, or both. Set your genre profile in under a minute." },
+  { n: "II", title: "Upload your manuscript", desc: "Authors upload a book or script. The platform renders it into a clean, readable view." },
+  { n: "III", title: "Collaborate", desc: "Invited collaborators highlight passages and propose edits. Authors decide what to keep." },
+  { n: "IV", title: "Publish & collect feedback", desc: "When ready, publish with the audience and feedback settings that work for you." },
 ];
+
+const Rule = ({ className = "" }: { className?: string }) => (
+  <div className={`border-t border-[#1A1614]/20 ${className}`} />
+);
+
+const ThickRule = ({ className = "" }: { className?: string }) => (
+  <div className={`border-t-2 border-[#1A1614] ${className}`} />
+);
 
 export default function Landing() {
   const { openAuthModal } = useAuth();
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-foreground overflow-x-hidden">
+    <div className="min-h-screen bg-[#F9F6EE] text-[#1A1614] overflow-x-hidden font-sans">
 
-      {/* Nav */}
-      <nav className="fixed top-0 inset-x-0 z-40 flex items-center justify-between px-6 md:px-12 py-4 bg-[#FAF8F5]/80 backdrop-blur-md border-b border-border/40">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <PenTool className="w-4 h-4 text-primary" />
+      {/* ── MASTHEAD NAV ── */}
+      <header className="fixed top-0 inset-x-0 z-40 bg-[#F9F6EE]/95 backdrop-blur-sm">
+        {/* Top metadata strip */}
+        <div className="border-b border-[#1A1614]/15 px-6 md:px-14 py-1.5 flex items-center justify-between">
+          <span className="text-[10px] uppercase tracking-[0.22em] text-[#7A6B5E] font-semibold">Collaborative Writing Platform</span>
+          <span className="text-[10px] uppercase tracking-[0.22em] text-[#7A6B5E] font-semibold">Free to join</span>
+        </div>
+
+        {/* Masthead */}
+        <div className="px-6 md:px-14 py-3 text-center">
+          <span className="font-serif font-bold text-2xl md:text-3xl tracking-[0.06em] text-[#1A1614]">Writers Room</span>
+        </div>
+
+        {/* Nav links strip */}
+        <ThickRule />
+        <div className="px-6 md:px-14 py-2 flex items-center justify-between">
+          <div className="hidden md:flex items-center gap-6">
+            {["Authors", "Contributors", "Discover", "Pitches"].map((item) => (
+              <span key={item} className="text-[11px] uppercase tracking-[0.16em] text-[#1A1614] font-semibold hover:text-[#2A8FAB] transition-colors cursor-default">{item}</span>
+            ))}
           </div>
-          <span className="font-serif font-bold text-lg text-foreground tracking-tight">Writers Room</span>
+          <div className="flex md:hidden">
+            <PenTool className="w-4 h-4 text-[#1A1614]" />
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={openAuthModal}
+              className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#1A1614] hover:text-[#2A8FAB] transition-colors"
+            >
+              Sign in
+            </button>
+            <button
+              onClick={openAuthModal}
+              className="px-4 py-1.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.16em] font-bold hover:bg-[#2A8FAB] transition-colors"
+            >
+              Subscribe
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={openAuthModal}
-            className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Sign in
-          </button>
-          <button
-            onClick={openAuthModal}
-            className="px-4 py-2 rounded-full bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors"
-          >
-            Get started
-          </button>
-        </div>
-      </nav>
+        <Rule />
+      </header>
 
-      {/* Hero */}
-      <section className="relative pt-32 pb-24 px-6 md:px-12 max-w-5xl mx-auto text-center">
-        {/* Background blob */}
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-radial from-primary/12 via-accent/8 to-transparent rounded-full blur-3xl" />
-        </div>
+      {/* ── HERO ── */}
+      <section className="pt-[9.5rem] pb-0 min-h-screen flex flex-col">
 
-        <motion.div {...fadeUp(0.05)}>
-          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-6 border border-primary/20">
-            <Sparkles className="w-3.5 h-3.5" /> Collaborative writing, reimagined
-          </span>
-        </motion.div>
+        {/* Yellow cover band */}
+        <div className="bg-[#E8B84B] px-6 md:px-14 pt-14 pb-16 flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden">
 
-        <motion.h1 {...fadeUp(0.12)} className="text-5xl md:text-7xl font-serif font-bold text-foreground leading-[1.05] tracking-tight mb-6">
-          The room where<br />
-          <span className="text-primary">great writing</span> happens
-        </motion.h1>
+          {/* Decorative teal accent lines */}
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#2A8FAB]" />
 
-        <motion.p {...fadeUp(0.2)} className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-          Writers Room is the platform where authors upload their manuscripts, invite genre-matched collaborators to suggest edits, and publish with total control over who reads — and who responds.
-        </motion.p>
-
-        <motion.div {...fadeUp(0.28)} className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <button
-            onClick={openAuthModal}
-            className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-foreground text-background font-semibold text-base hover:bg-foreground/90 transition-colors shadow-lg shadow-foreground/10"
-          >
-            Start for free <ArrowRight className="w-4 h-4" />
-          </button>
-          <button
-            onClick={openAuthModal}
-            className="px-7 py-3.5 rounded-full border border-border text-foreground font-semibold text-base hover:bg-accent/60 transition-colors"
-          >
-            Join as a contributor
-          </button>
-        </motion.div>
-      </section>
-
-      {/* How it works */}
-      <section className="py-20 px-6 md:px-12 bg-card/50 border-y border-border/50">
-        <div className="max-w-5xl mx-auto">
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-14"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
           >
-            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-3">How it works</h2>
-            <p className="text-muted-foreground">Four steps from first draft to published work</p>
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#1A1614]/60 mb-4">
+              Est. 2025 &nbsp;·&nbsp; Collaborative Writing &nbsp;·&nbsp; Global
+            </p>
+
+            <ThickRule className="w-48 md:w-72 mx-auto mb-5 border-[#1A1614]" />
+
+            <h1 className="font-serif font-bold text-[clamp(3.5rem,12vw,9rem)] leading-[0.9] tracking-tight text-[#1A1614] mb-5">
+              The<br />Writers<br />Room
+            </h1>
+
+            <ThickRule className="w-48 md:w-72 mx-auto mb-5 border-[#1A1614]" />
+
+            <p className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#1A1614]/60 mb-10">
+              Where great writing is made together
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                onClick={openAuthModal}
+                className="flex items-center gap-2 px-8 py-3.5 bg-[#1A1614] text-[#F9F6EE] text-sm font-bold uppercase tracking-[0.12em] hover:bg-[#2A8FAB] transition-colors"
+              >
+                Start for free <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={openAuthModal}
+                className="px-8 py-3.5 border-2 border-[#1A1614] text-[#1A1614] text-sm font-bold uppercase tracking-[0.12em] hover:bg-[#1A1614]/8 transition-colors"
+              >
+                Join as contributor
+              </button>
+            </div>
           </motion.div>
 
-          <div className="grid md:grid-cols-4 gap-6">
+          {/* Bottom teal accent */}
+          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-[#2A8FAB]" />
+        </div>
+
+        {/* Editorial standfirst strip */}
+        <div className="bg-[#F9F6EE] border-b-2 border-[#1A1614] px-6 md:px-14 py-6 text-center">
+          <p className="text-sm md:text-base text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif italic">
+            "Writers Room is the platform where authors upload their manuscripts, invite genre-matched collaborators to suggest edits, and publish with total control over who reads — and who responds."
+          </p>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ── */}
+      <section className="py-20 px-6 md:px-14 bg-[#F9F6EE]">
+        <div className="max-w-5xl mx-auto">
+          <motion.div {...inView()} className="mb-12">
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">The Process</p>
+            <ThickRule className="mb-2" />
+            <h2 className="font-serif font-bold text-4xl md:text-5xl text-[#1A1614] mt-4">How it works</h2>
+            <Rule className="mt-4" />
+          </motion.div>
+
+          <div className="grid md:grid-cols-4 gap-0 border-l-2 border-[#1A1614] md:border-l-0 md:border-t-2">
             {STEPS.map((step, i) => (
               <motion.div
                 key={step.n}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08, duration: 0.5 }}
-                className="relative"
+                {...inView(i * 0.1)}
+                className="pl-6 md:pl-0 md:pt-6 md:pr-6 py-6 md:py-0 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1614] last:border-0"
               >
-                {i < STEPS.length - 1 && (
-                  <div className="hidden md:block absolute top-6 left-full w-full h-px bg-border/60 -translate-y-px z-0" />
-                )}
-                <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 border border-primary/20">
-                    <span className="font-serif font-bold text-primary text-sm">{step.n}</span>
-                  </div>
-                  <h3 className="font-bold text-foreground mb-2">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
-                </div>
+                <span className="font-serif font-bold text-4xl text-[#E8B84B] leading-none block mb-3">{step.n}</span>
+                <h3 className="font-bold text-[#1A1614] uppercase tracking-[0.1em] text-sm mb-2">{step.title}</h3>
+                <p className="text-sm text-[#7A6B5E] leading-relaxed">{step.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Features grid */}
-      <section className="py-20 px-6 md:px-12 max-w-5xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-14"
-        >
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-3">Everything you need</h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">Built specifically for the writing process — not adapted from a generic tool</p>
-        </motion.div>
+      {/* ── FEATURES ── */}
+      <section className="py-20 px-6 md:px-14 bg-[#1A1614] text-[#F9F6EE]">
+        <div className="max-w-5xl mx-auto">
+          <motion.div {...inView()} className="mb-12">
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#E8B84B] mb-2">Features</p>
+            <div className="border-t-2 border-[#F9F6EE]/20 mb-2" />
+            <h2 className="font-serif font-bold text-4xl md:text-5xl text-[#F9F6EE] mt-4">Everything you need</h2>
+            <div className="border-t border-[#F9F6EE]/20 mt-4" />
+          </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-5">
-          {FEATURES.map((f, i) => (
+          <div className="grid md:grid-cols-3 gap-0">
+            {FEATURES.map((f, i) => (
+              <motion.div
+                key={f.title}
+                {...inView(i * 0.07)}
+                className="p-6 border border-[#F9F6EE]/10 hover:bg-[#F9F6EE]/5 transition-colors group"
+              >
+                <div className="w-8 h-8 rounded-sm bg-[#2A8FAB]/20 text-[#2A8FAB] flex items-center justify-center mb-4 group-hover:bg-[#E8B84B]/20 group-hover:text-[#E8B84B] transition-colors">
+                  {f.icon}
+                </div>
+                <h3 className="font-bold text-[#F9F6EE] uppercase tracking-[0.08em] text-xs mb-2">{f.title}</h3>
+                <p className="text-sm text-[#F9F6EE]/60 leading-relaxed">{f.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOR AUTHORS / FOR CONTRIBUTORS ── */}
+      <section className="py-20 px-6 md:px-14 bg-[#F9F6EE]">
+        <div className="max-w-5xl mx-auto">
+          <motion.div {...inView()} className="mb-12">
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">Who it's for</p>
+            <ThickRule className="mb-2" />
+            <Rule className="mt-0.5" />
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-0 border-2 border-[#1A1614]">
+            {/* Authors */}
             <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.06, duration: 0.5 }}
-              className="bg-card rounded-2xl border border-border p-6 hover:shadow-md transition-shadow"
+              {...inView(0.05)}
+              className="p-8 md:p-10 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1614]"
             >
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${f.color}`}>
-                {f.icon}
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-[#2A8FAB] flex items-center justify-center text-white">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#7A6B5E]">For the</p>
+                  <h3 className="font-serif font-bold text-2xl text-[#1A1614] leading-none">Author</h3>
+                </div>
               </div>
-              <h3 className="font-bold text-foreground mb-2">{f.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+              <p className="text-sm text-[#7A6B5E] mb-6 leading-relaxed font-serif italic">
+                Keep full ownership of your work while opening it to the exact people who can make it better.
+              </p>
+              <ul className="space-y-3 mb-8">
+                {FOR_AUTHORS.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-[#1A1614]">
+                    <Check className="w-4 h-4 text-[#2A8FAB] shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={openAuthModal}
+                className="w-full py-3 bg-[#1A1614] text-[#F9F6EE] font-bold text-xs uppercase tracking-[0.14em] hover:bg-[#2A8FAB] transition-colors"
+              >
+                Upload your manuscript
+              </button>
             </motion.div>
-          ))}
+
+            {/* Contributors */}
+            <motion.div
+              {...inView(0.12)}
+              className="p-8 md:p-10 bg-[#E8B84B]"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-[#1A1614] flex items-center justify-center text-[#E8B84B]">
+                  <Star className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#1A1614]/60">For the</p>
+                  <h3 className="font-serif font-bold text-2xl text-[#1A1614] leading-none">Contributor</h3>
+                </div>
+              </div>
+              <p className="text-sm text-[#1A1614]/70 mb-6 leading-relaxed font-serif italic">
+                Build a reputation as a skilled editor by working on projects that genuinely interest you.
+              </p>
+              <ul className="space-y-3 mb-8">
+                {FOR_CONTRIBUTORS.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-[#1A1614]">
+                    <Check className="w-4 h-4 text-[#1A1614]/60 shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={openAuthModal}
+                className="w-full py-3 border-2 border-[#1A1614] text-[#1A1614] font-bold text-xs uppercase tracking-[0.14em] hover:bg-[#1A1614] hover:text-[#E8B84B] transition-colors"
+              >
+                Join as a contributor
+              </button>
+            </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* Two columns: For Authors / For Contributors */}
-      <section className="py-20 px-6 md:px-12 bg-card/50 border-y border-border/50">
-        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-10">
-          {/* For Authors */}
-          <motion.div
-            initial={{ opacity: 0, x: -16 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.55 }}
-            className="bg-card rounded-3xl border border-border p-8"
-          >
-            <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-5">
-              <BookOpen className="w-6 h-6" />
-            </div>
-            <h3 className="text-2xl font-serif font-bold text-foreground mb-2">For Authors</h3>
-            <p className="text-muted-foreground text-sm mb-6">
-              Keep full ownership of your work while opening it to the exact people who can make it better.
+      {/* ── CTA BANNER ── */}
+      <section className="py-24 px-6 md:px-14 bg-[#2A8FAB] text-[#F9F6EE]">
+        <div className="max-w-3xl mx-auto text-center">
+          <motion.div {...inView()}>
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#F9F6EE]/60 mb-4">Join Today</p>
+            <div className="border-t-2 border-[#F9F6EE]/30 mb-6" />
+            <h2 className="font-serif font-bold text-5xl md:text-6xl text-[#F9F6EE] mb-4 leading-tight">
+              Ready to open<br />the room?
+            </h2>
+            <div className="border-t border-[#F9F6EE]/30 mb-6" />
+            <p className="text-[#F9F6EE]/70 text-base mb-10 font-serif italic">
+              Free to join. No credit card. Start uploading and collaborating today.
             </p>
-            <ul className="space-y-3">
-              {FOR_AUTHORS.map((item) => (
-                <li key={item} className="flex items-start gap-2.5 text-sm text-foreground">
-                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  {item}
-                </li>
-              ))}
-            </ul>
             <button
               onClick={openAuthModal}
-              className="mt-8 w-full py-3 rounded-xl bg-foreground text-background font-semibold text-sm hover:bg-foreground/90 transition-colors"
+              className="inline-flex items-center gap-3 px-10 py-4 bg-[#E8B84B] text-[#1A1614] font-bold text-sm uppercase tracking-[0.14em] hover:bg-[#F9F6EE] transition-colors"
             >
-              Upload your manuscript
-            </button>
-          </motion.div>
-
-          {/* For Contributors */}
-          <motion.div
-            initial={{ opacity: 0, x: 16 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.55, delay: 0.08 }}
-            className="bg-card rounded-3xl border border-border p-8"
-          >
-            <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mb-5">
-              <Star className="w-6 h-6" />
-            </div>
-            <h3 className="text-2xl font-serif font-bold text-foreground mb-2">For Contributors</h3>
-            <p className="text-muted-foreground text-sm mb-6">
-              Build a reputation as a skilled editor by working on projects that genuinely interest you.
-            </p>
-            <ul className="space-y-3">
-              {FOR_CONTRIBUTORS.map((item) => (
-                <li key={item} className="flex items-start gap-2.5 text-sm text-foreground">
-                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <button
-              onClick={openAuthModal}
-              className="mt-8 w-full py-3 rounded-xl border border-border text-foreground font-semibold text-sm hover:bg-accent/60 transition-colors"
-            >
-              Join as a contributor
+              Get started — it's free <ArrowRight className="w-4 h-4" />
             </button>
           </motion.div>
         </div>
       </section>
 
-      {/* CTA banner */}
-      <section className="py-24 px-6 md:px-12 text-center">
-        <div className="max-w-2xl mx-auto">
-          <motion.h2
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.55 }}
-            className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4"
-          >
-            Ready to open the room?
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.55, delay: 0.08 }}
-            className="text-muted-foreground text-lg mb-8"
-          >
-            Free to join. No credit card. Start uploading and collaborating today.
-          </motion.p>
-          <motion.button
-            initial={{ opacity: 0, scale: 0.96 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.45, delay: 0.15 }}
-            onClick={openAuthModal}
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-foreground text-background font-semibold text-base hover:bg-foreground/90 transition-colors shadow-xl shadow-foreground/10"
-          >
-            Get started — it's free <ArrowRight className="w-4 h-4" />
-          </motion.button>
+      {/* ── FOOTER ── */}
+      <footer className="bg-[#1A1614] text-[#F9F6EE]/60 px-6 md:px-14 py-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+            <div>
+              <p className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#E8B84B] mb-1">Writers Room</p>
+              <p className="font-serif font-bold text-xl text-[#F9F6EE]">The platform for serious<br />collaborative writing.</p>
+            </div>
+            <button
+              onClick={openAuthModal}
+              className="px-6 py-2.5 border border-[#F9F6EE]/20 text-[#F9F6EE] text-xs uppercase tracking-[0.14em] font-bold hover:border-[#E8B84B] hover:text-[#E8B84B] transition-colors"
+            >
+              Get started
+            </button>
+          </div>
+          <div className="border-t border-[#F9F6EE]/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-2 text-xs">
+            <span className="uppercase tracking-[0.12em] text-[10px]">© 2025 Writers Room</span>
+            <span className="uppercase tracking-[0.12em] text-[10px]">Collaborative Writing Platform</span>
+          </div>
         </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-border/50 py-8 px-6 md:px-12 flex items-center justify-between text-sm text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <PenTool className="w-4 h-4 text-primary" />
-          <span className="font-serif font-semibold text-foreground">Writers Room</span>
-        </div>
-        <p>The platform for serious collaborative writing.</p>
       </footer>
     </div>
   );
