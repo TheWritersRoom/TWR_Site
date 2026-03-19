@@ -8,6 +8,8 @@ export const projectsTable = pgTable("projects", {
   title: text("title").notNull(),
   type: text("type", { enum: ["book", "script"] }).notNull().default("book"),
   content: text("content").notNull().default(""),
+  synopsis: text("synopsis"),
+  contentMode: text("content_mode", { enum: ["full", "synopsis"] }).notNull().default("full"),
   ownerId: integer("owner_id").notNull().references(() => usersTable.id),
   collaboratorLimit: integer("collaborator_limit").notNull().default(6),
   // Publishing

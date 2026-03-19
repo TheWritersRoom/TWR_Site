@@ -303,6 +303,26 @@ export default function ProjectDetail() {
 
   // Render content with highlights for pending suggestions
   const renderContent = () => {
+    const isOwner = project?.role === "owner";
+    const showSynopsisOnly = project?.contentMode === "synopsis" && !isOwner;
+
+    if (showSynopsisOnly) {
+      const synopsisText = project?.synopsis;
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 pb-3 border-b border-[#1A1614]/15">
+            <span className="text-[9px] uppercase tracking-[0.25em] font-bold text-[#7A6B5E] bg-[#F9F6EE] border border-[#1A1614]/15 px-2 py-1">Synopsis</span>
+            <span className="text-xs text-[#7A6B5E]">The author has shared a synopsis. Full manuscript is private.</span>
+          </div>
+          {synopsisText ? (
+            <div className="font-serif text-base leading-relaxed text-[#1A1614] whitespace-pre-wrap">{synopsisText}</div>
+          ) : (
+            <p className="text-[#7A6B5E] italic text-sm">No synopsis has been provided yet.</p>
+          )}
+        </div>
+      );
+    }
+
     if (!project?.content) return null;
 
     // Script projects: parse and render Fountain format

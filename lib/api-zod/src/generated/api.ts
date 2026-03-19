@@ -75,6 +75,8 @@ export const CreateProjectBody = zod.object({
   type: zod.enum(["book", "script"]),
   content: zod.string(),
   userId: zod.number(),
+  synopsis: zod.string().nullish(),
+  contentMode: zod.enum(["full", "synopsis"]).optional().default("full"),
 });
 
 /**

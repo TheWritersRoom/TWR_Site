@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, BookText, FileText, MessageSquareQuote, Calendar,
-  Upload, PenLine, X, FileUp, Loader2, ChevronRight
+  Upload, PenLine, X, FileUp, Loader2, ChevronRight, AlignLeft
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateProject } from "@workspace/api-client-react";
@@ -92,6 +92,8 @@ export default function Dashboard() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [extracting, setExtracting] = useState(false);
   const [extractError, setExtractError] = useState("");
+  const [contentMode, setContentMode] = useState<"full" | "synopsis">("full");
+  const [synopsis, setSynopsis] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ACCEPTED = ".txt,.md,.pdf,.docx,.rtf";
 
@@ -126,13 +128,24 @@ export default function Dashboard() {
     setNewLimit(6);
     setUploadedFile(null);
     setExtractError("");
+    setContentMode("full");
+    setSynopsis("");
   };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !newTitle || !newContent) return;
+    const canSubmit = newTitle && (contentMode === "full" ? newContent : synopsis);
+    if (!user || !canSubmit) return;
     await createProject.mutateAsync({
-      data: { title: newTitle, type: newType, content: newContent, userId: user.id, collaboratorLimit: newLimit } as any,
+      data: {
+        title: newTitle,
+        type: newType,
+        content: newContent,
+        userId: user.id,
+        collaboratorLimit: newLimit,
+        contentMode,
+        synopsis: contentMode === "synopsis" ? synopsis : null,
+      } as any,
     });
     queryClient.invalidateQueries({ queryKey: ["/api/projects", user?.id] });
     resetForm();
@@ -271,6 +284,47 @@ export default function Dashboard() {
                 </div>
               </div>
 
+              {/* Content sharing mode toggle */}
+              <div>
+                <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-2">What to share with collaborators</label>
+                <div className="grid grid-cols-2 gap-0 border-2 border-[#1A1614]/20 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setContentMode("full")}
+                    className={`flex items-center gap-3 px-5 py-4 text-left transition-all border-r border-[#1A1614]/20 ${
+                      contentMode === "full"
+                        ? "bg-[#1A1614] text-[#F9F6EE]"
+                        : "bg-white text-[#1A1614] hover:bg-[#F9F6EE]"
+                    }`}
+                  >
+                    <FileText className="w-5 h-5 shrink-0 opacity-80" />
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.16em] font-bold">Full text</p>
+                      <p className={`text-xs mt-0.5 ${contentMode === "full" ? "text-[#F9F6EE]/70" : "text-[#7A6B5E]"}`}>
+                        Collaborators read the entire manuscript
+                      </p>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setContentMode("synopsis")}
+                    className={`flex items-center gap-3 px-5 py-4 text-left transition-all ${
+                      contentMode === "synopsis"
+                        ? "bg-[#1A1614] text-[#F9F6EE]"
+                        : "bg-white text-[#1A1614] hover:bg-[#F9F6EE]"
+                    }`}
+                  >
+                    <AlignLeft className="w-5 h-5 shrink-0 opacity-80" />
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.16em] font-bold">Synopsis only</p>
+                      <p className={`text-xs mt-0.5 ${contentMode === "synopsis" ? "text-[#F9F6EE]/70" : "text-[#7A6B5E]"}`}>
+                        Share a summary — keep the full draft private
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               {mode === "upload" && (
                 <div>
                   <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-2">File</label>
@@ -339,23 +393,58 @@ export default function Dashboard() {
                 </div>
               )}
 
-              <div>
-                <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-2">
-                  Content
-                  {mode === "upload" && uploadedFile && !extractError && (
-                    <span className="ml-2 text-[9px] font-normal text-[#7A6B5E] normal-case tracking-normal">
-                      — extracted, you can edit below
-                    </span>
+              {contentMode === "synopsis" ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-2">Synopsis</label>
+                    <textarea
+                      placeholder="Write a summary of your story, premise, or key ideas. Collaborators will see only this."
+                      value={synopsis}
+                      onChange={(e) => setSynopsis(e.target.value)}
+                      className="w-full px-4 py-4 bg-white border-2 border-[#1A1614]/20 focus:border-[#1A1614] outline-none font-serif text-base min-h-[180px] resize-y transition-colors text-[#1A1614]"
+                      required
+                    />
+                  </div>
+                  {mode === "write" && (
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-2">
+                        Manuscript
+                        <span className="ml-2 text-[9px] font-normal text-[#7A6B5E] normal-case tracking-normal">— optional, stored privately</span>
+                      </label>
+                      <textarea
+                        placeholder="Paste or type your draft here. Only you can see this."
+                        value={newContent}
+                        onChange={(e) => setNewContent(e.target.value)}
+                        className="w-full px-4 py-4 bg-white border-2 border-[#1A1614]/20 focus:border-[#1A1614] outline-none font-serif text-base min-h-[160px] resize-y transition-colors text-[#1A1614] opacity-70"
+                      />
+                    </div>
                   )}
-                </label>
-                <textarea
-                  placeholder={mode === "upload" ? "Content will appear here after upload…" : "Start typing your manuscript…"}
-                  value={newContent}
-                  onChange={(e) => setNewContent(e.target.value)}
-                  className="w-full px-4 py-4 bg-white border-2 border-[#1A1614]/20 focus:border-[#1A1614] outline-none font-serif text-base min-h-[240px] resize-y transition-colors text-[#1A1614]"
-                  required
-                />
-              </div>
+                  {mode === "upload" && uploadedFile && !extractError && (
+                    <p className="text-xs text-[#7A6B5E] flex items-center gap-1.5 bg-[#F9F6EE] px-3 py-2 border border-[#1A1614]/10">
+                      <FileText className="w-3.5 h-3.5 shrink-0" />
+                      Manuscript text extracted and stored privately — only your synopsis will be visible to collaborators.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-2">
+                    Content
+                    {mode === "upload" && uploadedFile && !extractError && (
+                      <span className="ml-2 text-[9px] font-normal text-[#7A6B5E] normal-case tracking-normal">
+                        — extracted, you can edit below
+                      </span>
+                    )}
+                  </label>
+                  <textarea
+                    placeholder={mode === "upload" ? "Content will appear here after upload…" : "Start typing your manuscript…"}
+                    value={newContent}
+                    onChange={(e) => setNewContent(e.target.value)}
+                    className="w-full px-4 py-4 bg-white border-2 border-[#1A1614]/20 focus:border-[#1A1614] outline-none font-serif text-base min-h-[240px] resize-y transition-colors text-[#1A1614]"
+                    required
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-1">Room size</label>
@@ -392,7 +481,7 @@ export default function Dashboard() {
                 </button>
                 <button
                   type="submit"
-                  disabled={createProject.isPending || !newTitle || !newContent}
+                  disabled={createProject.isPending || !newTitle || (contentMode === "full" ? !newContent : !synopsis)}
                   className="px-6 py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors disabled:opacity-40"
                 >
                   {createProject.isPending ? (

@@ -12,4 +12,6 @@ export interface CreateProjectBody {
   type: CreateProjectBodyType;
   content: string;
   userId: number;
+  synopsis?: string | null;
+  contentMode?: "full" | "synopsis";
 }
