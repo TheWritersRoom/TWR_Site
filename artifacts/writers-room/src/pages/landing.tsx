@@ -247,7 +247,7 @@ export default function Landing() {
               className="p-8 md:p-10 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1614]"
             >
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-[#F7C5D5] flex items-center justify-center text-white">
+                <div className="w-10 h-10 bg-[#F7C5D5] flex items-center justify-center text-[#1A1614]">
                   <BookOpen className="w-5 h-5" />
                 </div>
                 <div>
@@ -311,16 +311,16 @@ export default function Landing() {
       </section>
 
       {/* ── CTA BANNER ── */}
-      <section className="py-24 px-6 md:px-14 bg-[#F7C5D5] text-[#F9F6EE]">
+      <section className="py-24 px-6 md:px-14 bg-[#F7C5D5] text-[#1A1614]">
         <div className="max-w-3xl mx-auto text-center">
           <motion.div {...inView()}>
-            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#F9F6EE]/60 mb-4">Join Today</p>
-            <div className="border-t-2 border-[#F9F6EE]/30 mb-6" />
-            <h2 className="font-serif font-bold text-5xl md:text-6xl text-[#F9F6EE] mb-4 leading-tight">
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#1A1614]/60 mb-4">Join Today</p>
+            <div className="border-t-2 border-[#1A1614]/30 mb-6" />
+            <h2 className="font-serif font-bold text-5xl md:text-6xl text-[#1A1614] mb-4 leading-tight">
               Ready to open<br />the room?
             </h2>
-            <div className="border-t border-[#F9F6EE]/30 mb-6" />
-            <p className="text-[#F9F6EE]/70 text-base mb-10 font-serif italic">
+            <div className="border-t border-[#1A1614]/30 mb-6" />
+            <p className="text-[#1A1614]/70 text-base mb-10 font-serif italic">
               Free to join. No credit card. Start uploading and collaborating today.
             </p>
             <button
