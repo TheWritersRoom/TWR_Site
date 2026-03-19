@@ -134,7 +134,7 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 onClick={openAuthModal}
-                className="flex items-center gap-2 px-8 py-3.5 bg-[#1A1614] text-[#F9F6EE] text-sm font-bold uppercase tracking-[0.12em] hover:bg-[#FDDCB5] transition-colors"
+                className="flex items-center gap-2 px-8 py-3.5 bg-[#D94B1F] text-[#F9F6EE] text-sm font-bold uppercase tracking-[0.12em] hover:bg-[#C23A14] transition-colors"
               >
                 Start for free <ArrowRight className="w-4 h-4" />
               </button>
@@ -325,7 +325,7 @@ export default function Landing() {
             </p>
             <button
               onClick={openAuthModal}
-              className="inline-flex items-center gap-3 px-10 py-4 bg-[#E8B84B] text-[#1A1614] font-bold text-sm uppercase tracking-[0.14em] hover:bg-[#F9F6EE] transition-colors"
+              className="inline-flex items-center gap-3 px-10 py-4 bg-[#D94B1F] text-[#F9F6EE] font-bold text-sm uppercase tracking-[0.14em] hover:bg-[#C23A14] transition-colors"
             >
               Get started — it's free <ArrowRight className="w-4 h-4" />
             </button>
