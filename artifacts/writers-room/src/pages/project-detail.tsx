@@ -412,7 +412,16 @@ export default function ProjectDetail() {
             </Link>
             <div>
               <h1 className="font-serif font-bold text-xl text-foreground">{project.title}</h1>
-              <p className="text-xs text-muted-foreground uppercase tracking-widest">{project.type} • By {project.ownerName}</p>
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                <p className="text-xs text-muted-foreground uppercase tracking-widest">{project.type} • By {project.ownerName}</p>
+                {(() => {
+                  let genres: string[] = [];
+                  try { genres = JSON.parse(project.genres ?? "[]"); } catch {}
+                  return genres.length > 0 ? genres.map((g) => (
+                    <span key={g} className="text-[9px] uppercase tracking-[0.18em] font-bold px-2 py-0.5 border border-[#1A1614]/15 text-[#7A6B5E] bg-[#F9F6EE]">{g}</span>
+                  )) : null;
+                })()}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3">

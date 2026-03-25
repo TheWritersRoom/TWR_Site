@@ -4,12 +4,21 @@ import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, BookText, FileText, MessageSquareQuote, Calendar,
-  Upload, PenLine, X, FileUp, Loader2, ChevronRight, AlignLeft
+  Upload, PenLine, X, FileUp, Loader2, ChevronRight, AlignLeft, Check
 } from "lucide-react";
+
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateProject } from "@workspace/api-client-react";
 import type { Project } from "@workspace/api-client-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+const GENRES = [
+  "Long-form Fiction", "Non-fiction", "Short Story", "Poetry",
+  "Fan Fiction", "Graphic Novel / Comics", "Children's Literature",
+  "Literary Fiction", "Thriller / Mystery", "Romance",
+  "Science Fiction / Fantasy", "Horror",
+  "Film & TV Script", "Screenwriting",
+];
 
 type CreationMode = "choose" | "write" | "upload";
 
@@ -94,6 +103,9 @@ export default function Dashboard() {
   const [extractError, setExtractError] = useState("");
   const [contentMode, setContentMode] = useState<"full" | "synopsis">("full");
   const [synopsis, setSynopsis] = useState("");
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const toggleGenre = (g: string) =>
+    setSelectedGenres((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ACCEPTED = ".txt,.md,.pdf,.docx,.rtf";
 
@@ -130,6 +142,7 @@ export default function Dashboard() {
     setExtractError("");
     setContentMode("full");
     setSynopsis("");
+    setSelectedGenres([]);
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -145,6 +158,7 @@ export default function Dashboard() {
         collaboratorLimit: newLimit,
         contentMode,
         synopsis: contentMode === "synopsis" ? synopsis : null,
+        genres: JSON.stringify(selectedGenres),
       } as any,
     });
     queryClient.invalidateQueries({ queryKey: ["/api/projects", user?.id] });
@@ -322,6 +336,34 @@ export default function Dashboard() {
                       </p>
                     </div>
                   </button>
+                </div>
+              </div>
+
+              {/* Genre tags */}
+              <div>
+                <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-3">
+                  Genre tags
+                  <span className="ml-2 normal-case tracking-normal font-normal text-[#7A6B5E]">— optional</span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {GENRES.map((g) => {
+                    const sel = selectedGenres.includes(g);
+                    return (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => toggleGenre(g)}
+                        className={`inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-semibold border transition-all ${
+                          sel
+                            ? "bg-[#1A1614] text-[#F9F6EE] border-[#1A1614]"
+                            : "bg-white border-[#1A1614]/20 text-[#7A6B5E] hover:border-[#1A1614] hover:text-[#1A1614]"
+                        }`}
+                      >
+                        {sel && <Check className="w-3 h-3" />}
+                        {g}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

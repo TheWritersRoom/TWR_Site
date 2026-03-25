@@ -10,6 +10,7 @@ export const projectsTable = pgTable("projects", {
   content: text("content").notNull().default(""),
   synopsis: text("synopsis"),
   contentMode: text("content_mode", { enum: ["full", "synopsis"] }).notNull().default("full"),
+  genres: text("genres").notNull().default("[]"),
   ownerId: integer("owner_id").notNull().references(() => usersTable.id),
   collaboratorLimit: integer("collaborator_limit").notNull().default(6),
   // Publishing

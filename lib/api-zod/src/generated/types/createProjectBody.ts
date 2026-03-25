@@ -14,4 +14,5 @@ export interface CreateProjectBody {
   userId: number;
   synopsis?: string | null;
   contentMode?: "full" | "synopsis";
+  genres?: string;
 }

@@ -147,6 +147,7 @@ export interface ProjectDetail {
   content: string;
   synopsis?: string | null;
   contentMode?: "full" | "synopsis";
+  genres?: string;
   ownerId: number;
   ownerName: string;
   role: ProjectDetailRole;
