@@ -78,6 +78,8 @@ export const CreateProjectBody = zod.object({
   synopsis: zod.string().nullish(),
   contentMode: zod.enum(["full", "synopsis"]).optional().default("full"),
   genres: zod.string().optional().default("[]"),
+  ownershipTerms: zod.enum(["sole", "shared"]).optional().default("sole"),
+  ownershipNotes: zod.string().nullish(),
 });
 
 /**

@@ -152,6 +152,8 @@ router.get("/projects/:id", async (req, res): Promise<void> => {
       synopsis: projectsTable.synopsis,
       contentMode: projectsTable.contentMode,
       genres: projectsTable.genres,
+      ownershipTerms: projectsTable.ownershipTerms,
+      ownershipNotes: projectsTable.ownershipNotes,
       ownerId: projectsTable.ownerId,
       ownerName: usersTable.name,
       isPublished: projectsTable.isPublished,

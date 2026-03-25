@@ -4,7 +4,8 @@ import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, BookText, FileText, MessageSquareQuote, Calendar,
-  Upload, PenLine, X, FileUp, Loader2, ChevronRight, AlignLeft, Check
+  Upload, PenLine, X, FileUp, Loader2, ChevronRight, AlignLeft, Check,
+  Shield, Users as UsersIcon
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/use-auth";
@@ -106,6 +107,8 @@ export default function Dashboard() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const toggleGenre = (g: string) =>
     setSelectedGenres((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]);
+  const [ownershipTerms, setOwnershipTerms] = useState<"sole" | "shared">("sole");
+  const [ownershipNotes, setOwnershipNotes] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ACCEPTED = ".txt,.md,.pdf,.docx,.rtf";
 
@@ -143,6 +146,8 @@ export default function Dashboard() {
     setContentMode("full");
     setSynopsis("");
     setSelectedGenres([]);
+    setOwnershipTerms("sole");
+    setOwnershipNotes("");
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -159,6 +164,8 @@ export default function Dashboard() {
         contentMode,
         synopsis: contentMode === "synopsis" ? synopsis : null,
         genres: JSON.stringify(selectedGenres),
+        ownershipTerms,
+        ownershipNotes: ownershipNotes.trim() || null,
       } as any,
     });
     queryClient.invalidateQueries({ queryKey: ["/api/projects", user?.id] });
@@ -511,6 +518,64 @@ export default function Dashboard() {
                   </button>
                   <span className="text-sm text-[#7A6B5E]">{newLimit === 1 ? "person" : "people"}</span>
                 </div>
+              </div>
+
+              {/* Ownership Terms */}
+              <div>
+                <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-1">Ownership Terms</label>
+                <p className="text-xs text-[#7A6B5E] mb-3">
+                  Set the intellectual property terms contributors agree to when joining this room.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 border-2 border-[#1A1614]/20 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setOwnershipTerms("sole")}
+                    className={`flex items-start gap-3 px-5 py-4 text-left transition-all border-b sm:border-b-0 sm:border-r border-[#1A1614]/20 ${
+                      ownershipTerms === "sole"
+                        ? "bg-[#1A1614] text-[#F9F6EE]"
+                        : "bg-white text-[#1A1614] hover:bg-[#F9F6EE]"
+                    }`}
+                  >
+                    <Shield className="w-5 h-5 shrink-0 mt-0.5 opacity-80" />
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.16em] font-bold">Sole ownership</p>
+                      <p className={`text-xs mt-1 leading-relaxed ${ownershipTerms === "sole" ? "text-[#F9F6EE]/70" : "text-[#7A6B5E]"}`}>
+                        The author retains complete ownership of all work produced in this room.
+                      </p>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOwnershipTerms("shared")}
+                    className={`flex items-start gap-3 px-5 py-4 text-left transition-all ${
+                      ownershipTerms === "shared"
+                        ? "bg-[#1A1614] text-[#F9F6EE]"
+                        : "bg-white text-[#1A1614] hover:bg-[#F9F6EE]"
+                    }`}
+                  >
+                    <UsersIcon className="w-5 h-5 shrink-0 mt-0.5 opacity-80" />
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.16em] font-bold">Shared ownership</p>
+                      <p className={`text-xs mt-1 leading-relaxed ${ownershipTerms === "shared" ? "text-[#F9F6EE]/70" : "text-[#7A6B5E]"}`}>
+                        Ownership may be shared with contributors based on approved contributions in the final work.
+                      </p>
+                    </div>
+                  </button>
+                </div>
+                {ownershipTerms === "shared" && (
+                  <div className="mt-3">
+                    <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-2">
+                      Additional terms
+                      <span className="ml-2 normal-case tracking-normal font-normal text-[#7A6B5E]">— optional</span>
+                    </label>
+                    <textarea
+                      value={ownershipNotes}
+                      onChange={(e) => setOwnershipNotes(e.target.value)}
+                      placeholder="e.g. Contributors owning more than 20% of accepted edits will receive a credit and proportional royalty share…"
+                      className="w-full px-4 py-3 bg-white border-2 border-[#1A1614]/20 focus:border-[#1A1614] outline-none text-sm min-h-[90px] resize-y transition-colors text-[#1A1614]"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-2 border-t border-[#1A1614]/10">

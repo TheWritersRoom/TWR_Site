@@ -6,7 +6,7 @@ import {
   ChevronLeft, Users, MessageSquare, Check, X, 
   Send, AlertCircle, Edit3, BarChart2, Trophy, Mail,
   BookOpen, Globe, Lock, Eye, MessageCircle, Minus, Plus,
-  UserPlus, Clock, CheckCircle, XCircle, Film
+  UserPlus, Clock, CheckCircle, XCircle, Film, Shield
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient as useQC } from "@tanstack/react-query";
 import { PublishModal } from "@/components/publish-modal";
@@ -675,6 +675,38 @@ export default function ProjectDetail() {
 
           {activeTab === 'collaborators' && (
             <div className="space-y-6">
+              {/* Ownership Terms Panel */}
+              {(() => {
+                const terms = project.ownershipTerms ?? "sole";
+                const notes = project.ownershipNotes;
+                const isShared = terms === "shared";
+                return (
+                  <div className={`rounded-2xl border p-4 shadow-sm space-y-2 ${
+                    isShared ? "bg-amber-50/60 border-amber-200" : "bg-card border-border"
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <Shield className={`w-4 h-4 shrink-0 ${isShared ? "text-amber-600" : "text-muted-foreground"}`} />
+                      <h4 className="text-xs font-bold uppercase tracking-wider">Ownership Terms</h4>
+                      <span className={`ml-auto text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                        isShared ? "bg-amber-100 text-amber-700 border border-amber-300" : "bg-secondary text-muted-foreground border border-border"
+                      }`}>
+                        {isShared ? "Shared" : "Sole"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {isShared
+                        ? "The author has indicated that ownership may be shared with contributors, proportional to approved contributions included in the final work."
+                        : "The author retains complete ownership of all work produced in this room."}
+                    </p>
+                    {notes && (
+                      <div className="text-xs text-muted-foreground border-t border-border/50 pt-2 mt-2 italic">
+                        "{notes}"
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
               {/* Room size control (owner only) */}
               {isOwner && (() => {
                 const currentLimit = (project as any).collaboratorLimit ?? 6;
@@ -887,6 +919,28 @@ export default function ProjectDetail() {
                         <p className="text-xs text-muted-foreground">
                           Ask the author to add you as a collaborator on this project.
                         </p>
+                        {/* Ownership terms disclosure */}
+                        {(() => {
+                          const terms = project.ownershipTerms ?? "sole";
+                          const notes = project.ownershipNotes;
+                          const isShared = terms === "shared";
+                          return (
+                            <div className={`text-xs rounded-xl px-3 py-3 border space-y-1 ${
+                              isShared ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-secondary/60 border-border text-muted-foreground"
+                            }`}>
+                              <div className="flex items-center gap-1.5 font-semibold">
+                                <Shield className="w-3.5 h-3.5 shrink-0" />
+                                {isShared ? "Shared ownership" : "Sole ownership"}
+                              </div>
+                              <p className="leading-relaxed">
+                                {isShared
+                                  ? "By joining, you acknowledge that ownership may be shared with contributors proportional to approved contributions in the final work."
+                                  : "By joining, you acknowledge that the author retains complete ownership of all work produced in this room."}
+                              </p>
+                              {notes && <p className="italic border-t border-current/20 pt-1 mt-1">"{notes}"</p>}
+                            </div>
+                          );
+                        })()}
                         <JoinRequestForm
                           message={joinMessage}
                           setMessage={setJoinMessage}

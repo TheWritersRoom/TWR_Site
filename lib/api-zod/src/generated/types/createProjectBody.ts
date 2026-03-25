@@ -15,4 +15,6 @@ export interface CreateProjectBody {
   synopsis?: string | null;
   contentMode?: "full" | "synopsis";
   genres?: string;
+  ownershipTerms?: "sole" | "shared";
+  ownershipNotes?: string | null;
 }

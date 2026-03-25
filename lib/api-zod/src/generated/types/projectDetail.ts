@@ -19,6 +19,8 @@ export interface ProjectDetail {
   synopsis?: string | null;
   contentMode?: "full" | "synopsis";
   genres?: string;
+  ownershipTerms?: "sole" | "shared";
+  ownershipNotes?: string | null;
   ownerId: number;
   ownerName: string;
   role: ProjectDetailRole;
