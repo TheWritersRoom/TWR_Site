@@ -12,6 +12,8 @@ export const usersTable = pgTable("users", {
   role: text("role", { enum: ["author", "contributor", "both"] }).notNull().default("both"),
   genres: text("genres").default("[]"),
   mediaInterests: text("media_interests").default(""),
+  bio: text("bio"),
+  credentials: text("credentials"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

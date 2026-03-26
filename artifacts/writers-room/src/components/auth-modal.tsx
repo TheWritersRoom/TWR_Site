@@ -152,10 +152,12 @@ function PasswordInput({ value, onChange, placeholder }: {
   );
 }
 
+type WorkEntry = { title: string; year: string; publisher: string };
+
 export function AuthModal() {
   const { register, signIn, isLoading, authModalOpen, closeAuthModal } = useAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -170,21 +172,41 @@ export function AuthModal() {
   const [suRole, setSuRole] = useState<UserRole>("both");
   const [suGenres, setSuGenres] = useState<string[]>([]);
   const [suMedia, setSuMedia] = useState("");
+
+  // Credentials fields
+  const [suCredTitle, setSuCredTitle] = useState("");
+  const [suIsPublished, setSuIsPublished] = useState(false);
+  const [suWorks, setSuWorks] = useState<WorkEntry[]>([]);
+  const [suWebsite, setSuWebsite] = useState("");
+
   const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
 
   if (isLoading || !authModalOpen) return null;
 
-  const needsStep2 = suRole === "contributor" || suRole === "both";
+  // Roles that need the interests step (step 2)
+  const hasInterestsStep = suRole === "contributor" || suRole === "both";
+  // Credentials is always the last step — step 2 for authors, step 3 for contributor/both
+  const credentialsStep: 2 | 3 = hasInterestsStep ? 3 : 2;
+  const totalSteps = hasInterestsStep ? 3 : 2;
 
   const switchMode = (m: "signin" | "signup") => {
     setMode(m);
     setStep(1);
     setError("");
+    setSuCredTitle("");
+    setSuIsPublished(false);
+    setSuWorks([]);
+    setSuWebsite("");
   };
 
   const toggleGenre = (g: string) => {
     setSuGenres((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]);
   };
+
+  const addWork = () => setSuWorks((prev) => [...prev, { title: "", year: "", publisher: "" }]);
+  const removeWork = (i: number) => setSuWorks((prev) => prev.filter((_, j) => j !== i));
+  const updateWork = (i: number, field: keyof WorkEntry, value: string) =>
+    setSuWorks((prev) => prev.map((w, j) => j === i ? { ...w, [field]: value } : w));
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -213,17 +235,28 @@ export function AuthModal() {
       return;
     }
     setError("");
-    if (needsStep2) {
-      setStep(2);
-    } else {
-      handleSignUpSubmit();
-    }
+    setStep(2); // always advance — step 2 is interests (contributor/both) or credentials (author)
   };
 
   const handleSignUpSubmit = async () => {
     setIsSubmitting(true);
     setError("");
     try {
+      const validWorks = suWorks
+        .filter((w) => w.title.trim())
+        .map((w) => ({
+          title: w.title.trim(),
+          ...(w.year.trim() ? { year: parseInt(w.year) } : {}),
+          ...(w.publisher.trim() ? { publisher: w.publisher.trim() } : {}),
+        }));
+
+      const credentials = JSON.stringify({
+        ...(suCredTitle.trim() ? { professionalTitle: suCredTitle.trim() } : {}),
+        isPublishedAuthor: suIsPublished || validWorks.length > 0,
+        publishedWorks: validWorks,
+        ...(suWebsite.trim() ? { website: suWebsite.trim() } : {}),
+      });
+
       await register({
         name: suName,
         email: suEmail,
@@ -231,6 +264,7 @@ export function AuthModal() {
         role: suRole,
         genres: JSON.stringify(suGenres),
         mediaInterests: suMedia,
+        credentials,
       });
     } catch (err: any) {
       setError(err.message || "Registration failed");
@@ -287,9 +321,9 @@ export function AuthModal() {
           </div>
 
           {/* Step dots for signup */}
-          {mode === "signup" && needsStep2 && (
+          {mode === "signup" && (
             <div className="flex gap-2 px-8 pt-5">
-              {[1, 2].map((s) => (
+              {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
                 <div
                   key={s}
                   className={`h-1 flex-1 rounded-full transition-colors ${step >= s ? "bg-primary" : "bg-muted"}`}
@@ -467,11 +501,10 @@ export function AuthModal() {
                       className="w-full mt-2 text-lg h-14"
                       disabled={!suName || !suEmail || !suPassword}
                     >
-                      {needsStep2 ? (
-                        <span className="flex items-center gap-2">Next: Your Interests <ChevronRight className="w-4 h-4" /></span>
-                      ) : (
-                        isSubmitting ? "Creating account…" : "Create Account"
-                      )}
+                      <span className="flex items-center gap-2">
+                        {hasInterestsStep ? "Next: Your Interests" : "Next: Your Credentials"}
+                        <ChevronRight className="w-4 h-4" />
+                      </span>
                     </Button>
                   </form>
 
@@ -489,10 +522,10 @@ export function AuthModal() {
                 </motion.div>
               )}
 
-              {/* ── SIGN UP STEP 2 ── */}
-              {mode === "signup" && step === 2 && (
+              {/* ── SIGN UP STEP 2: INTERESTS (contributor / both only) ── */}
+              {mode === "signup" && step === 2 && hasInterestsStep && (
                 <motion.div
-                  key="signup-2"
+                  key="signup-interests"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
@@ -554,12 +587,161 @@ export function AuthModal() {
                     </div>
 
                     <Button
+                      type="button"
+                      onClick={() => setStep(3)}
+                      className="w-full text-lg h-14"
+                    >
+                      <span className="flex items-center gap-2">
+                        Next: Your Credentials <ChevronRight className="w-4 h-4" />
+                      </span>
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ── SIGN UP STEP: CREDENTIALS (step 2 for author, step 3 for contributor/both) ── */}
+              {mode === "signup" && step === credentialsStep && (
+                <motion.div
+                  key="signup-credentials"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="mb-5">
+                    <button
+                      onClick={() => setStep(hasInterestsStep ? 2 : 1)}
+                      className="text-xs text-muted-foreground hover:text-foreground mb-3 flex items-center gap-1 transition-colors"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5 rotate-180" /> Back
+                    </button>
+                    <h2 className="text-2xl font-serif font-bold text-foreground">Your Credentials</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      All optional — but published authors stand out to collaborators.
+                    </p>
+                  </div>
+
+                  <div className="space-y-5">
+                    {/* Professional title */}
+                    <div>
+                      <label className="block text-sm font-semibold text-foreground mb-1.5">
+                        Professional title
+                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">optional</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={suCredTitle}
+                        onChange={(e) => setSuCredTitle(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl bg-background/50 border-2 border-input focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none text-sm"
+                        placeholder="e.g. Published novelist & screenwriter"
+                        maxLength={120}
+                      />
+                    </div>
+
+                    {/* Published author checkbox */}
+                    <label className="flex items-start gap-3 cursor-pointer group">
+                      <div className="relative mt-0.5">
+                        <input
+                          type="checkbox"
+                          checked={suIsPublished}
+                          onChange={(e) => setSuIsPublished(e.target.checked)}
+                          className="sr-only"
+                        />
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${suIsPublished ? "bg-primary border-primary" : "border-input group-hover:border-primary/60"}`}>
+                          {suIsPublished && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">I am a published author</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Adds a verified badge to your profile</p>
+                      </div>
+                    </label>
+
+                    {/* Published works */}
+                    <div>
+                      <label className="block text-sm font-semibold text-foreground mb-2">
+                        Published works
+                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">optional</span>
+                      </label>
+                      <div className="space-y-2">
+                        {suWorks.map((work, i) => (
+                          <div key={i} className="flex gap-2 items-start">
+                            <div className="flex-1 min-w-0 space-y-1.5">
+                              <input
+                                type="text"
+                                value={work.title}
+                                onChange={(e) => updateWork(i, "title", e.target.value)}
+                                className="w-full px-3 py-2 text-sm rounded-lg bg-background/50 border-2 border-input focus:border-primary outline-none transition-all"
+                                placeholder="Title"
+                              />
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={work.year}
+                                  onChange={(e) => updateWork(i, "year", e.target.value.replace(/\D/g, "").slice(0, 4))}
+                                  className="w-20 px-3 py-2 text-sm rounded-lg bg-background/50 border-2 border-input focus:border-primary outline-none transition-all"
+                                  placeholder="Year"
+                                />
+                                <input
+                                  type="text"
+                                  value={work.publisher}
+                                  onChange={(e) => updateWork(i, "publisher", e.target.value)}
+                                  className="flex-1 px-3 py-2 text-sm rounded-lg bg-background/50 border-2 border-input focus:border-primary outline-none transition-all"
+                                  placeholder="Publisher (optional)"
+                                />
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeWork(i)}
+                              className="mt-2 p-1.5 text-muted-foreground hover:text-destructive transition-colors"
+                              aria-label="Remove"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={addWork}
+                          className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 mt-1"
+                        >
+                          + Add a work
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Website */}
+                    <div>
+                      <label className="block text-sm font-semibold text-foreground mb-1.5">
+                        Portfolio or website
+                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">optional</span>
+                      </label>
+                      <input
+                        type="url"
+                        value={suWebsite}
+                        onChange={(e) => setSuWebsite(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl bg-background/50 border-2 border-input focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none text-sm"
+                        placeholder="https://yoursite.com"
+                      />
+                    </div>
+
+                    <Button
+                      type="button"
                       onClick={handleSignUpSubmit}
                       className="w-full text-lg h-14"
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? "Creating account…" : "Create Account"}
                     </Button>
+                    <button
+                      type="button"
+                      onClick={handleSignUpSubmit}
+                      disabled={isSubmitting}
+                      className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Skip credentials for now
+                    </button>
                   </div>
                 </motion.div>
               )}

@@ -56,6 +56,9 @@ router.get("/users/browse", async (req, res): Promise<void> => {
       role: usersTable.role,
       genres: usersTable.genres,
       mediaInterests: usersTable.mediaInterests,
+      bio: usersTable.bio,
+      credentials: usersTable.credentials,
+      avatarUrl: usersTable.avatarUrl,
       createdAt: usersTable.createdAt,
     })
     .from(usersTable)

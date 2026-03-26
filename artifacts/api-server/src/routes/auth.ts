@@ -29,7 +29,7 @@ async function verifyPassword(password: string, stored: string): Promise<boolean
   }
 }
 
-function safeUser(user: typeof usersTable.$inferSelect) {
+export function safeUser(user: typeof usersTable.$inferSelect) {
   const { passwordHash: _ph, googleId: _gi, ...rest } = user;
   return rest;
 }
@@ -62,7 +62,7 @@ function getFrontendBase(): string {
 
 // POST /auth/register
 router.post("/auth/register", async (req, res): Promise<void> => {
-  const { name, email, password, role, genres, mediaInterests } = req.body ?? {};
+  const { name, email, password, role, genres, mediaInterests, bio, credentials } = req.body ?? {};
 
   if (!name || typeof name !== "string" || !name.trim()) {
     res.status(400).json({ error: "Name is required." });
@@ -112,6 +112,8 @@ router.post("/auth/register", async (req, res): Promise<void> => {
       role: userRole,
       genres: typeof genres === "string" ? genres : "[]",
       mediaInterests: typeof mediaInterests === "string" ? mediaInterests : "",
+      bio: typeof bio === "string" && bio.trim() ? bio.trim() : null,
+      credentials: typeof credentials === "string" && credentials !== "{}" ? credentials : null,
     })
     .returning();
 

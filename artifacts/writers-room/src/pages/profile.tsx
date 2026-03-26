@@ -6,8 +6,20 @@ import { useQuery } from "@tanstack/react-query";
 import {
   CheckCircle2, Clock, XCircle, BookText, FileText,
   MessageSquareQuote, CalendarDays, PenLine, Users, Layers,
-  ArrowRight, Sparkles, Tag, Trophy,
+  ArrowRight, Sparkles, Tag, Trophy, BadgeCheck, BookOpen, Globe,
 } from "lucide-react";
+
+type PublishedWork = { title: string; year?: number; publisher?: string };
+type UserCredentials = {
+  professionalTitle?: string;
+  isPublishedAuthor?: boolean;
+  publishedWorks?: PublishedWork[];
+  website?: string;
+};
+
+function parseCredentials(raw: string | null | undefined): UserCredentials {
+  try { return JSON.parse(raw ?? "{}"); } catch { return {}; }
+}
 
 type CollaboratorStat = {
   submitterId: number;
@@ -167,6 +179,48 @@ export default function Profile() {
               <p>{user.mediaInterests}</p>
             </div>
           )}
+
+          {/* Credentials */}
+          {(() => {
+            const creds = parseCredentials(user.credentials);
+            const hasAnything = creds.isPublishedAuthor || creds.professionalTitle ||
+              (creds.publishedWorks?.length ?? 0) > 0 || creds.website;
+            if (!hasAnything) return null;
+            return (
+              <div className="mt-4 pt-4 border-t border-[#1A1614]/10">
+                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#7A6B5E] mb-2.5 flex items-center gap-1.5">
+                  <BadgeCheck className="w-3.5 h-3.5 text-[#E8B84B]" />
+                  {creds.isPublishedAuthor ? "Published Author" : "Credentials"}
+                </p>
+                {creds.professionalTitle && (
+                  <p className="text-sm font-semibold text-[#1A1614] mb-2">{creds.professionalTitle}</p>
+                )}
+                {(creds.publishedWorks?.length ?? 0) > 0 && (
+                  <div className="space-y-1 mb-2">
+                    {creds.publishedWorks!.map((w, i) => (
+                      <div key={i} className="flex items-baseline gap-1.5 text-xs">
+                        <BookOpen className="w-3.5 h-3.5 shrink-0 text-[#7A6B5E] mt-px" />
+                        <span className="font-semibold text-[#1A1614]">{w.title}</span>
+                        {w.year && <span className="text-[#7A6B5E]">{w.year}</span>}
+                        {w.publisher && <span className="text-[#7A6B5E]">· {w.publisher}</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {creds.website && (
+                  <a
+                    href={creds.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    {creds.website.replace(/^https?:\/\//, "")}
+                  </a>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </motion.div>
 

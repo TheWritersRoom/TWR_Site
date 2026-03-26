@@ -2,8 +2,16 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Search, Sparkles, X, Mail } from "lucide-react";
+import { Users, Search, Sparkles, X, Mail, BadgeCheck, Globe } from "lucide-react";
 import { format } from "date-fns";
+
+type PublishedWork = { title: string; year?: number; publisher?: string };
+type UserCredentials = {
+  professionalTitle?: string;
+  isPublishedAuthor?: boolean;
+  publishedWorks?: PublishedWork[];
+  website?: string;
+};
 
 type Contributor = {
   id: number;
@@ -11,9 +19,16 @@ type Contributor = {
   email: string;
   role: "contributor" | "both";
   genres: string;
-  mediaInterests: string;
+  mediaInterests: string | null;
+  bio: string | null;
+  credentials: string | null;
+  avatarUrl: string | null;
   createdAt: string;
 };
+
+function parseCredentials(raw: string | null | undefined): UserCredentials {
+  try { return JSON.parse(raw ?? "{}"); } catch { return {}; }
+}
 
 function parseGenres(raw: string | null): string[] {
   try { return JSON.parse(raw ?? "[]"); } catch { return []; }
@@ -162,13 +177,29 @@ export default function Contributors() {
               >
                 <div className="p-5">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-[#1A1614] flex items-center justify-center shrink-0">
-                      <span className="text-lg font-serif font-bold text-[#F9F6EE]">
-                        {c.name.charAt(0).toUpperCase()}
-                      </span>
+                    <div className="w-12 h-12 bg-[#1A1614] flex items-center justify-center shrink-0 relative">
+                      {c.avatarUrl ? (
+                        <img src={c.avatarUrl} alt={c.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-lg font-serif font-bold text-[#F9F6EE]">
+                          {c.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-[#1A1614] text-lg leading-tight">{c.name}</h3>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-bold text-[#1A1614] text-lg leading-tight">{c.name}</h3>
+                        {parseCredentials(c.credentials).isPublishedAuthor && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#E8B84B] bg-[#E8B84B]/10 px-2 py-0.5 border border-[#E8B84B]/30">
+                            <BadgeCheck className="w-3 h-3" /> Published Author
+                          </span>
+                        )}
+                      </div>
+                      {parseCredentials(c.credentials).professionalTitle && (
+                        <p className="text-xs text-[#7A6B5E] mt-0.5 font-medium">
+                          {parseCredentials(c.credentials).professionalTitle}
+                        </p>
+                      )}
                       <p className="text-[10px] uppercase tracking-[0.1em] font-bold text-[#7A6B5E] mt-0.5">
                         Member since {format(new Date(c.createdAt), "MMM yyyy")}
                       </p>
@@ -188,37 +219,68 @@ export default function Contributors() {
                     </div>
                   )}
 
-                  {c.mediaInterests && (
-                    <AnimatePresence>
-                      {isExpanded ? (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="mt-3 overflow-hidden"
-                        >
-                          <div className="flex items-start gap-2 text-sm text-[#7A6B5E] bg-[#E8B84B]/8 p-3">
-                            <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-[#E8B84B]" />
-                            <p className="leading-relaxed">{c.mediaInterests}</p>
-                          </div>
-                          <button
-                            onClick={() => setExpanded(null)}
-                            className="mt-2 text-[10px] text-[#7A6B5E] uppercase tracking-[0.1em] font-bold hover:text-[#1A1614] transition-colors"
+                  {(() => {
+                    const creds = parseCredentials(c.credentials);
+                    const hasWorks = (creds.publishedWorks?.length ?? 0) > 0;
+                    const hasExpandable = c.mediaInterests || hasWorks || creds.website;
+                    if (!hasExpandable) return null;
+                    return (
+                      <AnimatePresence>
+                        {isExpanded ? (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mt-3 space-y-2 overflow-hidden"
                           >
-                            Hide
+                            {c.mediaInterests && (
+                              <div className="flex items-start gap-2 text-sm text-[#7A6B5E] bg-[#E8B84B]/8 p-3">
+                                <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-[#E8B84B]" />
+                                <p className="leading-relaxed">{c.mediaInterests}</p>
+                              </div>
+                            )}
+                            {hasWorks && (
+                              <div className="bg-[#F9F6EE] p-3 space-y-1">
+                                <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#7A6B5E] mb-1.5">Published Works</p>
+                                {creds.publishedWorks!.map((w, i) => (
+                                  <div key={i} className="text-xs flex gap-1.5 items-baseline">
+                                    <span className="font-semibold text-[#1A1614]">{w.title}</span>
+                                    {w.year && <span className="text-[#7A6B5E]">{w.year}</span>}
+                                    {w.publisher && <span className="text-[#7A6B5E]">· {w.publisher}</span>}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {creds.website && (
+                              <a
+                                href={creds.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                              >
+                                <Globe className="w-3.5 h-3.5" />
+                                {creds.website.replace(/^https?:\/\//, "")}
+                              </a>
+                            )}
+                            <button
+                              onClick={() => setExpanded(null)}
+                              className="mt-1 text-[10px] text-[#7A6B5E] uppercase tracking-[0.1em] font-bold hover:text-[#1A1614] transition-colors block"
+                            >
+                              Hide
+                            </button>
+                          </motion.div>
+                        ) : (
+                          <button
+                            onClick={() => setExpanded(c.id)}
+                            className="mt-3 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.1em] font-bold text-[#7A6B5E] hover:text-[#1A1614] transition-colors"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            View profile details
                           </button>
-                        </motion.div>
-                      ) : (
-                        <button
-                          onClick={() => setExpanded(c.id)}
-                          className="mt-3 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.1em] font-bold text-[#7A6B5E] hover:text-[#1A1614] transition-colors"
-                        >
-                          <Sparkles className="w-3.5 h-3.5" />
-                          View media interests
-                        </button>
-                      )}
-                    </AnimatePresence>
-                  )}
+                        )}
+                      </AnimatePresence>
+                    );
+                  })()}
                 </div>
 
                 {/* Footer */}

@@ -9,11 +9,13 @@ Writers Room is a collaborative writing platform where authors upload books/scri
 - **Fountain Script Editor**: Script-type projects have a fullscreen block-based screenplay editor (Tab cycles element types: Scene Heading, Action, Character, Dialogue, Parenthetical, Transition)
 - **Fountain Rendering**: Reading view for scripts parses and renders Fountain format with proper screenplay layout
 - **Collaborator Limit**: Owners can set a cap on collaborator count (1–50)
-- **Join Requests**: Non-collaborators can request to join; owners can accept/decline
+- **Join Requests**: Non-collaborators can request to join; owners can accept/decline (with ownership terms disclosure)
 - **Suggestions**: Collaborators highlight text and suggest edits; owners accept/discard
 - **Pitches**: Early-stage idea pitching with responses
 - **Publishing**: Granular readership and feedback controls
 - **Browse & Rate**: Discover and rate published projects
+- **Google OAuth**: Full Google sign-in/sign-up (callback at /auth/callback, token exchange at /api/auth/token/:token)
+- **Credentials**: Multi-step sign-up with professional credentials (title, published works, website). Authors get 2 steps; contributors/both get 3 steps (basic → interests → credentials). Stored as JSON in `credentials` column. Published Author badge shown on contributor cards and profile.
 
 ## Stack
 

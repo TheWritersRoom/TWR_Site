@@ -28,6 +28,10 @@ export interface User {
   mediaInterests?: string;
   /** Profile picture URL (populated from OAuth providers) */
   avatarUrl?: string | null;
+  /** Short professional biography */
+  bio?: string | null;
+  /** JSON-encoded credentials object (professionalTitle, isPublishedAuthor, publishedWorks, website) */
+  credentials?: string | null;
   createdAt: string;
 }
 
