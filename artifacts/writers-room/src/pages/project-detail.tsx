@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useRoute } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,7 +6,7 @@ import {
   ChevronLeft, Users, MessageSquare, Check, X, 
   Send, AlertCircle, Edit3, BarChart2, Trophy, Mail,
   BookOpen, Globe, Lock, Eye, MessageCircle, Minus, Plus,
-  UserPlus, Clock, CheckCircle, XCircle, Film, Shield
+  UserPlus, Clock, CheckCircle, XCircle, Film, Shield, AlignLeft
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient as useQC } from "@tanstack/react-query";
 import { PublishModal } from "@/components/publish-modal";
@@ -379,6 +379,13 @@ export default function ProjectDetail() {
     return <div dangerouslySetInnerHTML={{ __html: html }} />;
   };
 
+  // Word count for prose content (not shown for scripts — the ScriptEditor has its own)
+  const proseWordCount = useMemo(() => {
+    if (!project?.content || project.type === "script") return 0;
+    const stripped = project.content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    return stripped ? stripped.split(" ").filter(Boolean).length : 0;
+  }, [project?.content, project?.type]);
+
   const handleSaveScript = async (newContent: string) => {
     if (!user) return;
     await fetch(`/api/projects/${projectId}`, {
@@ -461,6 +468,24 @@ export default function ProjectDetail() {
           >
             {renderContent()}
           </div>
+
+          {/* Word count bar — prose projects only */}
+          {project.type !== "script" && proseWordCount > 0 && (
+            <div className="mt-10 pt-4 border-t border-border/50 flex items-center gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <AlignLeft className="w-3.5 h-3.5" />
+                <strong className="font-semibold text-foreground">{proseWordCount.toLocaleString()}</strong> words
+              </span>
+              <span className="opacity-40">·</span>
+              <span>~{Math.ceil(proseWordCount / 238)} min read</span>
+              {proseWordCount >= 1000 && (
+                <>
+                  <span className="opacity-40">·</span>
+                  <span>~{Math.round(proseWordCount / 250)} pages</span>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Floating Suggestion Button */}
@@ -568,6 +593,7 @@ export default function ProjectDetail() {
                     onChange={(e) => setSuggestedText(e.target.value)}
                     className="w-full bg-green-50/50 text-green-900 border border-green-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 min-h-[80px]"
                     placeholder="Type your proposed text..."
+                    spellCheck
                   />
                 </div>
 
@@ -1055,6 +1081,7 @@ export default function ProjectDetail() {
                     onChange={(e) => setFeedbackText(e.target.value)}
                     placeholder="Write your feedback…"
                     rows={3}
+                    spellCheck
                     className="w-full bg-background border border-input rounded-xl p-3 text-sm focus:outline-none focus:border-primary resize-none mb-2"
                   />
                   <Button type="submit" size="sm" className="w-full" disabled={!feedbackText.trim()}>

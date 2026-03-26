@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
-import { X, Save, Loader2, Film } from "lucide-react";
+import { X, Save, Loader2, Film, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
 import {
   type BlockType,
   type ScriptBlock,
@@ -11,6 +12,26 @@ import {
   BLOCK_LABELS,
   BLOCK_CYCLE,
 } from "@/utils/fountain";
+
+const LANGUAGES = [
+  { code: "en",    label: "English" },
+  { code: "en-GB", label: "English (UK)" },
+  { code: "fr",    label: "Français" },
+  { code: "es",    label: "Español" },
+  { code: "de",    label: "Deutsch" },
+  { code: "it",    label: "Italiano" },
+  { code: "pt",    label: "Português" },
+  { code: "pt-BR", label: "Português (BR)" },
+  { code: "nl",    label: "Nederlands" },
+  { code: "sv",    label: "Svenska" },
+  { code: "no",    label: "Norsk" },
+  { code: "da",    label: "Dansk" },
+  { code: "pl",    label: "Polski" },
+  { code: "ru",    label: "Русский" },
+  { code: "ja",    label: "日本語" },
+  { code: "zh",    label: "中文" },
+  { code: "ar",    label: "العربية" },
+];
 
 const BLOCK_STYLE: Record<BlockType, string> = {
   "scene-heading":
@@ -53,12 +74,14 @@ const ENTER_NEXT_TYPE: Record<BlockType, BlockType> = {
 function BlockRow({
   block,
   isFocused,
+  lang,
   onChange,
   onFocus,
   onKeyDown,
 }: {
   block: ScriptBlock;
   isFocused: boolean;
+  lang: string;
   onChange: (text: string) => void;
   onFocus: () => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
@@ -95,6 +118,8 @@ function BlockRow({
         onKeyDown={onKeyDown}
         placeholder={isFocused ? BLOCK_PLACEHOLDER[block.type] : undefined}
         rows={1}
+        lang={lang}
+        spellCheck
         className={`w-full bg-transparent border-none outline-none resize-none overflow-hidden leading-relaxed ${BLOCK_STYLE[block.type]} placeholder:text-muted-foreground/40`}
         style={{ minHeight: "1.6rem" }}
       />
@@ -120,6 +145,14 @@ export function ScriptEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [isDirty, setIsDirty] = useState(false);
+  const [language, setLanguage] = useState("en");
+
+  const wordCount = useMemo(
+    () => blocks.reduce((sum, b) => sum + (b.text.trim() ? b.text.trim().split(/\s+/).length : 0), 0),
+    [blocks]
+  );
+  // Screenplay convention: ~1 page per minute, ~55 words per page
+  const estPages = Math.max(1, Math.round(wordCount / 55));
 
   const updateBlock = useCallback(
     (id: string, text: string) => {
@@ -252,6 +285,21 @@ export function ScriptEditor({
         )}
 
         <div className="flex items-center gap-2">
+          {/* Language / spell-check selector */}
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Languages className="w-3.5 h-3.5 shrink-0" />
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-transparent border border-input rounded-md px-2 py-1 text-xs focus:outline-none focus:border-primary cursor-pointer"
+              title="Spell-check language"
+            >
+              {LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code}>{l.label}</option>
+              ))}
+            </select>
+          </div>
+
           {saveError && <p className="text-xs text-destructive">{saveError}</p>}
           <Button
             variant="ghost"
@@ -284,6 +332,7 @@ export function ScriptEditor({
               key={block.id}
               block={block}
               isFocused={block.id === focusedId}
+              lang={language}
               onChange={(text) => updateBlock(block.id, text)}
               onFocus={() => setFocusedId(block.id)}
               onKeyDown={(e) => handleKeyDown(e, block)}
@@ -302,8 +351,14 @@ export function ScriptEditor({
 
       {/* Status bar */}
       <div className="px-6 py-2 border-t border-border bg-card text-xs text-muted-foreground flex items-center justify-between shrink-0">
-        <span>{blocks.filter(b => b.type === "scene-heading").length} scenes • {blocks.length} elements</span>
-        <span className="opacity-60">Enter = new element • Tab = cycle type • Shift+Enter = line break</span>
+        <span className="flex items-center gap-3">
+          <span>{wordCount.toLocaleString()} words</span>
+          <span className="opacity-40">·</span>
+          <span>~{estPages} {estPages === 1 ? "page" : "pages"}</span>
+          <span className="opacity-40">·</span>
+          <span>{blocks.filter(b => b.type === "scene-heading").length} scenes • {blocks.length} elements</span>
+        </span>
+        <span className="opacity-60 hidden sm:inline">Enter = new element • Tab = cycle type • Shift+Enter = line break</span>
       </div>
     </motion.div>
   );
