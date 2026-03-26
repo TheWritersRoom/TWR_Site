@@ -23,6 +23,7 @@ type AuthContextType = {
   user: User | null;
   register: (payload: RegisterPayload) => Promise<void>;
   signIn: (payload: SignInPayload) => Promise<void>;
+  loginWithToken: (token: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
   authModalOpen: boolean;
@@ -82,6 +83,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthModalOpen(false);
   };
 
+  /** Called after the OAuth redirect — exchanges the one-time token for the user object */
+  const loginWithToken = async (token: string) => {
+    const res = await fetch(`/api/auth/token/${token}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Token exchange failed");
+    setUser(data);
+    localStorage.setItem(AUTH_KEY, JSON.stringify(data));
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem(AUTH_KEY);
@@ -92,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       register,
       signIn,
+      loginWithToken,
       logout,
       isLoading,
       authModalOpen,

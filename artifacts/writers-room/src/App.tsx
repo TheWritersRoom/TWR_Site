@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +13,7 @@ import Contributors from "@/pages/contributors";
 import Discover from "@/pages/discover";
 import Pitches from "@/pages/pitches";
 import PitchDetail from "@/pages/pitch-detail";
+import AuthCallback from "@/pages/auth-callback";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -43,6 +44,7 @@ function AuthenticatedRouter() {
 
 function AppContent() {
   const { user, isLoading } = useAuth();
+  const [location] = useLocation();
 
   if (isLoading) {
     return (
@@ -50,6 +52,11 @@ function AppContent() {
         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
+  }
+
+  // OAuth callback page — accessible without being signed in
+  if (location === "/auth/callback") {
+    return <AuthCallback />;
   }
 
   if (!user) {

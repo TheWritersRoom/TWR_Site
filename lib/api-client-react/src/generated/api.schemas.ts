@@ -26,6 +26,8 @@ export interface User {
   genres?: string;
   /** Free-form text of favourite authors, films and other media */
   mediaInterests?: string;
+  /** Profile picture URL (populated from OAuth providers) */
+  avatarUrl?: string | null;
   createdAt: string;
 }
 

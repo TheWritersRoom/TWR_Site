@@ -1,11 +1,14 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, lt } from "drizzle-orm";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import { db, usersTable } from "@workspace/db";
+import { randomUUID } from "crypto";
+import { db, usersTable, authTokensTable } from "@workspace/db";
 
 const scryptAsync = promisify(scrypt);
 const router: IRouter = Router();
+
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString("hex");
@@ -25,6 +28,37 @@ async function verifyPassword(password: string, stored: string): Promise<boolean
     return false;
   }
 }
+
+function safeUser(user: typeof usersTable.$inferSelect) {
+  const { passwordHash: _ph, googleId: _gi, ...rest } = user;
+  return rest;
+}
+
+/** Create a short-lived one-time token that the frontend exchanges for a user object */
+async function createLoginToken(userId: number): Promise<string> {
+  // Clean up any expired tokens first
+  await db.delete(authTokensTable).where(lt(authTokensTable.expiresAt, new Date()));
+
+  const token = randomUUID();
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+  await db.insert(authTokensTable).values({ token, userId, expiresAt });
+  return token;
+}
+
+function getBaseUrl(): string {
+  const domain = process.env.REPLIT_DEV_DOMAIN;
+  if (domain) return `https://${domain}`;
+  return process.env.APP_URL ?? "http://localhost:8080";
+}
+
+function getFrontendBase(): string {
+  const domain = process.env.REPLIT_DEV_DOMAIN;
+  // The writers-room frontend is served at /writers-room on the Replit proxy
+  if (domain) return `https://${domain}/writers-room`;
+  return process.env.APP_FRONTEND_URL ?? "http://localhost:5173";
+}
+
+// ── Password auth ──────────────────────────────────────────────────────────
 
 // POST /auth/register
 router.post("/auth/register", async (req, res): Promise<void> => {
@@ -56,18 +90,16 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   if (existing.length > 0) {
     const existingUser = existing[0];
     if (existingUser.passwordHash) {
-      // Already has a password — must sign in instead
       res.status(409).json({ error: "An account with this email already exists. Please sign in." });
       return;
     }
-    // Existing account with no password — set the password now
+    // Existing OAuth account — set the password now
     const [updated] = await db
       .update(usersTable)
       .set({ passwordHash })
       .where(eq(usersTable.id, existingUser.id))
       .returning();
-    const { passwordHash: _ph, ...safeUser } = updated;
-    res.status(200).json(safeUser);
+    res.status(200).json(safeUser(updated));
     return;
   }
 
@@ -83,8 +115,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     })
     .returning();
 
-  const { passwordHash: _ph, ...safeUser } = user;
-  res.status(201).json(safeUser);
+  res.status(201).json(safeUser(user));
 });
 
 // POST /auth/login
@@ -112,7 +143,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   }
 
   if (!user.passwordHash) {
-    res.status(401).json({ error: "This account was set up before passwords were required. Please register a new account." });
+    res.status(401).json({ error: "This account uses social sign-in. Please use the Google button to sign in." });
     return;
   }
 
@@ -122,8 +153,193 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
-  const { passwordHash: _ph, ...safeUser } = user;
-  res.status(200).json(safeUser);
+  res.status(200).json(safeUser(user));
+});
+
+// ── Token exchange (used after OAuth redirect) ──────────────────────────────
+
+// GET /auth/token/:token
+router.get("/auth/token/:token", async (req, res): Promise<void> => {
+  const { token } = req.params;
+
+  const [record] = await db
+    .select()
+    .from(authTokensTable)
+    .where(eq(authTokensTable.token, token))
+    .limit(1);
+
+  if (!record) {
+    res.status(404).json({ error: "Token not found or expired." });
+    return;
+  }
+
+  if (record.expiresAt < new Date()) {
+    await db.delete(authTokensTable).where(eq(authTokensTable.token, token));
+    res.status(410).json({ error: "Token has expired. Please sign in again." });
+    return;
+  }
+
+  // Delete token so it can't be reused
+  await db.delete(authTokensTable).where(eq(authTokensTable.token, token));
+
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, record.userId))
+    .limit(1);
+
+  if (!user) {
+    res.status(404).json({ error: "User not found." });
+    return;
+  }
+
+  res.status(200).json(safeUser(user));
+});
+
+// ── Google OAuth ────────────────────────────────────────────────────────────
+
+// GET /auth/google  — initiate the OAuth flow
+router.get("/auth/google", (req, res): void => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    res.status(503).send("Google sign-in is not configured. Please set GOOGLE_CLIENT_ID.");
+    return;
+  }
+
+  const redirectUri = `${getBaseUrl()}/api/auth/google/callback`;
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
+    scope: "openid email profile",
+    access_type: "offline",
+    prompt: "select_account",
+  });
+
+  res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+});
+
+// GET /auth/google/callback  — Google redirects here after user grants permission
+router.get("/auth/google/callback", async (req, res): Promise<void> => {
+  const { code, error } = req.query as Record<string, string>;
+  const frontendBase = getFrontendBase();
+
+  if (error || !code) {
+    res.redirect(`${frontendBase}/auth/callback?error=${encodeURIComponent(error ?? "access_denied")}`);
+    return;
+  }
+
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    res.redirect(`${frontendBase}/auth/callback?error=not_configured`);
+    return;
+  }
+
+  try {
+    // Exchange code for tokens
+    const redirectUri = `${getBaseUrl()}/api/auth/google/callback`;
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+        grant_type: "authorization_code",
+      }).toString(),
+    });
+
+    if (!tokenRes.ok) {
+      const err = await tokenRes.text();
+      console.error("Google token exchange failed:", err);
+      res.redirect(`${frontendBase}/auth/callback?error=token_exchange_failed`);
+      return;
+    }
+
+    const tokens = await tokenRes.json() as { access_token: string };
+
+    // Get user profile
+    const profileRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${tokens.access_token}` },
+    });
+
+    if (!profileRes.ok) {
+      res.redirect(`${frontendBase}/auth/callback?error=profile_fetch_failed`);
+      return;
+    }
+
+    const profile = await profileRes.json() as {
+      sub: string;
+      name: string;
+      email: string;
+      picture?: string;
+      email_verified?: boolean;
+    };
+
+    if (!profile.email) {
+      res.redirect(`${frontendBase}/auth/callback?error=no_email`);
+      return;
+    }
+
+    // Find or create the user
+    let user: typeof usersTable.$inferSelect | undefined;
+
+    // 1. Try by googleId
+    const [byGoogleId] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.googleId, profile.sub))
+      .limit(1);
+
+    if (byGoogleId) {
+      // Update avatar in case it changed
+      const [updated] = await db
+        .update(usersTable)
+        .set({ avatarUrl: profile.picture ?? byGoogleId.avatarUrl })
+        .where(eq(usersTable.id, byGoogleId.id))
+        .returning();
+      user = updated;
+    } else {
+      // 2. Try by email — link Google to existing account
+      const [byEmail] = await db
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.email, profile.email.toLowerCase()))
+        .limit(1);
+
+      if (byEmail) {
+        const [updated] = await db
+          .update(usersTable)
+          .set({ googleId: profile.sub, avatarUrl: profile.picture ?? byEmail.avatarUrl })
+          .where(eq(usersTable.id, byEmail.id))
+          .returning();
+        user = updated;
+      } else {
+        // 3. Create a brand-new account
+        const [created] = await db
+          .insert(usersTable)
+          .values({
+            name: profile.name,
+            email: profile.email.toLowerCase(),
+            googleId: profile.sub,
+            avatarUrl: profile.picture,
+            role: "both",
+            genres: "[]",
+            mediaInterests: "",
+          })
+          .returning();
+        user = created;
+      }
+    }
+
+    const loginToken = await createLoginToken(user.id);
+    res.redirect(`${frontendBase}/auth/callback?token=${loginToken}`);
+  } catch (err) {
+    console.error("Google OAuth error:", err);
+    res.redirect(`${frontendBase}/auth/callback?error=server_error`);
+  }
 });
 
 export default router;
