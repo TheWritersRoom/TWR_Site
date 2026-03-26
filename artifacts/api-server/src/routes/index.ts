@@ -8,6 +8,7 @@ import suggestionsRouter from "./suggestions";
 import publishingRouter from "./publishing";
 import searchRouter from "./search";
 import pitchesRouter from "./pitches";
+import exportRouter from "./export";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(publishingRouter);
 router.use(projectsRouter);
 router.use(collaboratorsRouter);
 router.use(suggestionsRouter);
+router.use(exportRouter);
 
 export default router;

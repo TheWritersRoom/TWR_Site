@@ -11,6 +11,7 @@ import {
 import { useQuery, useMutation, useQueryClient as useQC } from "@tanstack/react-query";
 import { PublishModal } from "@/components/publish-modal";
 import { ScriptEditor } from "@/components/script-editor";
+import { KdpExportModal } from "@/components/kdp-export-modal";
 import { parseFountain } from "@/utils/fountain";
 import { useAuth } from "@/hooks/use-auth";
 import { 
@@ -66,6 +67,7 @@ export default function ProjectDetail() {
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [publishLoading, setPublishLoading] = useState(false);
   const [scriptEditorOpen, setScriptEditorOpen] = useState(false);
+  const [kdpModalOpen, setKdpModalOpen] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
 
   type FeedbackItem = {
@@ -447,6 +449,15 @@ export default function ProjectDetail() {
                >
                  <Film className="w-4 h-4" />
                  Edit Script
+               </button>
+             )}
+             {isOwner && project.type !== "script" && (
+               <button
+                 onClick={() => setKdpModalOpen(true)}
+                 className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors"
+               >
+                 <BookOpen className="w-4 h-4" />
+                 Export for Kindle
                </button>
              )}
              {isOwner && (
@@ -1144,6 +1155,15 @@ export default function ProjectDetail() {
             feedbackVisibility: (project.feedbackVisibility ?? "public") as "public" | "private",
           } : undefined}
           loading={publishLoading}
+        />
+      )}
+
+      {/* KDP Export Modal */}
+      {kdpModalOpen && project && isOwner && user && (
+        <KdpExportModal
+          project={project}
+          userId={user.id}
+          onClose={() => setKdpModalOpen(false)}
         />
       )}
 
