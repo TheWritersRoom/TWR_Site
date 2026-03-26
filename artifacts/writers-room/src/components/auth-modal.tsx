@@ -294,7 +294,7 @@ export function AuthModal() {
           initial={{ scale: 0.95, y: 20 }}
           animate={{ scale: 1, y: 0 }}
           transition={{ type: "spring", bounce: 0.4 }}
-          className="relative z-10 w-full max-w-md bg-card/90 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl overflow-hidden"
+          className="relative z-10 w-full max-w-md bg-card/90 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[90vh]"
         >
           <button
             onClick={closeAuthModal}
@@ -332,7 +332,7 @@ export function AuthModal() {
             </div>
           )}
 
-          <div className="p-8 md:p-10 pt-6">
+          <div className="p-8 md:p-10 pt-6 overflow-y-auto flex-1">
             {error && (
               <div className="mb-4 px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
                 {error}
