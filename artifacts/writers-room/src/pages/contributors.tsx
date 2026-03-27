@@ -11,6 +11,9 @@ type UserCredentials = {
   isPublishedAuthor?: boolean;
   publishedWorks?: PublishedWork[];
   website?: string;
+  linkedin?: string;
+  patreon?: string;
+  substack?: string;
 };
 
 type Contributor = {
@@ -251,16 +254,34 @@ export default function Contributors() {
                                 ))}
                               </div>
                             )}
-                            {creds.website && (
-                              <a
-                                href={creds.website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
-                              >
-                                <Globe className="w-3.5 h-3.5" />
-                                {creds.website.replace(/^https?:\/\//, "")}
-                              </a>
+                            {(creds.website || creds.linkedin || creds.patreon || creds.substack) && (
+                              <div className="flex flex-wrap gap-2">
+                                {creds.website && (
+                                  <a href={creds.website} target="_blank" rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+                                    <Globe className="w-3.5 h-3.5" />
+                                    {creds.website.replace(/^https?:\/\//, "")}
+                                  </a>
+                                )}
+                                {creds.linkedin && (
+                                  <a href={creds.linkedin} target="_blank" rel="noopener noreferrer"
+                                    className="text-xs font-semibold text-[#0A66C2] bg-[#0A66C2]/10 px-2 py-0.5 rounded hover:bg-[#0A66C2]/20 transition-colors">
+                                    LinkedIn
+                                  </a>
+                                )}
+                                {creds.patreon && (
+                                  <a href={creds.patreon} target="_blank" rel="noopener noreferrer"
+                                    className="text-xs font-semibold text-[#F96854] bg-[#F96854]/10 px-2 py-0.5 rounded hover:bg-[#F96854]/20 transition-colors">
+                                    Patreon
+                                  </a>
+                                )}
+                                {creds.substack && (
+                                  <a href={creds.substack} target="_blank" rel="noopener noreferrer"
+                                    className="text-xs font-semibold text-[#FF6719] bg-[#FF6719]/10 px-2 py-0.5 rounded hover:bg-[#FF6719]/20 transition-colors">
+                                    Substack
+                                  </a>
+                                )}
+                              </div>
                             )}
                             <button
                               onClick={() => setExpanded(null)}

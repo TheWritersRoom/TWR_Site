@@ -178,6 +178,9 @@ export function AuthModal() {
   const [suIsPublished, setSuIsPublished] = useState(false);
   const [suWorks, setSuWorks] = useState<WorkEntry[]>([]);
   const [suWebsite, setSuWebsite] = useState("");
+  const [suLinkedin, setSuLinkedin] = useState("");
+  const [suPatreon, setSuPatreon] = useState("");
+  const [suSubstack, setSuSubstack] = useState("");
 
   const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
 
@@ -255,6 +258,9 @@ export function AuthModal() {
         isPublishedAuthor: suIsPublished || validWorks.length > 0,
         publishedWorks: validWorks,
         ...(suWebsite.trim() ? { website: suWebsite.trim() } : {}),
+        ...(suLinkedin.trim() ? { linkedin: suLinkedin.trim() } : {}),
+        ...(suPatreon.trim() ? { patreon: suPatreon.trim() } : {}),
+        ...(suSubstack.trim() ? { substack: suSubstack.trim() } : {}),
       });
 
       await register({
@@ -724,6 +730,46 @@ export function AuthModal() {
                         className="w-full px-4 py-3 rounded-xl bg-background/50 border-2 border-input focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none text-sm"
                         placeholder="https://yoursite.com"
                       />
+                    </div>
+
+                    {/* Platform links */}
+                    <div>
+                      <label className="block text-sm font-semibold text-foreground mb-3">
+                        Platform profiles
+                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">optional</span>
+                      </label>
+                      <div className="space-y-2.5">
+                        <div className="flex items-center gap-3">
+                          <span className="w-24 flex-shrink-0 text-xs font-semibold text-[#0A66C2] bg-[#0A66C2]/10 px-2 py-1 rounded text-center">LinkedIn</span>
+                          <input
+                            type="url"
+                            value={suLinkedin}
+                            onChange={(e) => setSuLinkedin(e.target.value)}
+                            className="flex-1 px-3 py-2 rounded-lg bg-background/50 border-2 border-input focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none text-sm"
+                            placeholder="https://linkedin.com/in/yourname"
+                          />
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="w-24 flex-shrink-0 text-xs font-semibold text-[#F96854] bg-[#F96854]/10 px-2 py-1 rounded text-center">Patreon</span>
+                          <input
+                            type="url"
+                            value={suPatreon}
+                            onChange={(e) => setSuPatreon(e.target.value)}
+                            className="flex-1 px-3 py-2 rounded-lg bg-background/50 border-2 border-input focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none text-sm"
+                            placeholder="https://patreon.com/yourname"
+                          />
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="w-24 flex-shrink-0 text-xs font-semibold text-[#FF6719] bg-[#FF6719]/10 px-2 py-1 rounded text-center">Substack</span>
+                          <input
+                            type="url"
+                            value={suSubstack}
+                            onChange={(e) => setSuSubstack(e.target.value)}
+                            className="flex-1 px-3 py-2 rounded-lg bg-background/50 border-2 border-input focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none text-sm"
+                            placeholder="https://yourname.substack.com"
+                          />
+                        </div>
+                      </div>
                     </div>
 
                     <Button
