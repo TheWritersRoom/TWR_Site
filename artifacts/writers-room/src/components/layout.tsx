@@ -87,6 +87,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           >
             Sign Out
           </button>
+          <p className="mt-3 text-[8px] text-[#7A6B5E]/60 tracking-[0.1em] text-center">
+            © {new Date().getFullYear()} Writers Room
+          </p>
         </div>
       </aside>
 
