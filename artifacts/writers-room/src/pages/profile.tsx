@@ -1,12 +1,14 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle2, Clock, XCircle, BookText, FileText,
   MessageSquareQuote, CalendarDays, PenLine, Users, Layers,
   ArrowRight, Sparkles, Tag, Trophy, BadgeCheck, BookOpen, Globe,
+  Bell, ToggleLeft, ToggleRight, Lightbulb, Mail, CheckCheck,
 } from "lucide-react";
 
 type PublishedWork = { title: string; year?: number; publisher?: string };
@@ -39,6 +41,19 @@ type CollaboratorStat = {
 function parseGenres(raw: string | null | undefined): string[] {
   try { return JSON.parse(raw ?? "[]"); } catch { return []; }
 }
+
+type PitchInvite = {
+  id: number;
+  pitchId: number;
+  pitchTitle: string;
+  pitchType: string;
+  pitchGenres: string;
+  fromUserId: number;
+  fromUserName: string;
+  message: string | null;
+  status: "pending" | "accepted" | "declined";
+  createdAt: string;
+};
 
 const GENRE_COLORS: Record<string, string> = {
   "Film & TV Script":          "bg-purple-100 text-purple-700",
@@ -101,6 +116,7 @@ function truncate(text: string, max = 80) {
 
 export default function Profile() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: activity = [], isLoading } = useQuery<ActivityItem[]>({
     queryKey: ["/api/users", user?.id, "activity"],
@@ -109,11 +125,44 @@ export default function Profile() {
   });
 
   const isAuthor = user?.role === "author" || user?.role === "both";
+  const isContributor = user?.role === "contributor" || user?.role === "both";
 
   const { data: collabStats = [], isLoading: collabStatsLoading } = useQuery<CollaboratorStat[]>({
     queryKey: ["/api/users", user?.id, "collaborator-stats"],
     enabled: !!user && isAuthor,
     queryFn: () => fetch(`/api/users/${user!.id}/collaborator-stats`).then((r) => r.json()),
+  });
+
+  const { data: pitchInvites = [], isLoading: invitesLoading } = useQuery<PitchInvite[]>({
+    queryKey: ["/api/users", user?.id, "pitch-invites"],
+    enabled: !!user && isContributor,
+    queryFn: () => fetch(`/api/users/${user!.id}/pitch-invites`).then((r) => r.json()),
+  });
+
+  const [openToApproach, setOpenToApproach] = useState<boolean>(user?.openToApproach ?? false);
+
+  const openToApproachMutation = useMutation({
+    mutationFn: (value: boolean) =>
+      fetch(`/api/users/${user!.id}/open-to-approach`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ openToApproach: value }),
+      }).then((r) => r.json()),
+    onSuccess: (_, value) => {
+      setOpenToApproach(value);
+    },
+  });
+
+  const respondToInviteMutation = useMutation({
+    mutationFn: ({ inviteId, status }: { inviteId: number; status: "accepted" | "declined" }) =>
+      fetch(`/api/pitch-invites/${inviteId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user!.id, status }),
+      }).then((r) => r.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users", user?.id, "pitch-invites"] });
+    },
   });
 
   if (!user) return null;
@@ -242,6 +291,32 @@ export default function Profile() {
               </div>
             );
           })()}
+
+          {/* Open to Approach toggle — contributors only */}
+          {isContributor && (
+            <div className="mt-4 pt-4 border-t border-[#1A1614]/10">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#7A6B5E] mb-0.5 flex items-center gap-1.5">
+                    <Bell className="w-3.5 h-3.5" /> Open to direct approach
+                  </p>
+                  <p className="text-xs text-[#7A6B5E]">
+                    Allow authors to invite you to their pitches directly
+                  </p>
+                </div>
+                <button
+                  onClick={() => openToApproachMutation.mutate(!openToApproach)}
+                  disabled={openToApproachMutation.isPending}
+                  className="flex items-center gap-1.5 shrink-0 transition-opacity disabled:opacity-50"
+                  aria-label="Toggle open to approach"
+                >
+                  {openToApproach
+                    ? <ToggleRight className="w-9 h-9 text-emerald-500" />
+                    : <ToggleLeft className="w-9 h-9 text-[#7A6B5E]/40" />}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
 
@@ -435,6 +510,103 @@ export default function Profile() {
           </div>
         )}
       </div>
+
+      {/* Pitch Invites — contributors only */}
+      {isContributor && (
+        <div className="mb-10">
+          <div className="mb-5">
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2 flex items-center gap-2">
+              <Mail className="w-3.5 h-3.5 text-[#E8B84B]" /> Pitch Invitations
+            </p>
+            <div className="border-t-2 border-[#1A1614] mb-2" />
+            <h2 className="text-2xl font-serif font-bold text-[#1A1614]">Invitations from Authors</h2>
+            <div className="border-t border-[#1A1614]/15 mt-3" />
+          </div>
+
+          {invitesLoading ? (
+            <div className="flex justify-center py-10">
+              <div className="w-7 h-7 border-b-2 border-[#1A1614] animate-spin rounded-full" />
+            </div>
+          ) : pitchInvites.length === 0 ? (
+            <div className="bg-white border border-[#1A1614]/15 p-10 text-center">
+              <Lightbulb className="w-10 h-10 text-[#7A6B5E] mx-auto mb-3 opacity-40" />
+              <h3 className="text-base font-serif font-bold text-[#1A1614]">No invitations yet</h3>
+              <p className="text-sm text-[#7A6B5E] mt-1 max-w-xs mx-auto">
+                {openToApproach
+                  ? "Authors whose pitch genres match your interests can invite you here."
+                  : "Enable \"Open to direct approach\" above to start receiving invitations."}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {pitchInvites.map((inv, i) => {
+                let genres: string[] = [];
+                try { genres = JSON.parse(inv.pitchGenres ?? "[]"); } catch {}
+                return (
+                  <motion.div
+                    key={inv.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="bg-white border border-[#1A1614]/15 p-5 hover:border-[#E8B84B] transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <Link href={`/pitch/${inv.pitchId}`}
+                          className="font-serif font-bold text-[#1A1614] hover:text-[#E8B84B] transition-colors text-base leading-snug block mb-1">
+                          {inv.pitchTitle}
+                        </Link>
+                        <p className="text-xs text-[#7A6B5E] mb-2">
+                          Invited by <span className="font-semibold">{inv.fromUserName}</span>
+                          {" · "}{format(new Date(inv.createdAt), "d MMM yyyy")}
+                        </p>
+                        {genres.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {genres.map((g) => (
+                              <span key={g} className={`px-2 py-0.5 text-[10px] font-semibold ${GENRE_COLORS[g] ?? "bg-[#1A1614]/5 text-[#7A6B5E]"}`}>{g}</span>
+                            ))}
+                          </div>
+                        )}
+                        {inv.message && (
+                          <p className="text-xs text-[#7A6B5E] italic bg-[#F9F6EE] border border-[#1A1614]/10 px-3 py-2 mt-1">
+                            "{inv.message}"
+                          </p>
+                        )}
+                      </div>
+                      <div className="shrink-0 flex flex-col items-end gap-2">
+                        {inv.status === "pending" ? (
+                          <>
+                            <button
+                              onClick={() => respondToInviteMutation.mutate({ inviteId: inv.id, status: "accepted" })}
+                              disabled={respondToInviteMutation.isPending}
+                              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                            >
+                              <CheckCheck className="w-3.5 h-3.5" /> Accept
+                            </button>
+                            <button
+                              onClick={() => respondToInviteMutation.mutate({ inviteId: inv.id, status: "declined" })}
+                              disabled={respondToInviteMutation.isPending}
+                              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 border border-[#1A1614]/20 text-[#7A6B5E] rounded-lg hover:border-[#1A1614] hover:text-[#1A1614] transition-colors"
+                            >
+                              Decline
+                            </button>
+                          </>
+                        ) : (
+                          <span className={`text-xs font-bold px-3 py-1.5 rounded-lg ${
+                            inv.status === "accepted" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-600 border border-red-200"
+                          }`}>
+                            {inv.status === "accepted" ? "Accepted" : "Declined"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

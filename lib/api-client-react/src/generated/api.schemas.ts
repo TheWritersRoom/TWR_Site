@@ -32,6 +32,8 @@ export interface User {
   bio?: string | null;
   /** JSON-encoded credentials object (professionalTitle, isPublishedAuthor, publishedWorks, website) */
   credentials?: string | null;
+  /** Whether the user is open to being approached directly by authors via pitch invites */
+  openToApproach?: boolean;
   createdAt: string;
 }
 

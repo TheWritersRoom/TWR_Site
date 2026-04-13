@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, and, ilike, or, sql, desc } from "drizzle-orm";
-import { db, pitchesTable, pitchResponsesTable, usersTable } from "@workspace/db";
+import { eq, and, ilike, or, sql, desc, ne } from "drizzle-orm";
+import { db, pitchesTable, pitchResponsesTable, usersTable, pitchInvitesTable } from "@workspace/db";
 
 const router: IRouter = Router();
 
@@ -185,6 +185,135 @@ router.delete("/pitches/:id/responses/:responseId", async (req, res): Promise<vo
 
   await db.delete(pitchResponsesTable).where(eq(pitchResponsesTable.id, responseId));
   res.json({ ok: true });
+});
+
+// GET /pitches/:id/suggested-collaborators?userId=X
+// Returns contributors open to approach whose genres overlap with the pitch's genres,
+// excluding those already invited and the pitch owner.
+router.get("/pitches/:id/suggested-collaborators", async (req, res): Promise<void> => {
+  const pitchId = parseInt(req.params.id, 10);
+  const userId = parseInt(req.query.userId as string, 10);
+  if (isNaN(pitchId) || isNaN(userId)) { res.status(400).json({ error: "Invalid params" }); return; }
+
+  const [pitch] = await db.select().from(pitchesTable).where(eq(pitchesTable.id, pitchId));
+  if (!pitch) { res.status(404).json({ error: "Pitch not found" }); return; }
+  if (pitch.ownerId !== userId) { res.status(403).json({ error: "Only the pitch owner can search for collaborators" }); return; }
+
+  const pitchGenres: string[] = JSON.parse(pitch.genres ?? "[]");
+
+  // Get already-invited user IDs for this pitch
+  const existingInvites = await db
+    .select({ toUserId: pitchInvitesTable.toUserId })
+    .from(pitchInvitesTable)
+    .where(eq(pitchInvitesTable.pitchId, pitchId));
+  const invitedIds = new Set(existingInvites.map((i) => i.toUserId));
+
+  // Fetch all contributors open to approach (excluding the pitch owner)
+  const candidates = await db
+    .select({
+      id: usersTable.id,
+      name: usersTable.name,
+      email: usersTable.email,
+      role: usersTable.role,
+      genres: usersTable.genres,
+      mediaInterests: usersTable.mediaInterests,
+      bio: usersTable.bio,
+      credentials: usersTable.credentials,
+      avatarUrl: usersTable.avatarUrl,
+    })
+    .from(usersTable)
+    .where(
+      and(
+        or(eq(usersTable.role, "contributor"), eq(usersTable.role, "both")),
+        eq(usersTable.openToApproach, true),
+        ne(usersTable.id, userId),
+      )
+    );
+
+  // Filter by genre overlap and exclude already-invited
+  const results = candidates
+    .filter((c) => !invitedIds.has(c.id))
+    .map((c) => {
+      const userGenres: string[] = JSON.parse(c.genres ?? "[]");
+      const overlap = pitchGenres.filter((g) => userGenres.includes(g));
+      return { ...c, matchingGenres: overlap, matchScore: overlap.length };
+    })
+    .filter((c) => pitchGenres.length === 0 || c.matchScore > 0)
+    .sort((a, b) => b.matchScore - a.matchScore);
+
+  res.json(results);
+});
+
+// POST /pitches/:id/invite — send an invite to a contributor
+router.post("/pitches/:id/invite", async (req, res): Promise<void> => {
+  const pitchId = parseInt(req.params.id, 10);
+  const { fromUserId, toUserId, message } = req.body as { fromUserId: number; toUserId: number; message?: string };
+  if (isNaN(pitchId) || !fromUserId || !toUserId) { res.status(400).json({ error: "Invalid params" }); return; }
+
+  const [pitch] = await db.select().from(pitchesTable).where(eq(pitchesTable.id, pitchId));
+  if (!pitch) { res.status(404).json({ error: "Pitch not found" }); return; }
+  if (pitch.ownerId !== fromUserId) { res.status(403).json({ error: "Only the pitch owner can send invites" }); return; }
+
+  // Check for duplicate
+  const [existing] = await db
+    .select()
+    .from(pitchInvitesTable)
+    .where(and(eq(pitchInvitesTable.pitchId, pitchId), eq(pitchInvitesTable.toUserId, toUserId)));
+  if (existing) { res.status(409).json({ error: "Already invited" }); return; }
+
+  const [invite] = await db
+    .insert(pitchInvitesTable)
+    .values({ pitchId, fromUserId, toUserId, message: message ?? "" })
+    .returning();
+
+  res.status(201).json(invite);
+});
+
+// GET /pitches/:id/invites?userId=X — list invites for a pitch (owner only)
+router.get("/pitches/:id/invites", async (req, res): Promise<void> => {
+  const pitchId = parseInt(req.params.id, 10);
+  const userId = parseInt(req.query.userId as string, 10);
+  if (isNaN(pitchId) || isNaN(userId)) { res.status(400).json({ error: "Invalid params" }); return; }
+
+  const [pitch] = await db.select().from(pitchesTable).where(eq(pitchesTable.id, pitchId));
+  if (!pitch) { res.status(404).json({ error: "Pitch not found" }); return; }
+  if (pitch.ownerId !== userId) { res.status(403).json({ error: "Forbidden" }); return; }
+
+  const invites = await db
+    .select({
+      id: pitchInvitesTable.id,
+      toUserId: pitchInvitesTable.toUserId,
+      toUserName: usersTable.name,
+      message: pitchInvitesTable.message,
+      status: pitchInvitesTable.status,
+      createdAt: pitchInvitesTable.createdAt,
+    })
+    .from(pitchInvitesTable)
+    .innerJoin(usersTable, eq(pitchInvitesTable.toUserId, usersTable.id))
+    .where(eq(pitchInvitesTable.pitchId, pitchId));
+
+  res.json(invites);
+});
+
+// PATCH /pitch-invites/:id — accept or decline an invite (recipient only)
+router.patch("/pitch-invites/:id", async (req, res): Promise<void> => {
+  const inviteId = parseInt(req.params.id, 10);
+  const { userId, status } = req.body as { userId: number; status: "accepted" | "declined" };
+  if (isNaN(inviteId) || !userId || !["accepted", "declined"].includes(status)) {
+    res.status(400).json({ error: "Invalid params" }); return;
+  }
+
+  const [invite] = await db.select().from(pitchInvitesTable).where(eq(pitchInvitesTable.id, inviteId));
+  if (!invite) { res.status(404).json({ error: "Invite not found" }); return; }
+  if (invite.toUserId !== userId) { res.status(403).json({ error: "Forbidden" }); return; }
+
+  const [updated] = await db
+    .update(pitchInvitesTable)
+    .set({ status })
+    .where(eq(pitchInvitesTable.id, inviteId))
+    .returning();
+
+  res.json(updated);
 });
 
 export default router;

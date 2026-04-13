@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, or } from "drizzle-orm";
-import { db, usersTable, suggestionsTable, projectsTable } from "@workspace/db";
+import { db, usersTable, suggestionsTable, projectsTable, pitchInvitesTable, pitchesTable } from "@workspace/db";
 import { CreateUserBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -259,6 +259,51 @@ router.get("/users/:id/activity", async (req, res): Promise<void> => {
     .orderBy(suggestionsTable.createdAt);
 
   res.json(rows);
+});
+
+// PATCH /users/:id/open-to-approach — toggle open-to-approach flag
+router.patch("/users/:id/open-to-approach", async (req, res): Promise<void> => {
+  const userId = parseInt(req.params.id, 10);
+  const { openToApproach } = req.body as { openToApproach: boolean };
+  if (isNaN(userId) || typeof openToApproach !== "boolean") {
+    res.status(400).json({ error: "Invalid params" }); return;
+  }
+
+  const [updated] = await db
+    .update(usersTable)
+    .set({ openToApproach })
+    .where(eq(usersTable.id, userId))
+    .returning();
+
+  if (!updated) { res.status(404).json({ error: "User not found" }); return; }
+  res.json(updated);
+});
+
+// GET /users/:id/pitch-invites — invites received by a contributor
+router.get("/users/:id/pitch-invites", async (req, res): Promise<void> => {
+  const userId = parseInt(req.params.id, 10);
+  if (isNaN(userId)) { res.status(400).json({ error: "Invalid user id" }); return; }
+
+  const invites = await db
+    .select({
+      id: pitchInvitesTable.id,
+      pitchId: pitchInvitesTable.pitchId,
+      pitchTitle: pitchesTable.title,
+      pitchType: pitchesTable.type,
+      pitchGenres: pitchesTable.genres,
+      fromUserId: pitchInvitesTable.fromUserId,
+      fromUserName: usersTable.name,
+      message: pitchInvitesTable.message,
+      status: pitchInvitesTable.status,
+      createdAt: pitchInvitesTable.createdAt,
+    })
+    .from(pitchInvitesTable)
+    .innerJoin(pitchesTable, eq(pitchInvitesTable.pitchId, pitchesTable.id))
+    .innerJoin(usersTable, eq(pitchInvitesTable.fromUserId, usersTable.id))
+    .where(eq(pitchInvitesTable.toUserId, userId))
+    .orderBy(pitchInvitesTable.createdAt);
+
+  res.json(invites);
 });
 
 router.get("/users/me", async (req, res): Promise<void> => {

@@ -7,10 +7,31 @@ import { useAuth } from "@/hooks/use-auth";
 import {
   Lightbulb, BookText, FileText, Shapes, ArrowLeft,
   MessageCircle, HandHeart, Trash2, CheckCircle, XCircle,
-  ChevronDown, ChevronUp, Send
+  ChevronDown, ChevronUp, Send, Users, Search, Mail, CheckCircle2, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+
+type SuggestedCollaborator = {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  genres: string;
+  bio: string | null;
+  credentials: string | null;
+  matchingGenres: string[];
+  matchScore: number;
+};
+
+type PitchInvite = {
+  id: number;
+  toUserId: number;
+  toUserName: string;
+  message: string | null;
+  status: "pending" | "accepted" | "declined";
+  createdAt: string;
+};
 
 type PitchResponse = {
   id: number;
@@ -210,6 +231,9 @@ export default function PitchDetail() {
 
   const [respondMode, setRespondMode] = useState<"feedback" | "interest" | null>(null);
   const [showDesc, setShowDesc] = useState(true);
+  const [showCollabSearch, setShowCollabSearch] = useState(false);
+  const [inviteMessages, setInviteMessages] = useState<Record<number, string>>({});
+  const [sentInvites, setSentInvites] = useState<Set<number>>(new Set());
 
   const { data: pitch, isLoading } = useQuery<PitchDetail>({
     queryKey: [`/api/pitches/${pitchId}`],
@@ -240,6 +264,32 @@ export default function PitchDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/pitches"] });
       navigate("/pitches");
+    },
+  });
+
+  const { data: suggestedCollabs = [], isLoading: collabsLoading } = useQuery<SuggestedCollaborator[]>({
+    queryKey: [`/api/pitches/${pitchId}/suggested-collaborators`, user?.id],
+    enabled: showCollabSearch && !!user,
+    queryFn: () => fetch(`/api/pitches/${pitchId}/suggested-collaborators?userId=${user!.id}`).then((r) => r.json()),
+  });
+
+  const { data: sentInvitesList = [] } = useQuery<PitchInvite[]>({
+    queryKey: [`/api/pitches/${pitchId}/invites`, user?.id],
+    enabled: showCollabSearch && !!user,
+    queryFn: () => fetch(`/api/pitches/${pitchId}/invites?userId=${user!.id}`).then((r) => r.json()),
+  });
+
+  const inviteMutation = useMutation({
+    mutationFn: ({ toUserId, message }: { toUserId: number; message: string }) =>
+      fetch(`/api/pitches/${pitchId}/invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fromUserId: user!.id, toUserId, message }),
+      }).then((r) => r.json()),
+    onSuccess: (_, { toUserId }) => {
+      setSentInvites((prev) => new Set(prev).add(toUserId));
+      queryClient.invalidateQueries({ queryKey: [`/api/pitches/${pitchId}/invites`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/pitches/${pitchId}/suggested-collaborators`] });
     },
   });
 
@@ -351,28 +401,140 @@ export default function PitchDetail() {
 
       {/* Owner actions */}
       {isOwner && (
-        <div className="flex items-center gap-3 mb-8 flex-wrap">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => toggleStatusMutation.mutate()}
-            disabled={toggleStatusMutation.isPending}
-          >
-            {pitch.status === "open"
-              ? <><XCircle className="w-3.5 h-3.5 mr-1.5" /> Close pitch</>
-              : <><CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Reopen pitch</>}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/30"
-            onClick={() => {
-              if (confirm("Delete this pitch and all its responses?")) deletePitchMutation.mutate();
-            }}
-            disabled={deletePitchMutation.isPending}
-          >
-            <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Delete pitch
-          </Button>
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => toggleStatusMutation.mutate()}
+              disabled={toggleStatusMutation.isPending}
+            >
+              {pitch.status === "open"
+                ? <><XCircle className="w-3.5 h-3.5 mr-1.5" /> Close pitch</>
+                : <><CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Reopen pitch</>}
+            </Button>
+            <Button
+              size="sm"
+              variant={showCollabSearch ? "default" : "outline"}
+              onClick={() => setShowCollabSearch((v) => !v)}
+              className={showCollabSearch ? "" : "border-[#E8B84B] text-[#1A1614] hover:bg-[#E8B84B]/10"}
+            >
+              <Users className="w-3.5 h-3.5 mr-1.5" /> Find Collaborators
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/30"
+              onClick={() => {
+                if (confirm("Delete this pitch and all its responses?")) deletePitchMutation.mutate();
+              }}
+              disabled={deletePitchMutation.isPending}
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Delete pitch
+            </Button>
+          </div>
+
+          {/* Find Collaborators Panel */}
+          <AnimatePresence>
+            {showCollabSearch && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-card border-2 border-[#E8B84B]/40 rounded-2xl p-6 mb-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Search className="w-4 h-4 text-[#E8B84B]" />
+                    <h3 className="font-serif font-bold text-foreground">Find Collaborators</h3>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      Contributors open to direct approach, matched by genre
+                    </span>
+                  </div>
+
+                  {collabsLoading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                    </div>
+                  ) : suggestedCollabs.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Users className="w-10 h-10 text-muted-foreground mx-auto mb-2 opacity-30" />
+                      <p className="text-sm text-muted-foreground">No matching contributors found.</p>
+                      <p className="text-xs text-muted-foreground mt-1">Contributors must opt in to being approached on their profile page.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {suggestedCollabs.map((c) => {
+                        const alreadySent = sentInvites.has(c.id) ||
+                          sentInvitesList.some((inv) => inv.toUserId === c.id);
+                        return (
+                          <div key={c.id} className="bg-background rounded-xl border border-border p-4">
+                            <div className="flex items-start gap-3">
+                              <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center text-sm font-bold shrink-0">
+                                {c.name.charAt(0)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-foreground text-sm">{c.name}</p>
+                                {c.bio && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{c.bio}</p>}
+                                {c.matchingGenres.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-1.5">
+                                    {c.matchingGenres.map((g) => (
+                                      <span key={g} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#E8B84B]/15 text-[#7A5C00]">{g}</span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              {alreadySent ? (
+                                <span className="flex items-center gap-1 text-xs text-emerald-600 font-semibold shrink-0 mt-1">
+                                  <CheckCircle2 className="w-3.5 h-3.5" /> Invited
+                                </span>
+                              ) : (
+                                <div className="flex flex-col gap-1.5 items-end shrink-0 min-w-[140px]">
+                                  <input
+                                    type="text"
+                                    placeholder="Optional message…"
+                                    value={inviteMessages[c.id] ?? ""}
+                                    onChange={(e) => setInviteMessages((prev) => ({ ...prev, [c.id]: e.target.value }))}
+                                    className="text-xs px-2.5 py-1.5 border border-input rounded-lg bg-background w-full outline-none focus:border-primary"
+                                  />
+                                  <button
+                                    onClick={() => inviteMutation.mutate({ toUserId: c.id, message: inviteMessages[c.id] ?? "" })}
+                                    disabled={inviteMutation.isPending}
+                                    className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-[#1A1614] text-[#F9F6EE] rounded-lg hover:bg-[#1A1614]/80 transition-colors w-full justify-center"
+                                  >
+                                    <Mail className="w-3 h-3" /> Send Invite
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Already-sent invites summary */}
+                  {sentInvitesList.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5" /> Invites sent ({sentInvitesList.length})
+                      </p>
+                      <div className="space-y-1.5">
+                        {sentInvitesList.map((inv) => (
+                          <div key={inv.id} className="flex items-center justify-between text-xs">
+                            <span className="text-foreground font-medium">{inv.toUserName}</span>
+                            <span className={`font-semibold ${inv.status === "accepted" ? "text-emerald-600" : inv.status === "declined" ? "text-red-500" : "text-amber-600"}`}>
+                              {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
