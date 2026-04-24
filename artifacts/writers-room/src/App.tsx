@@ -14,6 +14,7 @@ import Discover from "@/pages/discover";
 import Pitches from "@/pages/pitches";
 import PitchDetail from "@/pages/pitch-detail";
 import AuthCallback from "@/pages/auth-callback";
+import Admin from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -36,6 +37,7 @@ function AuthenticatedRouter() {
         <Route path="/discover" component={Discover} />
         <Route path="/pitches" component={Pitches} />
         <Route path="/pitch/:id" component={PitchDetail} />
+        <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

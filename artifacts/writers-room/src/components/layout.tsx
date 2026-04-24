@@ -22,6 +22,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/pitches",      label: "Pitches"          },
     { href: "/discover",     label: "Browse & Rate"    },
     { href: "/profile",      label: "My Profile"       },
+    { href: "/admin",        label: "Admin"            },
   ].filter((l) => !l.hidden);
 
   return (
