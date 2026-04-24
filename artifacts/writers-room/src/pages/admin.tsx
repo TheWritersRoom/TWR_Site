@@ -249,9 +249,46 @@ function ProjectsTab() {
   );
 }
 
+function StatCard({ label, value }: { label: string; value: number | null }) {
+  return (
+    <div className="border-2 border-[#1A1614]/15 px-6 py-4 flex flex-col gap-1 min-w-[140px]">
+      <span className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#7A6B5E]">
+        {label}
+      </span>
+      {value === null ? (
+        <div className="w-10 h-6 bg-[#1A1614]/8 animate-pulse rounded-none" />
+      ) : (
+        <span className="text-3xl font-serif font-bold text-[#1A1614] tabular-nums leading-tight">
+          {value.toLocaleString()}
+        </span>
+      )}
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
+
+  const { data: users } = useQuery<AdminUser[]>({
+    queryKey: ["/api/admin/users"],
+    queryFn: async () => {
+      const r = await fetch("/api/admin/users", { credentials: "include" });
+      if (!r.ok) throw new Error(`Failed to load users (${r.status})`);
+      return r.json();
+    },
+    enabled: !!user?.isAdmin,
+  });
+
+  const { data: projects } = useQuery<Project[]>({
+    queryKey: ["/api/projects/search/admin"],
+    queryFn: () => fetch("/api/projects/search").then((r) => r.json()),
+    enabled: !!user?.isAdmin,
+  });
+
+  const totalUsers = users ? users.length : null;
+  const totalProjects = projects ? projects.length : null;
+  const publishedProjects = projects ? projects.filter((p) => p.isPublished).length : null;
 
   useEffect(() => {
     if (!user?.isAdmin) {
@@ -272,7 +309,12 @@ export default function AdminDashboard() {
         <p className="text-[#7A6B5E] mt-1 text-base">
           All registered users and projects on the platform.
         </p>
-        <div className="border-t border-[#1A1614]/15 mt-4" />
+        <div className="flex flex-wrap gap-4 mt-6">
+          <StatCard label="Total Users" value={totalUsers} />
+          <StatCard label="Total Projects" value={totalProjects} />
+          <StatCard label="Published Projects" value={publishedProjects} />
+        </div>
+        <div className="border-t border-[#1A1614]/15 mt-6" />
       </header>
 
       <Tabs defaultValue="users">
