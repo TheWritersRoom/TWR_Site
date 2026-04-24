@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
-import { Search, Users, BookText } from "lucide-react";
+import { Search, Users, BookText, Shield, ShieldOff } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableHeader,
@@ -20,6 +21,7 @@ type AdminUser = {
   name: string;
   email: string;
   role: string;
+  isAdmin: boolean;
   createdAt: string;
 };
 
@@ -42,6 +44,8 @@ const ROLE_BADGE: Record<string, string> = {
 
 function UsersTab() {
   const [query, setQuery] = useState("");
+  const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
 
   const { data: users = [], isLoading } = useQuery<AdminUser[]>({
     queryKey: ["/api/admin/users"],
@@ -49,6 +53,27 @@ function UsersTab() {
       const r = await fetch("/api/admin/users", { credentials: "include" });
       if (!r.ok) throw new Error(`Failed to load users (${r.status})`);
       return r.json();
+    },
+  });
+
+  const toggleAdmin = useMutation({
+    mutationFn: async ({ id, isAdmin }: { id: number; isAdmin: boolean }) => {
+      const r = await fetch(`/api/admin/users/${id}/admin`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isAdmin }),
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error ?? `Request failed (${r.status})`);
+      }
+      return r.json() as Promise<AdminUser>;
+    },
+    onSuccess: (updated) => {
+      queryClient.setQueryData<AdminUser[]>(["/api/admin/users"], (prev) =>
+        prev ? prev.map((u) => (u.id === updated.id ? updated : u)) : prev
+      );
     },
   });
 
@@ -93,6 +118,9 @@ function UsersTab() {
                   Role
                 </TableHead>
                 <TableHead className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] py-3 px-4">
+                  Admin
+                </TableHead>
+                <TableHead className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] py-3 px-4">
                   Joined
                 </TableHead>
               </TableRow>
@@ -100,33 +128,67 @@ function UsersTab() {
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-12 text-[#7A6B5E] text-sm">
+                  <TableCell colSpan={5} className="text-center py-12 text-[#7A6B5E] text-sm">
                     {query ? "No users match your search." : "No users yet."}
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map((u) => (
-                  <TableRow key={u.id} className="border-b border-[#1A1614]/8 hover:bg-[#F9F6EE]">
-                    <TableCell className="py-3 px-4 font-semibold text-[#1A1614] text-sm">
-                      {u.name}
-                    </TableCell>
-                    <TableCell className="py-3 px-4 text-[#7A6B5E] text-sm">
-                      {u.email}
-                    </TableCell>
-                    <TableCell className="py-3 px-4">
-                      <span
-                        className={`inline-block px-2.5 py-0.5 text-[10px] uppercase tracking-[0.12em] font-bold border rounded-none ${
-                          ROLE_BADGE[u.role] ?? "bg-[#1A1614]/5 text-[#7A6B5E] border-[#1A1614]/15"
-                        }`}
-                      >
-                        {u.role}
-                      </span>
-                    </TableCell>
-                    <TableCell className="py-3 px-4 text-[#7A6B5E] text-sm tabular-nums">
-                      {format(new Date(u.createdAt), "MMM d, yyyy")}
-                    </TableCell>
-                  </TableRow>
-                ))
+                filtered.map((u) => {
+                  const isSelf = u.id === currentUser?.id;
+                  const isPending = toggleAdmin.isPending && toggleAdmin.variables?.id === u.id;
+                  return (
+                    <TableRow key={u.id} className="border-b border-[#1A1614]/8 hover:bg-[#F9F6EE]">
+                      <TableCell className="py-3 px-4 font-semibold text-[#1A1614] text-sm">
+                        {u.name}
+                      </TableCell>
+                      <TableCell className="py-3 px-4 text-[#7A6B5E] text-sm">
+                        {u.email}
+                      </TableCell>
+                      <TableCell className="py-3 px-4">
+                        <span
+                          className={`inline-block px-2.5 py-0.5 text-[10px] uppercase tracking-[0.12em] font-bold border rounded-none ${
+                            ROLE_BADGE[u.role] ?? "bg-[#1A1614]/5 text-[#7A6B5E] border-[#1A1614]/15"
+                          }`}
+                        >
+                          {u.role}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          {u.isAdmin && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] font-bold border rounded-none bg-[#E8B84B]/20 text-[#7A5A00] border-[#E8B84B]/40">
+                              <Shield className="w-3 h-3" />
+                              Admin
+                            </span>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={isSelf || isPending}
+                            onClick={() => toggleAdmin.mutate({ id: u.id, isAdmin: !u.isAdmin })}
+                            className={`h-7 px-2 text-[10px] uppercase tracking-[0.1em] font-bold rounded-none border ${
+                              u.isAdmin
+                                ? "border-[#1A1614]/20 text-[#7A6B5E] hover:bg-[#1A1614]/5 hover:text-[#1A1614]"
+                                : "border-[#E8B84B]/40 text-[#7A5A00] hover:bg-[#E8B84B]/10"
+                            } disabled:opacity-40`}
+                            title={isSelf ? "You cannot change your own admin status" : undefined}
+                          >
+                            {isPending ? (
+                              <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                            ) : u.isAdmin ? (
+                              <><ShieldOff className="w-3 h-3 mr-1" />Revoke</>
+                            ) : (
+                              <><Shield className="w-3 h-3 mr-1" />Grant</>
+                            )}
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-3 px-4 text-[#7A6B5E] text-sm tabular-nums">
+                        {format(new Date(u.createdAt), "MMM d, yyyy")}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
