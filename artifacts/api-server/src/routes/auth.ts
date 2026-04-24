@@ -1,9 +1,9 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Response } from "express";
 import { eq, lt } from "drizzle-orm";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { randomUUID } from "crypto";
-import { db, usersTable, authTokensTable } from "@workspace/db";
+import { db, usersTable, authTokensTable, userSessionsTable } from "@workspace/db";
 
 const scryptAsync = promisify(scrypt);
 const router: IRouter = Router();
@@ -32,6 +32,23 @@ async function verifyPassword(password: string, stored: string): Promise<boolean
 export function safeUser(user: typeof usersTable.$inferSelect) {
   const { passwordHash: _ph, googleId: _gi, ...rest } = user;
   return rest;
+}
+
+const SESSION_COOKIE = "wr_session";
+const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+/** Create a server-side session and set an httpOnly session cookie */
+async function createSession(userId: number, res: Response): Promise<void> {
+  const token = randomUUID();
+  const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
+  await db.insert(userSessionsTable).values({ token, userId, expiresAt });
+  res.cookie(SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    expires: expiresAt,
+    path: "/",
+  });
 }
 
 /** Create a short-lived one-time token that the frontend exchanges for a user object */
@@ -99,6 +116,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
       .set({ passwordHash })
       .where(eq(usersTable.id, existingUser.id))
       .returning();
+    await createSession(updated.id, res);
     res.status(200).json(safeUser(updated));
     return;
   }
@@ -117,6 +135,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     })
     .returning();
 
+  await createSession(user.id, res);
   res.status(201).json(safeUser(user));
 });
 
@@ -155,6 +174,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
+  await createSession(user.id, res);
   res.status(200).json(safeUser(user));
 });
 
@@ -195,6 +215,7 @@ router.get("/auth/token/:token", async (req, res): Promise<void> => {
     return;
   }
 
+  await createSession(user.id, res);
   res.status(200).json(safeUser(user));
 });
 
@@ -342,6 +363,16 @@ router.get("/auth/google/callback", async (req, res): Promise<void> => {
     console.error("Google OAuth error:", err);
     res.redirect(`${frontendBase}/auth/callback?error=server_error`);
   }
+});
+
+// POST /auth/logout — invalidate current session cookie
+router.post("/auth/logout", async (req, res): Promise<void> => {
+  const token = req.cookies?.[SESSION_COOKIE];
+  if (token) {
+    await db.delete(userSessionsTable).where(eq(userSessionsTable.token, token));
+  }
+  res.clearCookie(SESSION_COOKIE, { path: "/" });
+  res.status(204).send();
 });
 
 export default router;

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { Search, Users, BookText } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -12,6 +13,8 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
+import { useAuth } from "@/hooks/use-auth";
+
 type AdminUser = {
   id: number;
   name: string;
@@ -42,7 +45,11 @@ function UsersTab() {
 
   const { data: users = [], isLoading } = useQuery<AdminUser[]>({
     queryKey: ["/api/admin/users"],
-    queryFn: () => fetch("/api/admin/users").then((r) => r.json()),
+    queryFn: async () => {
+      const r = await fetch("/api/admin/users", { credentials: "include" });
+      if (!r.ok) throw new Error(`Failed to load users (${r.status})`);
+      return r.json();
+    },
   });
 
   const filtered = users.filter((u) => {
@@ -243,6 +250,17 @@ function ProjectsTab() {
 }
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (!user?.isAdmin) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
+  if (!user?.isAdmin) return null;
+
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
       <header className="mb-10">

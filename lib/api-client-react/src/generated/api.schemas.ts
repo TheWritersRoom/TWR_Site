@@ -22,6 +22,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  isAdmin?: boolean;
   /** JSON-encoded array of genre interest strings */
   genres?: string;
   /** Free-form text of favourite authors, films and other media */

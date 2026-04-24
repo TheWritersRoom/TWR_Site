@@ -10,6 +10,7 @@ export const usersTable = pgTable("users", {
   googleId: text("google_id").unique(),
   avatarUrl: text("avatar_url"),
   role: text("role", { enum: ["author", "contributor", "both"] }).notNull().default("both"),
+  isAdmin: boolean("is_admin").notNull().default(false),
   genres: text("genres").default("[]"),
   mediaInterests: text("media_interests").default(""),
   bio: text("bio"),
