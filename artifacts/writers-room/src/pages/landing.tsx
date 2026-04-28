@@ -69,7 +69,7 @@ export default function Landing() {
 
         {/* Masthead */}
         <div className="px-6 md:px-14 py-3 text-center">
-          <span className="font-serif font-bold text-2xl md:text-3xl tracking-[0.06em] text-[#1A1614]">Writers Room</span>
+          <a href="/" className="font-serif font-bold text-2xl md:text-3xl tracking-[0.06em] text-[#1A1614] hover:text-[#E8B84B] transition-colors">Writers Room</a>
         </div>
 
         {/* Nav links strip */}
