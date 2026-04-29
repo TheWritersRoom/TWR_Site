@@ -4,7 +4,7 @@ import {
   Upload, Users, MessageSquare, BarChart2, Globe, Telescope,
   ArrowRight, Check, BookOpen, Star, PenTool
 } from "lucide-react";
-import typewriterRoom from "@/assets/typewriter-room.png";
+import typewriterRoom from "@/assets/writers-room-banner.jpg";
 
 const inView = (delay = 0) => ({
   initial: { opacity: 0, y: 18 },
@@ -170,7 +170,7 @@ export default function Landing() {
         >
           <img
             src={typewriterRoom}
-            alt="Writers at their typewriters — the original writers room"
+            alt="A writers room — collaborators gathered around a table"
             className="w-full object-cover"
             style={{ maxHeight: "520px", objectPosition: "center 30%" }}
           />
