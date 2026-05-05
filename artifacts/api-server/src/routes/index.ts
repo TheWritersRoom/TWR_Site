@@ -10,12 +10,16 @@ import searchRouter from "./search";
 import pitchesRouter from "./pitches";
 import exportRouter from "./export";
 import adminRouter from "./admin";
+import messagesRouter from "./messages";
+import bookmarksRouter from "./bookmarks";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
 router.use(usersRouter);
+router.use(messagesRouter);
+router.use(bookmarksRouter);
 router.use(searchRouter);
 router.use(pitchesRouter);
 router.use(publishingRouter);

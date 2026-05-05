@@ -1,98 +1,57 @@
 # Writers Room
 
-## Overview
+A collaborative writing platform where authors publish projects, invite editors, manage suggestions, and discover contributors.
 
-Writers Room is a collaborative writing platform where authors upload books/scripts, invite collaborators, and manage suggested edits with accept/discard workflows.
+## Run & Operate
 
-## Key Features
-
-- **Fountain Script Editor**: Script-type projects have a fullscreen block-based screenplay editor (Tab cycles element types: Scene Heading, Action, Character, Dialogue, Parenthetical, Transition)
-- **Fountain Rendering**: Reading view for scripts parses and renders Fountain format with proper screenplay layout
-- **Collaborator Limit**: Owners can set a cap on collaborator count (1–50)
-- **Join Requests**: Non-collaborators can request to join; owners can accept/decline (with ownership terms disclosure)
-- **Suggestions**: Collaborators highlight text and suggest edits; owners accept/discard
-- **Pitches**: Early-stage idea pitching with responses
-- **Publishing**: Granular readership and feedback controls
-- **Browse & Rate**: Discover and rate published projects
-- **Google OAuth**: Full Google sign-in/sign-up (callback at /auth/callback, token exchange at /api/auth/token/:token)
-- **Credentials**: Multi-step sign-up with professional credentials (title, published works, website). Authors get 2 steps; contributors/both get 3 steps (basic → interests → credentials). Stored as JSON in `credentials` column. Published Author badge shown on contributor cards and profile.
+- `pnpm --filter @workspace/api-server run dev` — API server (port 8080)
+- `pnpm --filter @workspace/writers-room run dev` — Frontend (uses $PORT)
+- `pnpm --filter @workspace/db run push` — Push DB schema (has unique-constraint bug; prefer direct SQL)
+- Requires: `DATABASE_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 
 ## Stack
 
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **API framework**: Express 5
-- **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
-- **Frontend**: React + Vite + Tailwind CSS + shadcn/ui
-- **Routing**: Wouter
-- **Data fetching**: React Query + generated hooks
-- **Animations**: Framer Motion
+- **Monorepo**: pnpm workspaces, TypeScript 5.9, Node 24
+- **API**: Express 5 + tsx dev runner, Drizzle ORM, PostgreSQL
+- **Frontend**: React + Vite + Tailwind + shadcn/ui + Wouter + React Query + Framer Motion
+- **Auth**: Custom JWT (no library) — Google OAuth callback at `/auth/callback`
 
-## Structure
+## Where Things Live
 
-```text
-artifacts-monorepo/
-├── artifacts/
-│   ├── api-server/         # Express API server
-│   └── writers-room/       # React + Vite frontend (served at /)
-├── lib/
-│   ├── api-spec/           # OpenAPI spec + Orval codegen config
-│   ├── api-client-react/   # Generated React Query hooks
-│   ├── api-zod/            # Generated Zod schemas from OpenAPI
-│   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts
-├── pnpm-workspace.yaml
-├── tsconfig.base.json
-├── tsconfig.json
-└── package.json
-```
+- `artifacts/api-server/src/routes/` — all API route files
+- `artifacts/writers-room/src/pages/` — all page components
+- `lib/db/src/schema/` — Drizzle table definitions (source of truth)
+- `artifacts/writers-room/src/hooks/use-auth.tsx` — AuthContext + `updateUser()`
+- User credentials JSON stored in `users.credentials` TEXT column
 
-## Database Schema
+## Architecture Decisions
 
-- **users**: id, name, email (unique), createdAt
-- **projects**: id, title, type (book/script), content, ownerId, createdAt, updatedAt
-- **collaborators**: id, projectId, userId, addedAt (unique per project+user)
-- **suggestions**: id, projectId, submitterId, originalText, suggestedText, comment, status (pending/accepted/discarded), ownerNote, createdAt, updatedAt
+- **Direct SQL for new tables**: drizzle-kit push has unique constraint issues — always `CREATE TABLE IF NOT EXISTS` via `psql $DATABASE_URL` directly
+- **Route ordering**: `searchRouter` + `pitchesRouter` BEFORE `publishingRouter` + `projectsRouter`; `GET /users/me` MUST come before any `GET /users/:id` parameterized route
+- **No email in public APIs**: `GET /contributors/search` and `GET /users/:id/public` never return email; messaging is in-app only
+- **Auth state**: stored in localStorage key `writers_room_user` and AuthContext; use `updateUser()` to sync both after PATCH
+- **Credentials**: JSON blob in `users.credentials` — `{ professionalTitle?, isPublishedAuthor, publishedWorks[], website?, linkedin?, patreon?, substack?, editingSpecialties?, experienceLevel?, availableForWork? }`
 
-## Key Features
+## Product
 
-- **User identity**: No auth library; users enter name/email, stored in localStorage. API calls pass userId in body/query params.
-- **Projects**: Create book/script projects with text content. View a dashboard of owned + collaborated projects.
-- **Suggestions**: Collaborators select text in the document and suggest a replacement. The diff is shown (original in red, suggested in green).
-- **Acceptance workflow**: Project owners accept (applies replacement to document content), discard, or leave notes on suggestions.
-- **Invitations**: Owners invite collaborators by email (user must have signed in previously).
+- **Projects**: Create book/script projects; full Fountain script editor; collaborator limits + join requests
+- **Suggestions**: Contributors highlight text and suggest edits; owners accept/discard with diffs
+- **Pitches**: Early-stage idea pitching with invites to contributors (`pitch_invites` table)
+- **Contributors**: Discovery page with filtering by genre, specialty, experience; bookmarking/shortlisting
+- **Public Profiles**: `/profile/:id` — read-only public profile (no email exposed)
+- **In-app Messaging**: Authors message contributors directly; inbox visible on contributor's profile page
+- **Shortlist**: Authors star/bookmark contributors; shortlist shown on author's profile page
+- **Publishing**: Granular visibility and feedback controls; browse + rate published projects
+- **Google OAuth**: Full sign-in/sign-up flow
 
-## API Routes
+## Gotchas
 
-All routes under `/api`:
+- `GET /users/:id/public` uses `/public` suffix to avoid Express route conflicts with `/users/me`
+- `messages` and `contributor_bookmarks` tables created via direct SQL (not drizzle schema push)
+- Frontend TypeScript `tsc --noEmit` has pre-existing errors (isAdmin, api-zod exports) unrelated to features — runtime is fine via tsx
+- `suggestionsTable` uses `submitterId` (not contributorId) for the contributor FK
 
-- `POST /users` — create/login user
-- `GET /users/me?email=` — get user by email
-- `GET /projects?userId=` — list user's projects
-- `POST /projects` — create project
-- `GET /projects/:id?userId=` — get project detail + role
-- `PATCH /projects/:id` — update project (owner only)
-- `DELETE /projects/:id` — delete project (owner only)
-- `GET /projects/:id/collaborators` — list collaborators
-- `POST /projects/:id/invite` — invite collaborator (owner only)
-- `DELETE /projects/:id/collaborators/:collaboratorId` — remove collaborator (owner only)
-- `GET /projects/:id/suggestions?status=` — list suggestions
-- `POST /projects/:id/suggestions` — create suggestion (collaborators/owner)
-- `PATCH /projects/:id/suggestions/:suggestionId` — accept/discard (owner only, accept applies text change)
-- `DELETE /projects/:id/suggestions/:suggestionId` — delete (submitter or owner)
+## Pointers
 
-## TypeScript & Composite Projects
-
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references.
-
-## Development Commands
-
-- `pnpm --filter @workspace/api-server run dev` — API server dev mode
-- `pnpm --filter @workspace/writers-room run dev` — Frontend dev mode
-- `pnpm --filter @workspace/api-spec run codegen` — Regenerate API types
-- `pnpm --filter @workspace/db run push` — Push DB schema changes
+- DB schema: `lib/db/src/schema/`
+- API routes skill: `.local/skills/pnpm-workspace/SKILL.md`

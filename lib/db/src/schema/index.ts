@@ -5,3 +5,5 @@ export * from "./suggestions";
 export * from "./auth-tokens";
 export * from "./user-sessions";
 export * from "./pitch-invites";
+export * from "./messages";
+export * from "./bookmarks";

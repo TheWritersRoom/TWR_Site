@@ -348,7 +348,6 @@ router.get("/contributors/search", async (req, res): Promise<void> => {
     .select({
       id: usersTable.id,
       name: usersTable.name,
-      email: usersTable.email,
       role: usersTable.role,
       genres: usersTable.genres,
       mediaInterests: usersTable.mediaInterests,
@@ -429,6 +428,40 @@ router.get("/contributors/search", async (req, res): Promise<void> => {
   });
 
   res.json(enriched);
+});
+
+// GET /users/:id/public — safe public profile (no email)
+router.get("/users/:id/public", async (req, res): Promise<void> => {
+  const userId = parseInt(req.params.id, 10);
+  if (isNaN(userId)) { res.status(400).json({ error: "Invalid user id" }); return; }
+
+  const [user] = await db.select({
+    id: usersTable.id,
+    name: usersTable.name,
+    role: usersTable.role,
+    genres: usersTable.genres,
+    mediaInterests: usersTable.mediaInterests,
+    bio: usersTable.bio,
+    credentials: usersTable.credentials,
+    avatarUrl: usersTable.avatarUrl,
+    openToApproach: usersTable.openToApproach,
+    createdAt: usersTable.createdAt,
+  }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+
+  const statsRows = await db.select({
+    total: sql<number>`count(*)::int`.as("total"),
+    accepted: sql<number>`count(case when ${suggestionsTable.status} = 'accepted' then 1 end)::int`.as("accepted"),
+  }).from(suggestionsTable).where(eq(suggestionsTable.submitterId, userId));
+
+  const stats = statsRows[0] ?? { total: 0, accepted: 0 };
+
+  res.json({
+    ...user,
+    totalSuggestions: stats.total,
+    acceptRate: stats.total > 0 ? Math.round((stats.accepted / stats.total) * 100) : null,
+  });
 });
 
 router.get("/users/me", async (req, res): Promise<void> => {

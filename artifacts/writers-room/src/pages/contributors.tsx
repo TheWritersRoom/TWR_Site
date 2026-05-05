@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useSearch } from "wouter";
 import {
   Users, Search, Sparkles, X, BadgeCheck, Globe, CheckCircle2,
-  BarChart2, Star, ChevronDown, ToggleLeft, ToggleRight, Mail, Briefcase,
+  BarChart2, Star, ChevronDown, ToggleLeft, ToggleRight, MessageSquare, Send, Briefcase,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -43,7 +43,6 @@ const ALL_GENRES = Object.keys(GENRE_COLORS);
 type Contributor = {
   id: number;
   name: string;
-  email: string;
   role: "contributor" | "both";
   genres: string;
   mediaInterests: string | null;
@@ -91,6 +90,11 @@ export default function Contributors() {
   const [showGenrePanel, setShowGenrePanel] = useState(false);
   const [showSpecialtyPanel, setShowSpecialtyPanel] = useState(false);
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [bookmarkedIds, setBookmarkedIds] = useState<Set<number>>(new Set());
+  const [composeFor, setComposeFor] = useState<{ id: number; name: string } | null>(null);
+  const [composeBody, setComposeBody] = useState("");
+
+  const isAuthor = user?.role === "author" || user?.role === "both";
 
   useEffect(() => {
     if (!searchStr) return;
@@ -98,6 +102,43 @@ export default function Contributors() {
     const g = params.get("genres");
     if (g) setActiveGenres(g.split(",").map((x) => x.trim()).filter(Boolean));
   }, [searchStr]);
+
+  useQuery({
+    queryKey: ["/api/bookmarks", user?.id],
+    queryFn: () =>
+      fetch(`/api/bookmarks?authorId=${user!.id}`)
+        .then((r) => r.json())
+        .then((rows: { contributorId: number }[]) => {
+          setBookmarkedIds(new Set(rows.map((r) => r.contributorId)));
+          return rows;
+        }),
+    enabled: !!user && isAuthor,
+  });
+
+  const toggleBookmark = useMutation({
+    mutationFn: (contributorId: number) =>
+      fetch("/api/bookmarks", {
+        method: bookmarkedIds.has(contributorId) ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ authorId: user!.id, contributorId }),
+      }),
+    onSuccess: (_, contributorId) =>
+      setBookmarkedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(contributorId)) next.delete(contributorId); else next.add(contributorId);
+        return next;
+      }),
+  });
+
+  const sendMessage = useMutation({
+    mutationFn: () =>
+      fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fromUserId: user!.id, toUserId: composeFor!.id, body: composeBody }),
+      }).then((r) => r.json()),
+    onSuccess: () => { setComposeFor(null); setComposeBody(""); },
+  });
 
   const { data: contributors = [], isLoading } = useQuery<Contributor[]>({
     queryKey: ["/api/contributors/search", search, activeGenres, activeSpecialties, activeExperience, availableOnly],
@@ -365,7 +406,7 @@ export default function Contributors() {
                       <div className="flex items-start justify-between gap-2 flex-wrap">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-bold text-[#1A1614] text-base leading-tight">{c.name}</h3>
+                            <Link href={`/profile/${c.id}`} className="font-bold text-[#1A1614] text-base leading-tight hover:text-[#E8B84B] transition-colors">{c.name}</Link>
                             {c.isPublishedAuthor && (
                               <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#E8B84B] bg-[#E8B84B]/10 px-2 py-0.5 border border-[#E8B84B]/30">
                                 <BadgeCheck className="w-3 h-3" /> Published
@@ -380,6 +421,15 @@ export default function Contributors() {
                           </p>
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0">
+                          {isAuthor && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); toggleBookmark.mutate(c.id); }}
+                              title={bookmarkedIds.has(c.id) ? "Remove from shortlist" : "Add to shortlist"}
+                              className="p-1 hover:scale-110 transition-transform"
+                            >
+                              <Star className={`w-4 h-4 transition-colors ${bookmarkedIds.has(c.id) ? "fill-[#E8B84B] text-[#E8B84B]" : "text-[#7A6B5E]/40 hover:text-[#E8B84B]"}`} />
+                            </button>
+                          )}
                           {c.availableForWork && (
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5">
                               <CheckCircle2 className="w-3 h-3" /> Available
@@ -511,11 +561,7 @@ export default function Contributors() {
 
                 {/* Footer */}
                 <div className="border-t border-[#1A1614]/10 px-5 py-3 flex items-center justify-between bg-[#F9F6EE] gap-4">
-                  <span className="text-xs text-[#7A6B5E] flex items-center gap-1.5 truncate">
-                    <Mail className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">{c.email}</span>
-                  </span>
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-3">
                     {c.totalSuggestions > 0 && (
                       <span className="text-[10px] font-bold text-[#7A6B5E] flex items-center gap-1">
                         <BarChart2 className="w-3 h-3" />
@@ -524,14 +570,64 @@ export default function Contributors() {
                     )}
                     {c.openToApproach && (
                       <span className="text-[10px] font-bold text-[#E8B84B] flex items-center gap-1">
-                        <Star className="w-3 h-3" /> Open
+                        <Star className="w-3 h-3 fill-current" /> Open to pitches
                       </span>
                     )}
                   </div>
+                  {user && user.id !== c.id && (
+                    <button
+                      onClick={() => { setComposeFor({ id: c.id, name: c.name }); setComposeBody(""); }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] font-bold uppercase tracking-[0.1em] hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors shrink-0"
+                    >
+                      <MessageSquare className="w-3 h-3" /> Message
+                    </button>
+                  )}
                 </div>
               </motion.div>
             );
           })}
+        </div>
+      )}
+
+      {/* Compose message modal */}
+      {composeFor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setComposeFor(null)} />
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="relative bg-[#F9F6EE] border-2 border-[#1A1614] p-6 w-full max-w-md"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-serif font-bold text-lg text-[#1A1614]">Message {composeFor.name}</h3>
+              <button onClick={() => setComposeFor(null)} className="text-[#7A6B5E] hover:text-[#1A1614]">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <textarea
+              value={composeBody}
+              onChange={(e) => setComposeBody(e.target.value)}
+              rows={5}
+              className="w-full bg-white border border-[#1A1614]/20 focus:border-[#1A1614] outline-none px-3 py-2.5 text-sm text-[#1A1614] resize-none"
+              placeholder={`Introduce yourself and explain why you'd like to collaborate with ${composeFor.name}…`}
+            />
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => sendMessage.mutate()}
+                disabled={!composeBody.trim() || sendMessage.isPending}
+                className="flex-1 flex items-center justify-center gap-2 bg-[#1A1614] text-[#F9F6EE] text-sm font-semibold py-2.5 hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors disabled:opacity-50"
+              >
+                <Send className="w-4 h-4" />
+                {sendMessage.isPending ? "Sending…" : "Send message"}
+              </button>
+              <button
+                onClick={() => setComposeFor(null)}
+                className="px-4 py-2.5 border border-[#1A1614]/20 text-[#7A6B5E] text-sm font-semibold hover:border-[#1A1614] hover:text-[#1A1614] transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>

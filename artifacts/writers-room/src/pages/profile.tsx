@@ -9,7 +9,7 @@ import {
   MessageSquareQuote, CalendarDays, PenLine, Users, Layers,
   ArrowRight, Sparkles, Tag, Trophy, BadgeCheck, BookOpen, Globe,
   Bell, ToggleLeft, ToggleRight, Lightbulb, Mail, CheckCheck,
-  Pencil, Plus, Trash2, X, Check, Save,
+  Pencil, Plus, Trash2, X, Check, Save, Star, MessageSquare, BookmarkX,
 } from "lucide-react";
 
 type PublishedWork = { title: string; year?: number; publisher?: string };
@@ -116,6 +116,34 @@ type ActivityItem = {
   ownerNote: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+type BookmarkedContributor = {
+  bookmarkId: number;
+  contributorId: number;
+  contributorName: string;
+  contributorRole: string;
+  contributorBio: string | null;
+  contributorGenres: string | null;
+  contributorCredentials: string | null;
+  contributorAvatar: string | null;
+  contributorOpenToApproach: boolean;
+  totalSuggestions: number;
+  acceptRate: number | null;
+  editingSpecialties: string[];
+  availableForWork: boolean;
+  experienceLevel: string | null;
+  professionalTitle: string | null;
+  savedAt: string;
+};
+
+type InboxMessage = {
+  id: number;
+  fromUserId: number;
+  fromName: string;
+  body: string;
+  isRead: boolean;
+  createdAt: string;
 };
 
 const STATUS_CONFIG = {
@@ -545,6 +573,34 @@ export default function Profile() {
     queryFn: () => fetch(`/api/users/${user!.id}/pitch-invites`).then((r) => r.json()),
   });
 
+  const { data: shortlist = [], refetch: refetchShortlist } = useQuery<BookmarkedContributor[]>({
+    queryKey: ["/api/bookmarks", user?.id],
+    enabled: !!user && isAuthor,
+    queryFn: () => fetch(`/api/bookmarks?authorId=${user!.id}`).then((r) => r.json()),
+  });
+
+  const { data: inbox = [], refetch: refetchInbox } = useQuery<InboxMessage[]>({
+    queryKey: ["/api/messages/inbox", user?.id],
+    enabled: !!user && isContributor,
+    queryFn: () => fetch(`/api/messages/inbox?userId=${user!.id}`).then((r) => r.json()),
+  });
+
+  const markRead = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/messages/${id}/read`, { method: "PATCH" }).then((r) => r.json()),
+    onSuccess: () => refetchInbox(),
+  });
+
+  const removeBookmark = useMutation({
+    mutationFn: (contributorId: number) =>
+      fetch("/api/bookmarks", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ authorId: user!.id, contributorId }),
+      }),
+    onSuccess: () => refetchShortlist(),
+  });
+
   const [openToApproach, setOpenToApproach] = useState<boolean>(user?.openToApproach ?? false);
 
   const openToApproachMutation = useMutation({
@@ -886,6 +942,96 @@ export default function Profile() {
         </div>
       )}
 
+      {/* Shortlist – authors only */}
+      {isAuthor && (
+        <div className="mb-10">
+          <div className="mb-5">
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2 flex items-center gap-2">
+              <Star className="w-3.5 h-3.5 text-[#E8B84B] fill-current" /> Shortlist
+            </p>
+            <div className="border-t-2 border-[#1A1614] mb-2" />
+            <div className="flex items-baseline justify-between gap-4">
+              <h2 className="text-2xl font-serif font-bold text-[#1A1614]">My Shortlisted Editors</h2>
+              {shortlist.length > 0 && (
+                <Link href="/contributors" className="text-xs font-bold uppercase tracking-[0.12em] text-[#E8B84B] hover:underline">
+                  Find more →
+                </Link>
+              )}
+            </div>
+            <div className="border-t border-[#1A1614]/15 mt-3" />
+          </div>
+          {shortlist.length === 0 ? (
+            <div className="bg-white border border-[#1A1614]/15 p-10 text-center">
+              <Star className="w-10 h-10 text-[#7A6B5E] mx-auto mb-3 opacity-30" />
+              <h3 className="text-base font-serif font-bold text-[#1A1614]">No editors saved yet</h3>
+              <p className="text-sm text-[#7A6B5E] mt-1 max-w-xs mx-auto">
+                Star an editor on the discovery page to add them to your shortlist.
+              </p>
+              <Link
+                href="/contributors"
+                className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.12em] text-[#E8B84B] hover:underline"
+              >
+                Browse editors →
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {shortlist.map((c) => {
+                const genres: string[] = (() => { try { return JSON.parse(c.contributorGenres ?? "[]"); } catch { return []; } })();
+                return (
+                  <motion.div
+                    key={c.bookmarkId}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white border border-[#1A1614]/15 p-4 hover:border-[#E8B84B] transition-colors flex gap-3"
+                  >
+                    <div className="w-10 h-10 bg-[#1A1614] flex items-center justify-center shrink-0 font-bold text-[#F9F6EE] font-serif">
+                      {c.contributorName.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <Link href={`/profile/${c.contributorId}`} className="font-bold text-[#1A1614] text-sm hover:text-[#E8B84B] transition-colors">
+                            {c.contributorName}
+                          </Link>
+                          {c.professionalTitle && (
+                            <p className="text-xs text-[#7A6B5E]">{c.professionalTitle}</p>
+                          )}
+                          {c.availableForWork && (
+                            <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-emerald-700">Available</span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => removeBookmark.mutate(c.contributorId)}
+                          title="Remove from shortlist"
+                          className="text-[#7A6B5E]/40 hover:text-red-400 transition-colors p-0.5"
+                        >
+                          <BookmarkX className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {genres.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {genres.slice(0, 3).map((g) => (
+                            <span key={g} className="px-1.5 py-0.5 text-[9px] font-semibold bg-[#1A1614]/5 text-[#7A6B5E]">{g}</span>
+                          ))}
+                        </div>
+                      )}
+                      {c.editingSpecialties.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {c.editingSpecialties.slice(0, 2).map((s) => (
+                            <span key={s} className="px-1.5 py-0.5 text-[9px] font-semibold bg-[#1A1614]/6 text-[#1A1614] border border-[#1A1614]/12 rounded-full">{s}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Pitch Invitations – contributors only */}
       {isContributor && (
         <div className="mb-10">
@@ -962,6 +1108,70 @@ export default function Profile() {
                   </motion.div>
                 );
               })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Inbox – contributors only */}
+      {isContributor && (
+        <div className="mb-10">
+          <div className="mb-5">
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2 flex items-center gap-2">
+              <MessageSquare className="w-3.5 h-3.5 text-[#E8B84B]" /> Messages
+              {inbox.filter((m) => !m.isRead).length > 0 && (
+                <span className="inline-flex items-center justify-center w-5 h-5 text-[9px] font-bold bg-[#E8B84B] text-[#1A1614] rounded-full">
+                  {inbox.filter((m) => !m.isRead).length}
+                </span>
+              )}
+            </p>
+            <div className="border-t-2 border-[#1A1614] mb-2" />
+            <h2 className="text-2xl font-serif font-bold text-[#1A1614]">Messages from Authors</h2>
+            <div className="border-t border-[#1A1614]/15 mt-3" />
+          </div>
+          {inbox.length === 0 ? (
+            <div className="bg-white border border-[#1A1614]/15 p-10 text-center">
+              <MessageSquare className="w-10 h-10 text-[#7A6B5E] mx-auto mb-3 opacity-40" />
+              <h3 className="text-base font-serif font-bold text-[#1A1614]">No messages yet</h3>
+              <p className="text-sm text-[#7A6B5E] mt-1 max-w-xs mx-auto">
+                When authors reach out through your profile, their messages will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {inbox.map((msg, i) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                  className={`bg-white border p-5 transition-colors ${msg.isRead ? "border-[#1A1614]/15" : "border-[#E8B84B]/60 bg-[#E8B84B]/5"}`}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-sm text-[#1A1614]">{msg.fromName}</span>
+                        {!msg.isRead && (
+                          <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#E8B84B] bg-[#E8B84B]/10 px-1.5 py-0.5 border border-[#E8B84B]/30">
+                            New
+                          </span>
+                        )}
+                        <span className="text-[10px] text-[#7A6B5E] ml-auto">{format(new Date(msg.createdAt), "MMM d, yyyy")}</span>
+                      </div>
+                      <p className="text-sm text-[#7A6B5E] leading-relaxed">{msg.body}</p>
+                    </div>
+                    {!msg.isRead && (
+                      <button
+                        onClick={() => markRead.mutate(msg.id)}
+                        title="Mark as read"
+                        className="shrink-0 p-1.5 text-[#7A6B5E] hover:text-[#1A1614] transition-colors"
+                      >
+                        <CheckCheck className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
             </div>
           )}
         </div>
