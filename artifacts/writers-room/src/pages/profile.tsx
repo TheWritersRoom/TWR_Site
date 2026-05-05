@@ -20,6 +20,16 @@ type UserCredentials = {
   linkedin?: string;
   patreon?: string;
   substack?: string;
+  editingSpecialties?: string[];
+  experienceLevel?: string;
+  availableForWork?: boolean;
+};
+
+const EXPERIENCE_LABELS: Record<string, string> = {
+  novice: "Novice",
+  intermediate: "Intermediate",
+  experienced: "Experienced",
+  professional: "Professional",
 };
 
 function parseCredentials(raw: string | null | undefined): UserCredentials {
@@ -246,6 +256,29 @@ export default function Profile() {
                 </p>
                 {creds.professionalTitle && (
                   <p className="text-sm font-semibold text-[#1A1614] mb-2">{creds.professionalTitle}</p>
+                )}
+                {/* Experience level + availability */}
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {creds.experienceLevel && (
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7A6B5E] bg-[#F9F6EE] border border-[#1A1614]/10 px-2 py-0.5">
+                      {EXPERIENCE_LABELS[creds.experienceLevel] ?? creds.experienceLevel}
+                    </span>
+                  )}
+                  {creds.availableForWork && (
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5">
+                      Available for projects
+                    </span>
+                  )}
+                </div>
+                {/* Editing specialties */}
+                {(creds.editingSpecialties?.length ?? 0) > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {creds.editingSpecialties!.map((s) => (
+                      <span key={s} className="px-2 py-0.5 text-[10px] font-semibold bg-[#1A1614]/6 text-[#1A1614] border border-[#1A1614]/12 rounded-full">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
                 )}
                 {(creds.publishedWorks?.length ?? 0) > 0 && (
                   <div className="space-y-1 mb-2">

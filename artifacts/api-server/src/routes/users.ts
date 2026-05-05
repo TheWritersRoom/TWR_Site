@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, or } from "drizzle-orm";
+import { eq, or, sql } from "drizzle-orm";
 import { db, usersTable, suggestionsTable, projectsTable, pitchInvitesTable, pitchesTable } from "@workspace/db";
 import { CreateUserBody } from "@workspace/api-zod";
 
@@ -304,6 +304,97 @@ router.get("/users/:id/pitch-invites", async (req, res): Promise<void> => {
     .orderBy(pitchInvitesTable.createdAt);
 
   res.json(invites);
+});
+
+// GET /contributors/search — filtered contributor discovery with stats
+router.get("/contributors/search", async (req, res): Promise<void> => {
+  const { q, genres, specialties, available, experience } = req.query;
+
+  const rows = await db
+    .select({
+      id: usersTable.id,
+      name: usersTable.name,
+      email: usersTable.email,
+      role: usersTable.role,
+      genres: usersTable.genres,
+      mediaInterests: usersTable.mediaInterests,
+      bio: usersTable.bio,
+      credentials: usersTable.credentials,
+      avatarUrl: usersTable.avatarUrl,
+      openToApproach: usersTable.openToApproach,
+      createdAt: usersTable.createdAt,
+    })
+    .from(usersTable)
+    .where(or(eq(usersTable.role, "contributor"), eq(usersTable.role, "both")));
+
+  const statsRows = await db
+    .select({
+      submitterId: suggestionsTable.submitterId,
+      total: sql<number>`count(*)::int`.as("total"),
+      accepted: sql<number>`count(case when ${suggestionsTable.status} = 'accepted' then 1 end)::int`.as("accepted"),
+    })
+    .from(suggestionsTable)
+    .groupBy(suggestionsTable.submitterId);
+
+  const statsMap = new Map(statsRows.map((s) => [s.submitterId, s]));
+
+  let enriched = rows.map((r) => {
+    let creds: Record<string, unknown> = {};
+    try { creds = JSON.parse(r.credentials ?? "{}"); } catch { /* ignore */ }
+    const stats = statsMap.get(r.id);
+    const total = stats?.total ?? 0;
+    const accepted = stats?.accepted ?? 0;
+    return {
+      ...r,
+      totalSuggestions: total,
+      acceptRate: total > 0 ? Math.round((accepted / total) * 100) : null,
+      editingSpecialties: (creds.editingSpecialties as string[]) ?? [],
+      availableForWork: (creds.availableForWork as boolean) ?? false,
+      experienceLevel: (creds.experienceLevel as string) ?? null,
+      professionalTitle: (creds.professionalTitle as string) ?? null,
+      isPublishedAuthor: (creds.isPublishedAuthor as boolean) ?? false,
+    };
+  });
+
+  if (q && typeof q === "string") {
+    const lq = q.toLowerCase();
+    enriched = enriched.filter((c) =>
+      c.name.toLowerCase().includes(lq) ||
+      (c.bio ?? "").toLowerCase().includes(lq) ||
+      (c.mediaInterests ?? "").toLowerCase().includes(lq) ||
+      (c.professionalTitle ?? "").toLowerCase().includes(lq) ||
+      c.editingSpecialties.some((s: string) => s.toLowerCase().includes(lq))
+    );
+  }
+
+  if (genres && typeof genres === "string") {
+    const gList = genres.split(",").map((g) => g.trim()).filter(Boolean);
+    enriched = enriched.filter((c) => {
+      let cGenres: string[] = [];
+      try { cGenres = JSON.parse(c.genres ?? "[]"); } catch { /* ignore */ }
+      return gList.some((g) => cGenres.includes(g));
+    });
+  }
+
+  if (specialties && typeof specialties === "string") {
+    const sList = specialties.split(",").map((s) => s.trim()).filter(Boolean);
+    enriched = enriched.filter((c) => sList.some((s) => c.editingSpecialties.includes(s)));
+  }
+
+  if (available === "true") {
+    enriched = enriched.filter((c) => c.availableForWork);
+  }
+
+  if (experience && typeof experience === "string") {
+    enriched = enriched.filter((c) => c.experienceLevel === experience);
+  }
+
+  enriched.sort((a, b) => {
+    if (a.availableForWork !== b.availableForWork) return a.availableForWork ? -1 : 1;
+    return (b.totalSuggestions - a.totalSuggestions) || ((b.acceptRate ?? 0) - (a.acceptRate ?? 0));
+  });
+
+  res.json(enriched);
 });
 
 router.get("/users/me", async (req, res): Promise<void> => {
