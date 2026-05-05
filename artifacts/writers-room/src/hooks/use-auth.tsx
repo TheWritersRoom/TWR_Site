@@ -26,6 +26,7 @@ type AuthContextType = {
   register: (payload: RegisterPayload) => Promise<void>;
   signIn: (payload: SignInPayload) => Promise<void>;
   loginWithToken: (token: string) => Promise<void>;
+  updateUser: (user: User) => void;
   logout: () => void;
   isLoading: boolean;
   authModalOpen: boolean;
@@ -102,12 +103,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetch("/api/auth/logout", { method: "POST", credentials: "include" }).catch(() => {});
   };
 
+  const updateUser = (updated: User) => {
+    setUser(updated);
+    localStorage.setItem(AUTH_KEY, JSON.stringify(updated));
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
       register,
       signIn,
       loginWithToken,
+      updateUser,
       logout,
       isLoading,
       authModalOpen,

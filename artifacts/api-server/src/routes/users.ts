@@ -261,6 +261,40 @@ router.get("/users/:id/activity", async (req, res): Promise<void> => {
   res.json(rows);
 });
 
+// PATCH /users/:id — update editable profile fields
+router.patch("/users/:id", async (req, res): Promise<void> => {
+  const userId = parseInt(req.params.id, 10);
+  if (isNaN(userId)) { res.status(400).json({ error: "Invalid user id" }); return; }
+
+  const { name, bio, mediaInterests, genres, credentials } = req.body as {
+    name?: string;
+    bio?: string;
+    mediaInterests?: string;
+    genres?: string;
+    credentials?: string;
+  };
+
+  const updates: Record<string, unknown> = {};
+  if (name !== undefined) updates.name = name;
+  if (bio !== undefined) updates.bio = bio;
+  if (mediaInterests !== undefined) updates.mediaInterests = mediaInterests;
+  if (genres !== undefined) updates.genres = genres;
+  if (credentials !== undefined) updates.credentials = credentials;
+
+  if (Object.keys(updates).length === 0) {
+    res.status(400).json({ error: "No fields to update" }); return;
+  }
+
+  const [updated] = await db
+    .update(usersTable)
+    .set(updates)
+    .where(eq(usersTable.id, userId))
+    .returning();
+
+  if (!updated) { res.status(404).json({ error: "User not found" }); return; }
+  res.json(updated);
+});
+
 // PATCH /users/:id/open-to-approach — toggle open-to-approach flag
 router.patch("/users/:id/open-to-approach", async (req, res): Promise<void> => {
   const userId = parseInt(req.params.id, 10);

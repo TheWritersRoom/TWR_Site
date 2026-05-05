@@ -1,17 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   CheckCircle2, Clock, XCircle, BookText, FileText,
   MessageSquareQuote, CalendarDays, PenLine, Users, Layers,
   ArrowRight, Sparkles, Tag, Trophy, BadgeCheck, BookOpen, Globe,
   Bell, ToggleLeft, ToggleRight, Lightbulb, Mail, CheckCheck,
+  Pencil, Plus, Trash2, X, Check, Save,
 } from "lucide-react";
 
 type PublishedWork = { title: string; year?: number; publisher?: string };
+type WorkEntry    = { title: string; year: string; publisher: string };
+
 type UserCredentials = {
   professionalTitle?: string;
   isPublishedAuthor?: boolean;
@@ -32,38 +35,24 @@ const EXPERIENCE_LABELS: Record<string, string> = {
   professional: "Professional",
 };
 
-function parseCredentials(raw: string | null | undefined): UserCredentials {
-  try { return JSON.parse(raw ?? "{}"); } catch { return {}; }
-}
+const EDITING_SPECIALTIES = [
+  "Developmental Editing", "Line Editing", "Copy Editing", "Proofreading",
+  "Structural Feedback", "Dialogue & Voice", "Pacing & Flow", "Research & Fact-checking", "World-building",
+];
 
-type CollaboratorStat = {
-  submitterId: number;
-  submitterName: string;
-  submitterEmail: string;
-  total: number;
-  accepted: number;
-  discarded: number;
-  pending: number;
-  acceptRate: number;
-  projectsTogether: { id: number; title: string }[];
-};
+const EXPERIENCE_LEVELS = [
+  { value: "novice",       label: "Novice",       desc: "New to editing" },
+  { value: "intermediate", label: "Intermediate",  desc: "Some experience" },
+  { value: "experienced",  label: "Experienced",   desc: "Several years" },
+  { value: "professional", label: "Professional",  desc: "Full-time editor" },
+];
 
-function parseGenres(raw: string | null | undefined): string[] {
-  try { return JSON.parse(raw ?? "[]"); } catch { return []; }
-}
-
-type PitchInvite = {
-  id: number;
-  pitchId: number;
-  pitchTitle: string;
-  pitchType: string;
-  pitchGenres: string;
-  fromUserId: number;
-  fromUserName: string;
-  message: string | null;
-  status: "pending" | "accepted" | "declined";
-  createdAt: string;
-};
+const ALL_GENRES = [
+  "Film & TV Script", "Long-form Fiction", "Non-fiction", "Short Story",
+  "Poetry", "Fan Fiction", "Screenwriting", "Graphic Novel / Comics",
+  "Children's Literature", "Literary Fiction", "Thriller / Mystery",
+  "Romance", "Science Fiction / Fantasy", "Horror",
+];
 
 const GENRE_COLORS: Record<string, string> = {
   "Film & TV Script":          "bg-purple-100 text-purple-700",
@@ -80,6 +69,39 @@ const GENRE_COLORS: Record<string, string> = {
   "Romance":                   "bg-rose-100 text-rose-700",
   "Science Fiction / Fantasy": "bg-sky-100 text-sky-700",
   "Horror":                    "bg-stone-100 text-stone-700",
+};
+
+function parseCredentials(raw: string | null | undefined): UserCredentials {
+  try { return JSON.parse(raw ?? "{}"); } catch { return {}; }
+}
+
+function parseGenres(raw: string | null | undefined): string[] {
+  try { return JSON.parse(raw ?? "[]"); } catch { return []; }
+}
+
+type CollaboratorStat = {
+  submitterId: number;
+  submitterName: string;
+  submitterEmail: string;
+  total: number;
+  accepted: number;
+  discarded: number;
+  pending: number;
+  acceptRate: number;
+  projectsTogether: { id: number; title: string }[];
+};
+
+type PitchInvite = {
+  id: number;
+  pitchId: number;
+  pitchTitle: string;
+  pitchType: string;
+  pitchGenres: string;
+  fromUserId: number;
+  fromUserName: string;
+  message: string | null;
+  status: "pending" | "accepted" | "declined";
+  createdAt: string;
 };
 
 type ActivityItem = {
@@ -124,9 +146,383 @@ function truncate(text: string, max = 80) {
   return text.length > max ? text.slice(0, max) + "…" : text;
 }
 
+// ─── Edit Drawer ──────────────────────────────────────────────────────────────
+function EditProfileDrawer({
+  open,
+  onClose,
+  user,
+  onSaved,
+}: {
+  open: boolean;
+  onClose: () => void;
+  user: NonNullable<ReturnType<typeof useAuth>["user"]>;
+  onSaved: (updated: NonNullable<ReturnType<typeof useAuth>["user"]>) => void;
+}) {
+  const creds = parseCredentials(user.credentials);
+  const isContributor = user.role === "contributor" || user.role === "both";
+
+  const [name, setName]               = useState(user.name);
+  const [about, setAbout]             = useState(user.mediaInterests ?? "");
+  const [genres, setGenres]           = useState<string[]>(parseGenres(user.genres));
+  const [credTitle, setCredTitle]     = useState(creds.professionalTitle ?? "");
+  const [isPublished, setIsPublished] = useState(creds.isPublishedAuthor ?? false);
+  const [works, setWorks]             = useState<WorkEntry[]>(
+    (creds.publishedWorks ?? []).map((w) => ({
+      title: w.title,
+      year: w.year ? String(w.year) : "",
+      publisher: w.publisher ?? "",
+    }))
+  );
+  const [website, setWebsite]         = useState(creds.website ?? "");
+  const [linkedin, setLinkedin]       = useState(creds.linkedin ?? "");
+  const [patreon, setPatreon]         = useState(creds.patreon ?? "");
+  const [substack, setSubstack]       = useState(creds.substack ?? "");
+  const [specialties, setSpecialties] = useState<string[]>(creds.editingSpecialties ?? []);
+  const [experience, setExperience]   = useState(creds.experienceLevel ?? "");
+  const [available, setAvailable]     = useState(creds.availableForWork ?? false);
+  const [error, setError]             = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      const c = parseCredentials(user.credentials);
+      setName(user.name);
+      setAbout(user.mediaInterests ?? "");
+      setGenres(parseGenres(user.genres));
+      setCredTitle(c.professionalTitle ?? "");
+      setIsPublished(c.isPublishedAuthor ?? false);
+      setWorks((c.publishedWorks ?? []).map((w) => ({ title: w.title, year: w.year ? String(w.year) : "", publisher: w.publisher ?? "" })));
+      setWebsite(c.website ?? "");
+      setLinkedin(c.linkedin ?? "");
+      setPatreon(c.patreon ?? "");
+      setSubstack(c.substack ?? "");
+      setSpecialties(c.editingSpecialties ?? []);
+      setExperience(c.experienceLevel ?? "");
+      setAvailable(c.availableForWork ?? false);
+      setError(null);
+    }
+  }, [open, user]);
+
+  const saveM = useMutation({
+    mutationFn: async (body: Record<string, unknown>) => {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to save");
+      return data;
+    },
+    onSuccess: onSaved,
+    onError: (e: Error) => setError(e.message),
+  });
+
+  const handleSave = () => {
+    if (!name.trim()) { setError("Name is required"); return; }
+    setError(null);
+    const validWorks = works.filter((w) => w.title.trim());
+    const credentials = JSON.stringify({
+      ...(credTitle.trim() ? { professionalTitle: credTitle.trim() } : {}),
+      isPublishedAuthor: isPublished || validWorks.length > 0,
+      publishedWorks: validWorks.map((w) => ({
+        title: w.title.trim(),
+        ...(w.year.trim() ? { year: parseInt(w.year) } : {}),
+        ...(w.publisher.trim() ? { publisher: w.publisher.trim() } : {}),
+      })),
+      ...(website.trim() ? { website: website.trim() } : {}),
+      ...(linkedin.trim() ? { linkedin: linkedin.trim() } : {}),
+      ...(patreon.trim() ? { patreon: patreon.trim() } : {}),
+      ...(substack.trim() ? { substack: substack.trim() } : {}),
+      ...(specialties.length > 0 ? { editingSpecialties: specialties } : {}),
+      ...(experience ? { experienceLevel: experience } : {}),
+      availableForWork: available,
+    });
+    saveM.mutate({
+      name: name.trim(),
+      mediaInterests: about,
+      genres: JSON.stringify(genres),
+      credentials,
+    });
+  };
+
+  const addWork = () => setWorks((w) => [...w, { title: "", year: "", publisher: "" }]);
+  const removeWork = (i: number) => setWorks((w) => w.filter((_, idx) => idx !== i));
+  const updateWork = (i: number, field: keyof WorkEntry, val: string) =>
+    setWorks((w) => w.map((x, idx) => idx === i ? { ...x, [field]: val } : x));
+
+  const toggleGenre    = (g: string) => setGenres((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]);
+  const toggleSpecialty = (s: string) => setSpecialties((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
+
+  const input = "w-full bg-white border border-[#1A1614]/20 focus:border-[#1A1614] outline-none px-3 py-2.5 text-sm text-[#1A1614] transition-colors";
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-stretch justify-end">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/40"
+            onClick={onClose}
+          />
+          {/* Drawer */}
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", stiffness: 350, damping: 40 }}
+            className="relative w-full max-w-xl bg-[#F9F6EE] border-l-2 border-[#1A1614] flex flex-col overflow-hidden"
+          >
+            {/* Header */}
+            <div className="px-7 py-5 border-b-2 border-[#1A1614] flex items-center justify-between shrink-0 bg-[#1A1614]">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.24em] font-bold text-[#E8B84B] mb-0.5">Your profile</p>
+                <h2 className="text-xl font-serif font-bold text-[#F9F6EE]">Edit Profile</h2>
+              </div>
+              <button onClick={onClose} className="text-[#F9F6EE]/60 hover:text-[#F9F6EE] transition-colors p-1">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Scrollable body */}
+            <div className="flex-1 overflow-y-auto px-7 py-6 space-y-8">
+
+              {/* ── Section: About You ── */}
+              <section>
+                <SectionHeader label="About You" />
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-[0.16em] font-bold text-[#7A6B5E] mb-1.5">Display name <span className="text-red-500">*</span></label>
+                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={input} placeholder="Your name" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-[0.16em] font-bold text-[#7A6B5E] mb-1.5">About you</label>
+                    <textarea
+                      value={about}
+                      onChange={(e) => setAbout(e.target.value)}
+                      rows={3}
+                      className={`${input} resize-none`}
+                      placeholder="Tell authors about the stories you love, your passions, interests…"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              {/* ── Section: Genres ── */}
+              <section>
+                <SectionHeader label="Genre Interests" />
+                <p className="text-xs text-[#7A6B5E] mb-3">Select all genres you work in or enjoy.</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {ALL_GENRES.map((g) => {
+                    const active = genres.includes(g);
+                    return (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => toggleGenre(g)}
+                        className={`px-2.5 py-1 text-[11px] font-semibold transition-all ${
+                          active
+                            ? `${GENRE_COLORS[g] ?? "bg-[#1A1614] text-[#F9F6EE]"} ring-1 ring-offset-1 ring-current/50`
+                            : `${GENRE_COLORS[g] ?? "bg-[#1A1614]/5 text-[#7A6B5E]"} opacity-50 hover:opacity-100`
+                        }`}
+                      >
+                        {g}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* ── Section: Credentials ── */}
+              <section>
+                <SectionHeader label="Credentials & Links" />
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-[0.16em] font-bold text-[#7A6B5E] mb-1.5">Professional title</label>
+                    <input type="text" value={credTitle} onChange={(e) => setCredTitle(e.target.value)} className={input} placeholder="e.g. Freelance Editor, Literary Agent…" />
+                  </div>
+
+                  {/* Published author toggle */}
+                  <label className="flex items-center justify-between gap-4 cursor-pointer bg-white border border-[#1A1614]/15 px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[#1A1614]">Published author</p>
+                      <p className="text-xs text-[#7A6B5E]">Shows a badge on your public profile</p>
+                    </div>
+                    <button type="button" onClick={() => setIsPublished((v) => !v)}>
+                      {isPublished
+                        ? <ToggleRight className="w-9 h-9 text-[#E8B84B]" />
+                        : <ToggleLeft className="w-9 h-9 text-[#7A6B5E]/40" />}
+                    </button>
+                  </label>
+
+                  {/* Published works */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#7A6B5E]">Published works</label>
+                      <button type="button" onClick={addWork} className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#E8B84B] hover:text-[#1A1614] transition-colors">
+                        <Plus className="w-3.5 h-3.5" /> Add
+                      </button>
+                    </div>
+                    {works.length === 0 ? (
+                      <p className="text-xs text-[#7A6B5E]/60 italic">No works added yet.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {works.map((w, i) => (
+                          <div key={i} className="bg-white border border-[#1A1614]/15 p-3 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <input type="text" value={w.title} onChange={(e) => updateWork(i, "title", e.target.value)} className="flex-1 bg-[#F9F6EE] border border-[#1A1614]/15 px-2.5 py-1.5 text-xs text-[#1A1614] outline-none focus:border-[#1A1614]" placeholder="Title" />
+                              <button type="button" onClick={() => removeWork(i)} className="text-[#7A6B5E] hover:text-red-500 transition-colors p-1 shrink-0">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                            <div className="flex gap-2">
+                              <input type="number" value={w.year} onChange={(e) => updateWork(i, "year", e.target.value)} className="w-20 bg-[#F9F6EE] border border-[#1A1614]/15 px-2.5 py-1.5 text-xs text-[#1A1614] outline-none focus:border-[#1A1614]" placeholder="Year" />
+                              <input type="text" value={w.publisher} onChange={(e) => updateWork(i, "publisher", e.target.value)} className="flex-1 bg-[#F9F6EE] border border-[#1A1614]/15 px-2.5 py-1.5 text-xs text-[#1A1614] outline-none focus:border-[#1A1614]" placeholder="Publisher (optional)" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Platform links */}
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-[0.16em] font-bold text-[#7A6B5E] mb-2">Platform links</label>
+                    <div className="space-y-2">
+                      {[
+                        { label: "Website",  value: website,  set: setWebsite,  placeholder: "https://yoursite.com" },
+                        { label: "LinkedIn", value: linkedin, set: setLinkedin, placeholder: "https://linkedin.com/in/…" },
+                        { label: "Patreon",  value: patreon,  set: setPatreon,  placeholder: "https://patreon.com/…" },
+                        { label: "Substack", value: substack, set: setSubstack, placeholder: "https://yourname.substack.com" },
+                      ].map(({ label, value, set, placeholder }) => (
+                        <div key={label} className="flex items-center gap-2">
+                          <span className="w-16 text-[10px] font-bold text-[#7A6B5E] shrink-0">{label}</span>
+                          <input type="url" value={value} onChange={(e) => set(e.target.value)} className={input} placeholder={placeholder} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* ── Section: Editing Profile (contributors only) ── */}
+              {isContributor && (
+                <section>
+                  <SectionHeader label="Editing Profile" />
+                  <div className="space-y-5">
+                    {/* Specialties */}
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-[0.16em] font-bold text-[#7A6B5E] mb-2">
+                        Editing specialties <span className="font-normal normal-case tracking-normal text-[#7A6B5E]/60">select all that apply</span>
+                      </label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {EDITING_SPECIALTIES.map((s) => {
+                          const active = specialties.includes(s);
+                          return (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => toggleSpecialty(s)}
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
+                                active
+                                  ? "bg-[#1A1614] text-[#F9F6EE] border-[#1A1614]"
+                                  : "bg-white border-[#1A1614]/20 text-[#7A6B5E] hover:border-[#1A1614] hover:text-[#1A1614]"
+                              }`}
+                            >
+                              {active && <Check className="w-3 h-3" />}
+                              {s}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Experience level */}
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-[0.16em] font-bold text-[#7A6B5E] mb-2">Experience level</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {EXPERIENCE_LEVELS.map((lvl) => (
+                          <button
+                            key={lvl.value}
+                            type="button"
+                            onClick={() => setExperience(experience === lvl.value ? "" : lvl.value)}
+                            className={`px-3 py-2.5 text-left border-2 transition-all ${
+                              experience === lvl.value
+                                ? "border-[#1A1614] bg-[#1A1614] text-[#F9F6EE]"
+                                : "border-[#1A1614]/15 bg-white text-[#7A6B5E] hover:border-[#1A1614]/40"
+                            }`}
+                          >
+                            <p className="text-xs font-bold">{lvl.label}</p>
+                            <p className="text-[11px] font-normal opacity-70 mt-0.5">{lvl.desc}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Available for work */}
+                    <label className="flex items-center justify-between gap-4 cursor-pointer bg-white border border-[#1A1614]/15 px-4 py-3">
+                      <div>
+                        <p className="text-sm font-semibold text-[#1A1614]">Available for new projects</p>
+                        <p className="text-xs text-[#7A6B5E]">Shows authors you're open to collaboration requests</p>
+                      </div>
+                      <button type="button" onClick={() => setAvailable((v) => !v)}>
+                        {available
+                          ? <ToggleRight className="w-9 h-9 text-emerald-500" />
+                          : <ToggleLeft className="w-9 h-9 text-[#7A6B5E]/40" />}
+                      </button>
+                    </label>
+                  </div>
+                </section>
+              )}
+
+              {/* Error */}
+              {error && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-4 py-2.5">{error}</p>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-7 py-4 border-t-2 border-[#1A1614] flex items-center gap-3 shrink-0 bg-white">
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saveM.isPending}
+                className="flex-1 flex items-center justify-center gap-2 bg-[#E8B84B] hover:bg-[#d4a73d] text-[#1A1614] font-bold px-6 py-3 transition-colors disabled:opacity-60"
+              >
+                <Save className="w-4 h-4" />
+                {saveM.isPending ? "Saving…" : "Save changes"}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={saveM.isPending}
+                className="px-5 py-3 border-2 border-[#1A1614]/20 text-[#7A6B5E] font-semibold hover:border-[#1A1614] hover:text-[#1A1614] transition-colors disabled:opacity-60"
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <div className="mb-4">
+      <p className="text-[9px] uppercase tracking-[0.24em] font-bold text-[#7A6B5E] mb-1">{label}</p>
+      <div className="border-t-2 border-[#1A1614]" />
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function Profile() {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { user, updateUser } = useAuth();
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: activity = [], isLoading } = useQuery<ActivityItem[]>({
     queryKey: ["/api/users", user?.id, "activity"],
@@ -158,8 +554,9 @@ export default function Profile() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ openToApproach: value }),
       }).then((r) => r.json()),
-    onSuccess: (_, value) => {
-      setOpenToApproach(value);
+    onSuccess: (updatedUser) => {
+      setOpenToApproach(updatedUser.openToApproach);
+      updateUser(updatedUser);
     },
   });
 
@@ -170,9 +567,7 @@ export default function Profile() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: user!.id, status }),
       }).then((r) => r.json()),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users", user?.id, "pitch-invites"] });
-    },
+    onSuccess: () => {},
   });
 
   if (!user) return null;
@@ -187,6 +582,7 @@ export default function Profile() {
   };
 
   const acceptRate = stats.total > 0 ? Math.round((stats.accepted / stats.total) * 100) : 0;
+  const creds      = parseCredentials(user.credentials);
 
   return (
     <div className="p-6 md:p-10 max-w-4xl mx-auto">
@@ -203,8 +599,19 @@ export default function Profile() {
           </span>
         </div>
         <div className="flex-1 min-w-0">
-          <h1 className="text-3xl font-serif font-bold text-[#1A1614]">{user.name}</h1>
-          <p className="text-[#7A6B5E] mt-1">{user.email}</p>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-3xl font-serif font-bold text-[#1A1614]">{user.name}</h1>
+              <p className="text-[#7A6B5E] mt-1">{user.email}</p>
+            </div>
+            <button
+              onClick={() => setEditOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 border-2 border-[#1A1614] text-sm font-semibold text-[#1A1614] hover:bg-[#1A1614] hover:text-[#F9F6EE] transition-colors shrink-0"
+            >
+              <Pencil className="w-3.5 h-3.5" /> Edit Profile
+            </button>
+          </div>
+
           <div className="flex flex-wrap items-center gap-2 mt-3">
             <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 border border-[#1A1614]/20 uppercase tracking-[0.1em] ${roleConf.color}`}>
               {roleConf.icon}
@@ -218,36 +625,57 @@ export default function Profile() {
 
           {/* Genre interests */}
           {(() => {
-            const genres = parseGenres(user.genres);
-            return genres.length > 0 ? (
+            const genreList = parseGenres(user.genres);
+            return genreList.length > 0 ? (
               <div className="mt-4">
                 <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#7A6B5E] mb-2 flex items-center gap-1.5">
                   <Tag className="w-3.5 h-3.5" /> Areas of interest
                 </p>
                 <div className="flex flex-wrap gap-1.5">
-                  {genres.map((g) => (
+                  {genreList.map((g) => (
                     <span key={g} className={`px-2.5 py-1 text-[11px] font-semibold ${GENRE_COLORS[g] ?? "bg-[#1A1614]/5 text-[#7A6B5E]"}`}>
                       {g}
                     </span>
                   ))}
                 </div>
               </div>
-            ) : null;
+            ) : (
+              <button
+                onClick={() => setEditOpen(true)}
+                className="mt-3 inline-flex items-center gap-1.5 text-xs text-[#7A6B5E] hover:text-[#E8B84B] transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add your genre interests
+              </button>
+            );
           })()}
 
-          {user.mediaInterests && (
+          {user.mediaInterests ? (
             <div className="mt-3 flex items-start gap-2 text-sm text-[#7A6B5E]">
               <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-[#E8B84B]" />
               <p>{user.mediaInterests}</p>
             </div>
+          ) : (
+            <button
+              onClick={() => setEditOpen(true)}
+              className="mt-3 inline-flex items-center gap-1.5 text-xs text-[#7A6B5E] hover:text-[#E8B84B] transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add a bio
+            </button>
           )}
 
           {/* Credentials */}
           {(() => {
-            const creds = parseCredentials(user.credentials);
             const hasAnything = creds.isPublishedAuthor || creds.professionalTitle ||
-              (creds.publishedWorks?.length ?? 0) > 0 || creds.website;
-            if (!hasAnything) return null;
+              (creds.publishedWorks?.length ?? 0) > 0 || creds.website ||
+              (creds.editingSpecialties?.length ?? 0) > 0 || creds.experienceLevel;
+            if (!hasAnything) return (
+              <button
+                onClick={() => setEditOpen(true)}
+                className="mt-3 inline-flex items-center gap-1.5 text-xs text-[#7A6B5E] hover:text-[#E8B84B] transition-colors"
+              >
+                <BadgeCheck className="w-3.5 h-3.5" /> Add credentials & links
+              </button>
+            );
             return (
               <div className="mt-4 pt-4 border-t border-[#1A1614]/10">
                 <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#7A6B5E] mb-2.5 flex items-center gap-1.5">
@@ -257,7 +685,6 @@ export default function Profile() {
                 {creds.professionalTitle && (
                   <p className="text-sm font-semibold text-[#1A1614] mb-2">{creds.professionalTitle}</p>
                 )}
-                {/* Experience level + availability */}
                 <div className="flex flex-wrap gap-2 mb-2">
                   {creds.experienceLevel && (
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7A6B5E] bg-[#F9F6EE] border border-[#1A1614]/10 px-2 py-0.5">
@@ -270,7 +697,6 @@ export default function Profile() {
                     </span>
                   )}
                 </div>
-                {/* Editing specialties */}
                 {(creds.editingSpecialties?.length ?? 0) > 0 && (
                   <div className="flex flex-wrap gap-1 mb-2">
                     {creds.editingSpecialties!.map((s) => (
@@ -423,10 +849,7 @@ export default function Profile() {
                         </div>
                         <div className="flex items-center gap-2 mb-2">
                           <div className="flex-1 h-1.5 bg-[#1A1614]/10 overflow-hidden">
-                            <div
-                              className="h-full bg-[#E8B84B]"
-                              style={{ width: `${c.acceptRate}%` }}
-                            />
+                            <div className="h-full bg-[#E8B84B]" style={{ width: `${c.acceptRate}%` }} />
                           </div>
                           <span className="text-xs font-bold text-[#1A1614]">{c.acceptRate}% accepted</span>
                         </div>
@@ -453,6 +876,87 @@ export default function Profile() {
                             <p className="text-[9px] text-[#7A6B5E] uppercase tracking-[0.1em]">{s.label}</p>
                           </div>
                         ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Pitch Invitations – contributors only */}
+      {isContributor && (
+        <div className="mb-10">
+          <div className="mb-5">
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2 flex items-center gap-2">
+              <Mail className="w-3.5 h-3.5 text-[#E8B84B]" /> Incoming invites
+            </p>
+            <div className="border-t-2 border-[#1A1614] mb-2" />
+            <h2 className="text-2xl font-serif font-bold text-[#1A1614]">Invitations from Authors</h2>
+            <div className="border-t border-[#1A1614]/15 mt-3" />
+          </div>
+          {invitesLoading ? (
+            <div className="flex justify-center py-10">
+              <div className="w-7 h-7 border-b-2 border-[#1A1614] animate-spin rounded-full" />
+            </div>
+          ) : pitchInvites.length === 0 ? (
+            <div className="bg-white border border-[#1A1614]/15 p-10 text-center">
+              <Lightbulb className="w-10 h-10 text-[#7A6B5E] mx-auto mb-3 opacity-40" />
+              <h3 className="text-base font-serif font-bold text-[#1A1614]">No invitations yet</h3>
+              <p className="text-sm text-[#7A6B5E] mt-1 max-w-xs mx-auto">
+                When authors invite you to collaborate on a pitch, it'll appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {pitchInvites.map((inv, i) => {
+                const genres = (() => { try { return JSON.parse(inv.pitchGenres ?? "[]") as string[]; } catch { return []; } })();
+                return (
+                  <motion.div
+                    key={inv.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="bg-white border border-[#1A1614]/15 p-5"
+                  >
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                      <div className="min-w-0">
+                        <Link href={`/pitch/${inv.pitchId}`} className="font-bold text-[#1A1614] hover:text-[#E8B84B] transition-colors">
+                          {inv.pitchTitle}
+                        </Link>
+                        <p className="text-xs text-[#7A6B5E] mt-0.5">from <span className="font-semibold">{inv.fromUserName}</span> · {formatDistanceToNow(new Date(inv.createdAt), { addSuffix: true })}</p>
+                        {genres.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {genres.map((g) => <span key={g} className={`px-2 py-0.5 text-[10px] font-semibold ${GENRE_COLORS[g] ?? "bg-[#1A1614]/5 text-[#7A6B5E]"}`}>{g}</span>)}
+                          </div>
+                        )}
+                        {inv.message && <p className="text-sm text-[#7A6B5E] mt-2 italic">"{inv.message}"</p>}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {inv.status === "pending" ? (
+                          <>
+                            <button
+                              onClick={() => respondToInviteMutation.mutate({ inviteId: inv.id, status: "accepted" })}
+                              disabled={respondToInviteMutation.isPending}
+                              className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 transition-colors disabled:opacity-50"
+                            >
+                              <CheckCheck className="w-3.5 h-3.5" /> Accept
+                            </button>
+                            <button
+                              onClick={() => respondToInviteMutation.mutate({ inviteId: inv.id, status: "declined" })}
+                              disabled={respondToInviteMutation.isPending}
+                              className="inline-flex items-center gap-1.5 px-3 py-2 border border-[#1A1614]/20 text-[#7A6B5E] text-xs font-bold hover:border-red-300 hover:text-red-500 transition-colors disabled:opacity-50"
+                            >
+                              <X className="w-3.5 h-3.5" /> Decline
+                            </button>
+                          </>
+                        ) : (
+                          <span className={`text-xs font-bold px-3 py-1.5 ${inv.status === "accepted" ? "text-emerald-700 bg-emerald-50 border border-emerald-200" : "text-red-600 bg-red-50 border border-red-200"}`}>
+                            {inv.status === "accepted" ? "Accepted" : "Declined"}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </motion.div>
@@ -509,32 +1013,25 @@ export default function Profile() {
                     </Link>
                     <div className="flex items-center gap-2 shrink-0">
                       <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 border uppercase tracking-[0.1em] ${conf.className}`}>
-                        {conf.icon}
-                        {conf.label}
+                        {conf.icon} {conf.label}
                       </span>
-                      <span className="text-xs text-[#7A6B5E]">
-                        {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
-                      </span>
+                      <span className="text-[10px] text-[#7A6B5E]">{formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}</span>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm font-mono">
-                    <div className="bg-red-50 border border-red-100 px-3 py-2 text-red-700 leading-relaxed">
-                      <span className="text-red-400 mr-1 select-none">−</span>
-                      {truncate(item.originalText)}
-                    </div>
-                    <div className="bg-emerald-50 border border-emerald-100 px-3 py-2 text-emerald-800 leading-relaxed">
-                      <span className="text-emerald-400 mr-1 select-none">+</span>
-                      {truncate(item.suggestedText)}
-                    </div>
+                  <div className="bg-[#F9F6EE] p-3 text-xs text-[#7A6B5E] border-l-2 border-[#E8B84B] mb-2">
+                    <span className="line-through mr-2">{truncate(item.originalText)}</span>
+                    <span className="text-[#1A1614] font-medium">→ {truncate(item.suggestedText)}</span>
                   </div>
-
                   {item.comment && (
-                    <p className="mt-2 text-xs text-[#7A6B5E] italic">"{item.comment}"</p>
+                    <p className="text-xs text-[#7A6B5E] italic flex items-start gap-1.5">
+                      <MessageSquareQuote className="w-3.5 h-3.5 shrink-0 mt-px" />
+                      {truncate(item.comment, 120)}
+                    </p>
                   )}
                   {item.ownerNote && (
-                    <p className="mt-1.5 text-xs text-[#1A1614] bg-[#E8B84B]/10 px-3 py-1.5">
-                      <span className="font-bold">Author note:</span> {item.ownerNote}
+                    <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 mt-2 flex items-start gap-1.5">
+                      <CheckCheck className="w-3.5 h-3.5 shrink-0 mt-px" />
+                      {item.ownerNote}
                     </p>
                   )}
                 </motion.div>
@@ -544,102 +1041,16 @@ export default function Profile() {
         )}
       </div>
 
-      {/* Pitch Invites — contributors only */}
-      {isContributor && (
-        <div className="mb-10">
-          <div className="mb-5">
-            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2 flex items-center gap-2">
-              <Mail className="w-3.5 h-3.5 text-[#E8B84B]" /> Pitch Invitations
-            </p>
-            <div className="border-t-2 border-[#1A1614] mb-2" />
-            <h2 className="text-2xl font-serif font-bold text-[#1A1614]">Invitations from Authors</h2>
-            <div className="border-t border-[#1A1614]/15 mt-3" />
-          </div>
-
-          {invitesLoading ? (
-            <div className="flex justify-center py-10">
-              <div className="w-7 h-7 border-b-2 border-[#1A1614] animate-spin rounded-full" />
-            </div>
-          ) : pitchInvites.length === 0 ? (
-            <div className="bg-white border border-[#1A1614]/15 p-10 text-center">
-              <Lightbulb className="w-10 h-10 text-[#7A6B5E] mx-auto mb-3 opacity-40" />
-              <h3 className="text-base font-serif font-bold text-[#1A1614]">No invitations yet</h3>
-              <p className="text-sm text-[#7A6B5E] mt-1 max-w-xs mx-auto">
-                {openToApproach
-                  ? "Authors whose pitch genres match your interests can invite you here."
-                  : "Enable \"Open to direct approach\" above to start receiving invitations."}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {pitchInvites.map((inv, i) => {
-                let genres: string[] = [];
-                try { genres = JSON.parse(inv.pitchGenres ?? "[]"); } catch {}
-                return (
-                  <motion.div
-                    key={inv.id}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                    className="bg-white border border-[#1A1614]/15 p-5 hover:border-[#E8B84B] transition-colors"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <Link href={`/pitch/${inv.pitchId}`}
-                          className="font-serif font-bold text-[#1A1614] hover:text-[#E8B84B] transition-colors text-base leading-snug block mb-1">
-                          {inv.pitchTitle}
-                        </Link>
-                        <p className="text-xs text-[#7A6B5E] mb-2">
-                          Invited by <span className="font-semibold">{inv.fromUserName}</span>
-                          {" · "}{format(new Date(inv.createdAt), "d MMM yyyy")}
-                        </p>
-                        {genres.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {genres.map((g) => (
-                              <span key={g} className={`px-2 py-0.5 text-[10px] font-semibold ${GENRE_COLORS[g] ?? "bg-[#1A1614]/5 text-[#7A6B5E]"}`}>{g}</span>
-                            ))}
-                          </div>
-                        )}
-                        {inv.message && (
-                          <p className="text-xs text-[#7A6B5E] italic bg-[#F9F6EE] border border-[#1A1614]/10 px-3 py-2 mt-1">
-                            "{inv.message}"
-                          </p>
-                        )}
-                      </div>
-                      <div className="shrink-0 flex flex-col items-end gap-2">
-                        {inv.status === "pending" ? (
-                          <>
-                            <button
-                              onClick={() => respondToInviteMutation.mutate({ inviteId: inv.id, status: "accepted" })}
-                              disabled={respondToInviteMutation.isPending}
-                              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-                            >
-                              <CheckCheck className="w-3.5 h-3.5" /> Accept
-                            </button>
-                            <button
-                              onClick={() => respondToInviteMutation.mutate({ inviteId: inv.id, status: "declined" })}
-                              disabled={respondToInviteMutation.isPending}
-                              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 border border-[#1A1614]/20 text-[#7A6B5E] rounded-lg hover:border-[#1A1614] hover:text-[#1A1614] transition-colors"
-                            >
-                              Decline
-                            </button>
-                          </>
-                        ) : (
-                          <span className={`text-xs font-bold px-3 py-1.5 rounded-lg ${
-                            inv.status === "accepted" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-600 border border-red-200"
-                          }`}>
-                            {inv.status === "accepted" ? "Accepted" : "Declined"}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+      {/* Edit Profile Drawer */}
+      <EditProfileDrawer
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        user={user}
+        onSaved={(updated) => {
+          updateUser(updated);
+          setEditOpen(false);
+        }}
+      />
     </div>
   );
 }
