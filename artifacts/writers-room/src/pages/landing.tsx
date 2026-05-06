@@ -128,7 +128,7 @@ export default function Landing() {
             <ThickRule className="w-48 md:w-72 mx-auto mb-5 border-[#1A1614]" />
 
             <p className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#1A1614]/60 mb-10">
-              Where great writing is made together
+              Pitch. Write. Edit. Publish.<br />Together
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
