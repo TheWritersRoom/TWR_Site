@@ -13,6 +13,7 @@ import adminRouter from "./admin";
 import messagesRouter from "./messages";
 import bookmarksRouter from "./bookmarks";
 import versionsRouter from "./versions";
+import ipProtectionRouter from "./ip-protection";
 
 const router: IRouter = Router();
 
@@ -25,6 +26,7 @@ router.use(searchRouter);
 router.use(pitchesRouter);
 router.use(publishingRouter);
 router.use(versionsRouter);
+router.use(ipProtectionRouter);
 router.use(projectsRouter);
 router.use(collaboratorsRouter);
 router.use(suggestionsRouter);

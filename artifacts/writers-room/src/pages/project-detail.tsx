@@ -6,9 +6,10 @@ import {
   ChevronLeft, Users, MessageSquare, Check, X, 
   Send, AlertCircle, Edit3, BarChart2, Trophy, Mail,
   BookOpen, Globe, Lock, Eye, MessageCircle, Minus, Plus,
-  UserPlus, Clock, CheckCircle, XCircle, Film, Shield, AlignLeft, History
+  UserPlus, Clock, CheckCircle, XCircle, Film, Shield, AlignLeft, History, ShieldCheck
 } from "lucide-react";
 import { VersionHistoryPanel } from "@/components/version-history-panel";
+import { IpProtectionPanel } from "@/components/ip-protection-panel";
 import { useQuery, useMutation, useQueryClient as useQC } from "@tanstack/react-query";
 import { PublishModal } from "@/components/publish-modal";
 import { ScriptEditor } from "@/components/script-editor";
@@ -64,7 +65,7 @@ export default function ProjectDetail() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<"suggestions" | "collaborators" | "insights" | "feedback" | "history">("suggestions");
+  const [activeTab, setActiveTab] = useState<"suggestions" | "collaborators" | "insights" | "feedback" | "history" | "ip">("suggestions");
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [publishLoading, setPublishLoading] = useState(false);
   const [scriptEditorOpen, setScriptEditorOpen] = useState(false);
@@ -291,6 +292,17 @@ export default function ProjectDetail() {
       setPublishLoading(false);
     }
   };
+
+  // Log access when project content is viewed
+  useEffect(() => {
+    if (project && user && project.ownerId !== user.id) {
+      fetch(`/api/projects/${projectId}/access-log`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, accessType: "view" }),
+      }).catch(() => {});
+    }
+  }, [!!project]);
 
   const handleSubmitFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -577,6 +589,13 @@ export default function ProjectDetail() {
               History
             </button>
           )}
+          <button
+            className={`flex-1 py-3 text-xs font-semibold border-b-2 transition-colors ${activeTab === 'ip' ? 'border-[#E8B84B] text-[#1A1614]' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+            onClick={() => setActiveTab('ip')}
+          >
+            <ShieldCheck className="w-4 h-4 mx-auto mb-1" />
+            IP
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto bg-secondary/30 p-4">
@@ -1104,6 +1123,16 @@ export default function ProjectDetail() {
                 onRestored={() => {
                   queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
                 }}
+              />
+            </div>
+          )}
+          {activeTab === 'ip' && user && (
+            <div className="-m-4 h-full">
+              <IpProtectionPanel
+                projectId={projectId}
+                userId={user.id}
+                isOwner={isOwner}
+                collaborators={(collaborators ?? []).map(c => ({ id: c.id, name: c.name, userId: c.userId ?? c.id }))}
               />
             </div>
           )}

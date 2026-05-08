@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, projectsTable, usersTable } from "@workspace/db";
+import { sha256 } from "./ip-protection";
 import JSZip from "jszip";
 import {
   Document,
@@ -200,6 +201,51 @@ ${paragraphs}
   </navMap>
 </ncx>`);
 
+  // Copyright / fingerprint page
+  const contentHash = sha256(project.content ?? "");
+  const exportedAt = new Date().toISOString();
+  oebps.file("copyright.xhtml", `<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>Copyright</title><link rel="stylesheet" href="styles.css"/></head>
+<body>
+  <div style="margin:4em 2em;color:#555;font-size:0.85em;line-height:1.8;">
+    <p><strong>Copyright &copy; ${new Date().getFullYear()} ${safeAuthor}</strong></p>
+    <p>All rights reserved. This manuscript is protected under copyright law. No part of this publication may be reproduced, distributed, or transmitted in any form without the prior written permission of the author.</p>
+    <p style="margin-top:2em;font-size:0.8em;color:#888;">Exported via Writers Room &bull; ${exportedAt}</p>
+    <p style="font-size:0.75em;color:#aaa;word-break:break-all;">Content fingerprint (SHA-256): ${contentHash}</p>
+  </div>
+</body>
+</html>`);
+
+  // Prepend copyright to spine and manifest
+  const manifestWithCopyright = [
+    `<item id="copyright" href="copyright.xhtml" media-type="application/xhtml+xml"/>`,
+    ...manifestItems.split("\n    ").filter(Boolean),
+  ].join("\n    ");
+  const spineWithCopyright = [
+    `<itemref idref="copyright"/>`,
+    ...spineItems.split("\n    ").filter(Boolean),
+  ].join("\n    ");
+
+  oebps.file("content.opf", `<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="bookid" version="2.0">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+    <dc:title>${safeTitle}</dc:title>
+    <dc:creator>${safeAuthor}</dc:creator>
+    <dc:language>en</dc:language>
+    <dc:identifier id="bookid">${uid}</dc:identifier>
+    <dc:rights>Copyright ${new Date().getFullYear()} ${safeAuthor}. All rights reserved.</dc:rights>
+    ${project.synopsis ? `<dc:description>${textToXhtml(project.synopsis)}</dc:description>` : ""}
+  </metadata>
+  <manifest>
+    ${manifestWithCopyright}
+  </manifest>
+  <spine toc="ncx">
+    ${spineWithCopyright}
+  </spine>
+</package>`);
+
   const buffer = await zip.generateAsync({ type: "nodebuffer", mimeType: "application/epub+zip" });
   const filename = `${project.title.replace(/[^a-z0-9]/gi, "_")}.epub`;
 
@@ -287,6 +333,33 @@ router.get("/projects/:id/export/docx", async (req, res): Promise<void> => {
     }
   }
 
+  const contentHashDocx = sha256(project.content ?? "");
+  const exportedAtDocx = new Date().toISOString();
+
+  // Copyright page at the start
+  const copyrightParagraphs: Paragraph[] = [
+    new Paragraph({
+      children: [new TextRun({ text: `Copyright © ${new Date().getFullYear()} ${project.ownerName ?? "Unknown Author"}`, bold: true, size: 24 })],
+      alignment: AlignmentType.CENTER,
+      spacing: { before: convertInchesToTwip(3), after: convertInchesToTwip(0.4) },
+    }),
+    new Paragraph({
+      children: [new TextRun({ text: "All rights reserved. This manuscript is protected under copyright law. No part of this publication may be reproduced, distributed, or transmitted in any form without the prior written permission of the author.", size: 20, color: "555555" })],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: convertInchesToTwip(0.3) },
+    }),
+    new Paragraph({
+      children: [new TextRun({ text: `Exported via Writers Room · ${exportedAtDocx}`, size: 18, color: "888888" })],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: convertInchesToTwip(0.2) },
+    }),
+    new Paragraph({
+      children: [new TextRun({ text: `Content fingerprint (SHA-256): ${contentHashDocx}`, size: 16, color: "bbbbbb", font: "Courier New" })],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: convertInchesToTwip(3) },
+    }),
+  ];
+
   const doc = new Document({
     sections: [{
       properties: {
@@ -299,7 +372,7 @@ router.get("/projects/:id/export/docx", async (req, res): Promise<void> => {
           },
         },
       },
-      children: docChildren,
+      children: [...copyrightParagraphs, ...docChildren],
     }],
   });
 
