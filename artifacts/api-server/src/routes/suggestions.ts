@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, and } from "drizzle-orm";
 import { db, suggestionsTable, usersTable, projectsTable, collaboratorsTable } from "@workspace/db";
+import { createVersion } from "./versions";
 import {
   ListSuggestionsParams,
   ListSuggestionsQueryParams,
@@ -200,6 +201,13 @@ router.patch("/projects/:id/suggestions/:suggestionId", async (req, res): Promis
   if (parsed.data.status === "accepted") {
     const currentContent = project.content;
     if (currentContent.includes(suggestion.originalText)) {
+      await createVersion(
+        params.data.id,
+        parsed.data.userId,
+        currentContent,
+        `Before accepting: "${suggestion.originalText.slice(0, 40)}${suggestion.originalText.length > 40 ? "…" : ""}"`,
+        "suggestion-accepted"
+      );
       const newContent = currentContent.replace(suggestion.originalText, suggestion.suggestedText);
       await db
         .update(projectsTable)

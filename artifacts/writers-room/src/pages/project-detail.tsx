@@ -6,8 +6,9 @@ import {
   ChevronLeft, Users, MessageSquare, Check, X, 
   Send, AlertCircle, Edit3, BarChart2, Trophy, Mail,
   BookOpen, Globe, Lock, Eye, MessageCircle, Minus, Plus,
-  UserPlus, Clock, CheckCircle, XCircle, Film, Shield, AlignLeft
+  UserPlus, Clock, CheckCircle, XCircle, Film, Shield, AlignLeft, History
 } from "lucide-react";
+import { VersionHistoryPanel } from "@/components/version-history-panel";
 import { useQuery, useMutation, useQueryClient as useQC } from "@tanstack/react-query";
 import { PublishModal } from "@/components/publish-modal";
 import { ScriptEditor } from "@/components/script-editor";
@@ -63,7 +64,7 @@ export default function ProjectDetail() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<"suggestions" | "collaborators" | "insights" | "feedback">("suggestions");
+  const [activeTab, setActiveTab] = useState<"suggestions" | "collaborators" | "insights" | "feedback" | "history">("suggestions");
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [publishLoading, setPublishLoading] = useState(false);
   const [scriptEditorOpen, setScriptEditorOpen] = useState(false);
@@ -565,6 +566,15 @@ export default function ProjectDetail() {
             >
               <MessageCircle className="w-4 h-4 mx-auto mb-1" />
               Feedback
+            </button>
+          )}
+          {isOwner && (
+            <button
+              className={`flex-1 py-3 text-xs font-semibold border-b-2 transition-colors ${activeTab === 'history' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+              onClick={() => setActiveTab('history')}
+            >
+              <History className="w-4 h-4 mx-auto mb-1" />
+              History
             </button>
           )}
         </div>
@@ -1083,6 +1093,18 @@ export default function ProjectDetail() {
                   );
                 })
               )}
+            </div>
+          )}
+          {activeTab === 'history' && isOwner && user && (
+            <div className="-m-4 h-full">
+              <VersionHistoryPanel
+                projectId={projectId}
+                userId={user.id}
+                currentContent={project.content ?? ""}
+                onRestored={() => {
+                  queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
+                }}
+              />
             </div>
           )}
           {activeTab === 'feedback' && (

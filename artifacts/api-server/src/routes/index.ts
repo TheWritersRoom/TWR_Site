@@ -12,6 +12,7 @@ import exportRouter from "./export";
 import adminRouter from "./admin";
 import messagesRouter from "./messages";
 import bookmarksRouter from "./bookmarks";
+import versionsRouter from "./versions";
 
 const router: IRouter = Router();
 
@@ -23,6 +24,7 @@ router.use(bookmarksRouter);
 router.use(searchRouter);
 router.use(pitchesRouter);
 router.use(publishingRouter);
+router.use(versionsRouter);
 router.use(projectsRouter);
 router.use(collaboratorsRouter);
 router.use(suggestionsRouter);

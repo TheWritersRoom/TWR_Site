@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, and, desc, inArray, sql, count } from "drizzle-orm";
 import { db, projectsTable, usersTable, collaboratorsTable, feedbackTable } from "@workspace/db";
+import { createVersion } from "./versions";
 
 const router: IRouter = Router();
 
@@ -86,6 +87,8 @@ router.post("/projects/:id/publish", async (req, res): Promise<void> => {
   const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));
   if (!project) { res.status(404).json({ error: "Project not found" }); return; }
   if (project.ownerId !== userId) { res.status(403).json({ error: "Only the owner can publish" }); return; }
+
+  await createVersion(projectId, userId, project.content, "Published snapshot", "published");
 
   const [updated] = await db
     .update(projectsTable)
