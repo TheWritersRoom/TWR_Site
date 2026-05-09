@@ -1,7 +1,8 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, useCallback, createContext, useContext } from "react";
 import type { User } from "@workspace/api-client-react";
 
 const AUTH_KEY = "writers_room_user";
+const POLL_INTERVAL_MS = 60_000;
 
 export type UserRole = "author" | "contributor" | "both";
 
@@ -41,17 +42,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
+  const refreshUser = useCallback(async (email: string) => {
+    try {
+      const res = await fetch(`/api/users/me?email=${encodeURIComponent(email)}`);
+      if (res.status === 404) {
+        setUser(null);
+        localStorage.removeItem(AUTH_KEY);
+        return;
+      }
+      if (!res.ok) return;
+      const fresh: User = await res.json();
+      setUser(fresh);
+      localStorage.setItem(AUTH_KEY, JSON.stringify(fresh));
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.warn("[auth] Failed to refresh user profile:", err);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const stored = localStorage.getItem(AUTH_KEY);
     if (stored) {
       try {
-        setUser(JSON.parse(stored));
+        const parsed: User = JSON.parse(stored);
+        setUser(parsed);
+        refreshUser(parsed.email).finally(() => setIsLoading(false));
+        return;
       } catch {
         localStorage.removeItem(AUTH_KEY);
       }
     }
     setIsLoading(false);
-  }, []);
+  }, [refreshUser]);
+
+  useEffect(() => {
+    if (!user?.email) return;
+
+    const email = user.email;
+
+    const intervalId = setInterval(() => {
+      refreshUser(email);
+    }, POLL_INTERVAL_MS);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        refreshUser(email);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [user?.email, refreshUser]);
 
   const register = async (payload: RegisterPayload) => {
     const res = await fetch("/api/auth/register", {
@@ -88,7 +134,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthModalOpen(false);
   };
 
-  /** Called after the OAuth redirect — exchanges the one-time token for the user object */
   const loginWithToken = async (token: string) => {
     const res = await fetch(`/api/auth/token/${token}`);
     const data = await res.json();
