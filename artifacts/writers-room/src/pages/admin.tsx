@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { format } from "date-fns";
-import { Search, Users, BookText, Shield, ShieldOff } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
+import { Search, Users, BookText, Shield, ShieldOff, Activity, UserPlus, Globe, MessageSquare } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -36,11 +36,127 @@ type Project = {
   createdAt: string;
 };
 
+type ActivityEvent = {
+  type: "user_joined" | "project_published" | "feedback_submitted";
+  actorName: string;
+  targetTitle?: string;
+  timestamp: string;
+};
+
 const ROLE_BADGE: Record<string, string> = {
   author: "bg-[#E8B84B]/20 text-[#7A5A00] border-[#E8B84B]/40",
   contributor: "bg-[#F7C5D5]/30 text-[#8B2A50] border-[#F7C5D5]/60",
   both: "bg-[#D4E8B0]/30 text-[#3A6020] border-[#D4E8B0]/60",
 };
+
+const EVENT_META: Record<
+  ActivityEvent["type"],
+  { icon: React.ReactNode; label: string; color: string; bg: string }
+> = {
+  user_joined: {
+    icon: <UserPlus className="w-3.5 h-3.5" />,
+    label: "Joined",
+    color: "text-[#3A6020]",
+    bg: "bg-[#D4E8B0]/30 border-[#D4E8B0]/60",
+  },
+  project_published: {
+    icon: <Globe className="w-3.5 h-3.5" />,
+    label: "Published",
+    color: "text-[#7A5A00]",
+    bg: "bg-[#E8B84B]/20 border-[#E8B84B]/40",
+  },
+  feedback_submitted: {
+    icon: <MessageSquare className="w-3.5 h-3.5" />,
+    label: "Feedback",
+    color: "text-[#8B2A50]",
+    bg: "bg-[#F7C5D5]/30 border-[#F7C5D5]/60",
+  },
+};
+
+function ActivityFeed() {
+  const { data: events = [], isLoading, isError } = useQuery<ActivityEvent[]>({
+    queryKey: ["/api/admin/activity"],
+    queryFn: async () => {
+      const r = await fetch("/api/admin/activity", { credentials: "include" });
+      if (!r.ok) throw new Error(`Failed to load activity (${r.status})`);
+      return r.json();
+    },
+    refetchInterval: 30_000,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-16">
+        <div className="w-6 h-6 border-2 border-[#1A1614] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="border-2 border-[#1A1614]/15 py-16 text-center space-y-1">
+        <p className="text-sm font-semibold text-[#1A1614]">Failed to load activity</p>
+        <p className="text-[11px] text-[#7A6B5E]">Check your connection or try refreshing the page.</p>
+      </div>
+    );
+  }
+
+  if (events.length === 0) {
+    return (
+      <div className="border-2 border-[#1A1614]/15 py-16 text-center text-[#7A6B5E] text-sm">
+        No recent activity to display.
+      </div>
+    );
+  }
+
+  return (
+    <ol className="border-2 border-[#1A1614]/15 divide-y divide-[#1A1614]/8">
+      {events.map((ev, i) => {
+        const meta = EVENT_META[ev.type];
+        const ago = formatDistanceToNow(new Date(ev.timestamp), { addSuffix: true });
+        const exact = format(new Date(ev.timestamp), "MMM d, yyyy 'at' h:mm a");
+
+        return (
+          <li key={i} className="flex items-start gap-4 px-5 py-4 hover:bg-[#F9F6EE] transition-colors">
+            <span
+              className={`inline-flex items-center justify-center w-7 h-7 border rounded-none mt-0.5 flex-shrink-0 ${meta.bg} ${meta.color}`}
+            >
+              {meta.icon}
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-[#1A1614] leading-snug">
+                <span className="font-semibold">{ev.actorName}</span>
+                {ev.type === "user_joined" && (
+                  <span className="text-[#7A6B5E]"> joined the platform</span>
+                )}
+                {ev.type === "project_published" && (
+                  <>
+                    <span className="text-[#7A6B5E]"> published </span>
+                    <span className="font-semibold italic">{ev.targetTitle}</span>
+                  </>
+                )}
+                {ev.type === "feedback_submitted" && (
+                  <>
+                    <span className="text-[#7A6B5E]"> submitted feedback on </span>
+                    <span className="font-semibold italic">{ev.targetTitle}</span>
+                  </>
+                )}
+              </p>
+              <p className="text-[10px] text-[#7A6B5E] mt-0.5 tracking-[0.05em]" title={exact}>
+                {ago}
+              </p>
+            </div>
+            <span
+              className={`inline-flex items-center gap-1 px-2 py-0.5 text-[9px] uppercase tracking-[0.12em] font-bold border rounded-none flex-shrink-0 mt-1 ${meta.bg} ${meta.color}`}
+            >
+              {meta.label}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
 
 function UsersTab() {
   const [query, setQuery] = useState("");
@@ -379,8 +495,15 @@ export default function AdminDashboard() {
         <div className="border-t border-[#1A1614]/15 mt-6" />
       </header>
 
-      <Tabs defaultValue="users">
+      <Tabs defaultValue="activity">
         <TabsList className="bg-transparent border-b-2 border-[#1A1614]/15 w-full justify-start rounded-none h-auto p-0 mb-8 gap-0">
+          <TabsTrigger
+            value="activity"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#E8B84B] data-[state=active]:bg-transparent data-[state=active]:text-[#1A1614] data-[state=active]:shadow-none text-[#7A6B5E] px-5 py-2.5 text-[11px] uppercase tracking-[0.14em] font-bold -mb-[2px] flex items-center gap-2"
+          >
+            <Activity className="w-3.5 h-3.5" />
+            Activity
+          </TabsTrigger>
           <TabsTrigger
             value="users"
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#E8B84B] data-[state=active]:bg-transparent data-[state=active]:text-[#1A1614] data-[state=active]:shadow-none text-[#7A6B5E] px-5 py-2.5 text-[11px] uppercase tracking-[0.14em] font-bold -mb-[2px] flex items-center gap-2"
@@ -397,6 +520,9 @@ export default function AdminDashboard() {
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="activity">
+          <ActivityFeed />
+        </TabsContent>
         <TabsContent value="users">
           <UsersTab />
         </TabsContent>

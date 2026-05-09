@@ -1,9 +1,83 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
-import { db, usersTable } from "@workspace/db";
+import { desc, eq, isNotNull } from "drizzle-orm";
+import { db, usersTable, projectsTable, feedbackTable } from "@workspace/db";
 import { requireAdmin } from "../middleware/require-admin";
 
 const router: IRouter = Router();
+
+router.get("/admin/activity", requireAdmin, async (_req, res): Promise<void> => {
+  const LIMIT = 25;
+
+  const [recentUsers, recentPublications, recentFeedback] = await Promise.all([
+    db
+      .select({
+        id: usersTable.id,
+        name: usersTable.name,
+        createdAt: usersTable.createdAt,
+      })
+      .from(usersTable)
+      .orderBy(desc(usersTable.createdAt))
+      .limit(LIMIT),
+
+    db
+      .select({
+        id: projectsTable.id,
+        title: projectsTable.title,
+        publishedAt: projectsTable.publishedAt,
+        ownerName: usersTable.name,
+      })
+      .from(projectsTable)
+      .innerJoin(usersTable, eq(projectsTable.ownerId, usersTable.id))
+      .where(isNotNull(projectsTable.publishedAt))
+      .orderBy(desc(projectsTable.publishedAt))
+      .limit(LIMIT),
+
+    db
+      .select({
+        id: feedbackTable.id,
+        content: feedbackTable.content,
+        createdAt: feedbackTable.createdAt,
+        authorName: usersTable.name,
+        projectTitle: projectsTable.title,
+      })
+      .from(feedbackTable)
+      .innerJoin(usersTable, eq(feedbackTable.userId, usersTable.id))
+      .innerJoin(projectsTable, eq(feedbackTable.projectId, projectsTable.id))
+      .orderBy(desc(feedbackTable.createdAt))
+      .limit(LIMIT),
+  ]);
+
+  type ActivityEvent = {
+    type: "user_joined" | "project_published" | "feedback_submitted";
+    actorName: string;
+    targetTitle?: string;
+    timestamp: string;
+  };
+
+  const events: ActivityEvent[] = [
+    ...recentUsers.map((u) => ({
+      type: "user_joined" as const,
+      actorName: u.name,
+      timestamp: u.createdAt.toISOString(),
+    })),
+    ...recentPublications.map((p) => ({
+      type: "project_published" as const,
+      actorName: p.ownerName,
+      targetTitle: p.title,
+      timestamp: p.publishedAt!.toISOString(),
+    })),
+    ...recentFeedback.map((f) => ({
+      type: "feedback_submitted" as const,
+      actorName: f.authorName,
+      targetTitle: f.projectTitle,
+      timestamp: f.createdAt.toISOString(),
+    })),
+  ];
+
+  events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+  res.json(events.slice(0, LIMIT));
+});
 
 router.get("/admin/users", requireAdmin, async (req, res): Promise<void> => {
   const rows = await db
