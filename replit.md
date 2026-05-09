@@ -8,6 +8,7 @@ A collaborative writing platform where authors publish projects, invite editors,
 - `pnpm --filter @workspace/writers-room run dev` — Frontend (uses $PORT)
 - `pnpm --filter @workspace/db run push` — Push DB schema (has unique-constraint bug; prefer direct SQL)
 - Requires: `DATABASE_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- Set `ADMIN_EMAIL` to the email of the first admin user — on each boot the server promotes that address to `is_admin = true`
 
 ## Stack
 

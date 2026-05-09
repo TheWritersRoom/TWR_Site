@@ -1,4 +1,5 @@
 import app from "./app";
+import { applyMigrations } from "@workspace/db";
 
 const rawPort = process.env["PORT"];
 
@@ -14,6 +15,13 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
-});
+applyMigrations()
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`Server listening on port ${port}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Startup migration failed — server will not start:", err);
+    process.exit(1);
+  });
