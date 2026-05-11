@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import {
   Upload, Users, MessageSquare, BarChart2, Globe, Telescope,
-  ArrowRight, Check, BookOpen, Star, PenTool
+  ArrowRight, Check, BookOpen, Star, PenTool, Shield, Award, Mail
 } from "lucide-react";
 import typewriterRoom from "@/assets/writers-room-banner.jpg";
 
@@ -16,11 +16,14 @@ const inView = (delay = 0) => ({
 
 const FEATURES = [
   { icon: <Upload className="w-5 h-5" />, title: "Write or upload", desc: "Start from a blank page or bring existing work in any format — PDF, DOCX, TXT, Markdown, RTF. Lands in a clean reading view instantly." },
-  { icon: <Users className="w-5 h-5" />, title: "Invite your collaborators", desc: "Set your own room size and send targeted invites to contributors whose interests align with your work." },
-  { icon: <MessageSquare className="w-5 h-5" />, title: "Inline edit suggestions", desc: "Collaborators highlight any passage and propose a replacement. Authors accept, discard, or annotate each one." },
-  { icon: <BarChart2 className="w-5 h-5" />, title: "Track who helps most", desc: "An acceptance-rate leaderboard shows which collaborators consistently improve your work." },
-  { icon: <Globe className="w-5 h-5" />, title: "Publish with fine-grained control", desc: "Choose who reads — all users, genre-matched readers, or contributors only — and who can comment." },
-  { icon: <Telescope className="w-5 h-5" />, title: "Discover published works", desc: "Browse works that match your interests, leave feedback, and build your reputation as a thoughtful editor." },
+  { icon: <Users className="w-5 h-5" />, title: "Invite or post a pitch", desc: "Send targeted invites to contributors matched by genre and track record, or post a Pitch and let the right people come to you." },
+  { icon: <MessageSquare className="w-5 h-5" />, title: "Inline diff suggestions", desc: "Collaborators highlight any passage and propose a replacement. Authors see the original and the alternative side by side — accept or discard in one click." },
+  { icon: <Shield className="w-5 h-5" />, title: "IP protection built in", desc: "Require contributors to sign an IP agreement before joining. Content is SHA-256 fingerprinted on demand and every view is logged." },
+  { icon: <BarChart2 className="w-5 h-5" />, title: "Track who helps most", desc: "Per-project leaderboards and public acceptance-rate profiles show which contributors consistently improve the work." },
+  { icon: <Globe className="w-5 h-5" />, title: "Publish with fine-grained control", desc: "Choose who reads — all users, genre-matched readers, or contributors only — and whether public comments are open." },
+  { icon: <Telescope className="w-5 h-5" />, title: "Discover published works", desc: "Browse a curated feed of published projects in your favourite genres. Leave feedback and build your editorial reputation before you're even invited." },
+  { icon: <Award className="w-5 h-5" />, title: "Contribution certificates", desc: "Contributors download a signed PDF for every project — listing accepted suggestions, timestamps, and a cryptographic content fingerprint. Proof of creative work, forever." },
+  { icon: <Mail className="w-5 h-5" />, title: "Direct messaging", desc: "Discuss a suggestion in depth, ask about a project, or simply introduce yourself. Every great collaboration starts with a conversation." },
 ];
 
 const FOR_AUTHORS = [
