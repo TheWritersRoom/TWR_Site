@@ -235,7 +235,7 @@ export default function Landing() {
               <motion.div
                 key={f.title}
                 {...inView(i * 0.07)}
-                className="p-6 border border-[#F9F6EE]/10 hover:bg-[#F9F6EE]/5 transition-colors group"
+                className="p-6 md:p-10 border border-[#F9F6EE]/10 hover:bg-[#F9F6EE]/5 transition-colors group"
               >
                 <div className="w-8 h-8 rounded-sm bg-[#FDDCB5]/20 text-[#FDDCB5] flex items-center justify-center mb-4 group-hover:bg-[#E8B84B]/20 group-hover:text-[#E8B84B] transition-colors">
                   {f.icon}
