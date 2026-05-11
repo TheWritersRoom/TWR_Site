@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -299,6 +300,8 @@ function UsersTab() {
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
 
+  const { toast } = useToast();
+
   const { data: users = [], isLoading, refetch } = useQuery<AdminUser[]>({
     queryKey: ["/api/admin/users"],
     queryFn: async () => {
@@ -322,6 +325,19 @@ function UsersTab() {
       queryClient.setQueryData<AdminUser[]>(["/api/admin/users"], prev =>
         prev ? prev.map(u => u.id === updated.id ? { ...u, ...updated } : u) : prev
       );
+      toast({
+        title: updated.isAdmin ? "Admin granted" : "Admin revoked",
+        description: updated.isAdmin
+          ? `${updated.name} now has admin privileges.`
+          : `Admin privileges removed from ${updated.name}.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to update admin status",
+        description: "Couldn't update admin status. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
