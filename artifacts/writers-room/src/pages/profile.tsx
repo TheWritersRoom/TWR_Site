@@ -602,6 +602,20 @@ export default function Profile() {
   });
 
   const [openToApproach, setOpenToApproach] = useState<boolean>(user?.openToApproach ?? false);
+  const [profilePublic, setProfilePublic] = useState<boolean>((user as any)?.profilePublic ?? true);
+
+  const profilePublicMutation = useMutation({
+    mutationFn: (value: boolean) =>
+      fetch(`/api/users/${user!.id}/profile-public`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profilePublic: value }),
+      }).then((r) => r.json()),
+    onSuccess: (updatedUser) => {
+      setProfilePublic(updatedUser.profilePublic);
+      updateUser(updatedUser);
+    },
+  });
 
   const openToApproachMutation = useMutation({
     mutationFn: (value: boolean) =>
@@ -806,6 +820,32 @@ export default function Profile() {
               </div>
             );
           })()}
+
+          {/* Public profile toggle */}
+          <div className="mt-4 pt-4 border-t border-[#1A1614]/10">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#7A6B5E] mb-0.5 flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5" /> Public profile
+                </p>
+                <p className="text-xs text-[#7A6B5E]">
+                  {profilePublic
+                    ? "Anyone with your profile link can view it — useful for sharing with employers or collaborators outside the platform."
+                    : "Your profile is private. Only Writers Room members can see it."}
+                </p>
+              </div>
+              <button
+                onClick={() => profilePublicMutation.mutate(!profilePublic)}
+                disabled={profilePublicMutation.isPending}
+                className="flex items-center gap-1.5 shrink-0 transition-opacity disabled:opacity-50"
+                aria-label="Toggle public profile"
+              >
+                {profilePublic
+                  ? <ToggleRight className="w-9 h-9 text-emerald-500" />
+                  : <ToggleLeft className="w-9 h-9 text-[#7A6B5E]/40" />}
+              </button>
+            </div>
+          </div>
 
           {/* Open to Approach toggle — contributors only */}
           {isContributor && (

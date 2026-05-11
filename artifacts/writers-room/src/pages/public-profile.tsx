@@ -21,6 +21,7 @@ type PublicUser = {
   credentials: string | null;
   avatarUrl: string | null;
   openToApproach: boolean;
+  profilePublic: boolean;
   createdAt: string;
   totalSuggestions: number;
   acceptRate: number | null;
@@ -132,6 +133,34 @@ export default function PublicProfile() {
   }
 
   if (!profile) return null;
+
+  // Private profile — unauthenticated visitors see a locked state
+  if (!user && !profile.profilePublic) {
+    return (
+      <div className="min-h-screen bg-[#F9F6EE]">
+        <header className="border-b-2 border-[#1A1614] bg-[#F9F6EE]">
+          <div className="border-b border-[#1A1614]/15 px-6 md:px-14 py-1.5 flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-[0.22em] text-[#7A6B5E] font-semibold">Collaborative Writing Platform</span>
+            <span className="text-[10px] uppercase tracking-[0.22em] text-[#7A6B5E] font-semibold">Free to join</span>
+          </div>
+          <div className="px-6 md:px-14 py-3 flex items-center justify-between">
+            <Link href="/"><span className="font-serif font-bold text-2xl text-[#1A1614] hover:text-[#E8B84B] transition-colors">Writers Room</span></Link>
+            <Link href="/"><span className="px-4 py-1.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.16em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors">Join free</span></Link>
+          </div>
+        </header>
+        <div className="flex flex-col items-center justify-center py-32 px-6 text-center">
+          <div className="w-16 h-16 bg-[#1A1614]/6 flex items-center justify-center mb-6">
+            <span className="text-3xl font-serif font-bold text-[#1A1614]/30">{profile.name.charAt(0).toUpperCase()}</span>
+          </div>
+          <h2 className="font-serif font-bold text-2xl text-[#1A1614] mb-2">{profile.name}</h2>
+          <p className="text-sm text-[#7A6B5E] mb-6 max-w-xs">This profile is set to private by the member.</p>
+          <Link href="/">
+            <span className="px-6 py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors">Join Writers Room</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const creds = parseCreds(profile.credentials);
   const genres = parseGenres(profile.genres);

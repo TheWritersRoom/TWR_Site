@@ -295,6 +295,24 @@ router.patch("/users/:id", async (req, res): Promise<void> => {
   res.json(updated);
 });
 
+// PATCH /users/:id/profile-public — toggle public profile visibility
+router.patch("/users/:id/profile-public", async (req, res): Promise<void> => {
+  const userId = parseInt(req.params.id, 10);
+  const { profilePublic } = req.body as { profilePublic: boolean };
+  if (isNaN(userId) || typeof profilePublic !== "boolean") {
+    res.status(400).json({ error: "Invalid params" }); return;
+  }
+
+  const [updated] = await db
+    .update(usersTable)
+    .set({ profilePublic })
+    .where(eq(usersTable.id, userId))
+    .returning();
+
+  if (!updated) { res.status(404).json({ error: "User not found" }); return; }
+  res.json(updated);
+});
+
 // PATCH /users/:id/open-to-approach — toggle open-to-approach flag
 router.patch("/users/:id/open-to-approach", async (req, res): Promise<void> => {
   const userId = parseInt(req.params.id, 10);
@@ -445,6 +463,7 @@ router.get("/users/:id/public", async (req, res): Promise<void> => {
     credentials: usersTable.credentials,
     avatarUrl: usersTable.avatarUrl,
     openToApproach: usersTable.openToApproach,
+    profilePublic: usersTable.profilePublic,
     createdAt: usersTable.createdAt,
   }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
 

@@ -16,6 +16,7 @@ export const usersTable = pgTable("users", {
   bio: text("bio"),
   credentials: text("credentials"),
   openToApproach: boolean("open_to_approach").notNull().default(false),
+  profilePublic: boolean("profile_public").notNull().default(true),
   subscriptionTier: text("subscription_tier", { enum: ["free", "pro"] }).notNull().default("free"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
