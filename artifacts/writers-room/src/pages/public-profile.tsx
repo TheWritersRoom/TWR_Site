@@ -7,8 +7,9 @@ import { useAuth } from "@/hooks/use-auth";
 import {
   ArrowLeft, PenLine, Users, Layers, BadgeCheck, Globe, BookOpen,
   BarChart2, CheckCircle2, Sparkles, Tag, Bell, Star, MessageSquare,
-  X, Send, Briefcase,
+  X, Send, Briefcase, Award,
 } from "lucide-react";
+import { AchievementGrid, ReputationScore, type Achievement } from "@/components/reputation-badge";
 
 type PublicUser = {
   id: number;
@@ -89,6 +90,18 @@ export default function PublicProfile() {
       if (!r.ok) throw new Error("Not found");
       return r.json();
     }),
+    enabled: !isNaN(profileId),
+  });
+
+  const { data: reputation } = useQuery<{
+    score: number;
+    totalSuggestions: number;
+    acceptedSuggestions: number;
+    acceptRate: number | null;
+    achievements: Achievement[];
+  }>({
+    queryKey: ["/api/users", profileId, "reputation"],
+    queryFn: () => fetch(`/api/users/${profileId}/reputation`).then(r => r.json()),
     enabled: !isNaN(profileId),
   });
 
@@ -225,6 +238,31 @@ export default function PublicProfile() {
           </div>
         )}
       </motion.div>
+
+      {/* Reputation & Achievements */}
+      {reputation && isContributor && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white border-2 border-[#1A1614] p-6 mb-6"
+        >
+          <div className="flex items-start gap-5 flex-wrap">
+            <ReputationScore score={reputation.score} />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-3">
+                <Award className="w-3.5 h-3.5 text-[#E8B84B]" />
+                <p className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#7A6B5E]">Reputation & Achievements</p>
+              </div>
+              {reputation.achievements.some(a => a.earned) ? (
+                <AchievementGrid achievements={reputation.achievements} />
+              ) : (
+                <p className="text-sm text-[#7A6B5E] italic">No achievements earned yet — contributions will unlock them.</p>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left column */}

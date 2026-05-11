@@ -4,7 +4,8 @@ import { useLocation } from "wouter";
 import {
   ArrowRight, PenTool, Users, MessageSquare, Star, BookOpen,
   Check, Lightbulb, Award, Shield, Heart, Globe, ArrowLeft,
-  TrendingUp, Search, Mail, Handshake, Quote
+  TrendingUp, Search, Mail, Handshake, Quote,
+  Pencil, Eye, BadgeCheck, Crown, Repeat2, BookMarked,
 } from "lucide-react";
 
 const inView = (delay = 0) => ({
@@ -317,6 +318,74 @@ export default function HowItWorks() {
             >
               Join as a contributor <ArrowRight className="w-4 h-4" />
             </button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── REPUTATION & ACHIEVEMENTS ── */}
+      <section className="py-20 px-6 md:px-14 bg-[#F9F6EE] border-t-2 border-[#1A1614]">
+        <div className="max-w-5xl mx-auto">
+          <motion.div {...inView()} className="mb-12">
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">Standing in the community</p>
+            <ThickRule className="mb-2" />
+            <h2 className="font-serif font-bold text-4xl md:text-5xl text-[#1A1614] mt-4">Reputation, not scores</h2>
+            <Rule className="mt-4" />
+            <p className="text-sm text-[#7A6B5E] mt-6 max-w-2xl leading-relaxed">
+              Writers Room does not have points, leaderboards, or engagement metrics. What we track instead is quality — the kind of editorial instinct that makes a manuscript genuinely better. Achievements are earned, not collected.
+            </p>
+          </motion.div>
+
+          {/* Achievement grid */}
+          <div className="grid md:grid-cols-2 gap-0 border-2 border-[#1A1614] mb-12">
+            {[
+              { icon: Pencil,    tier: "Bronze",   label: "First Mark",       desc: "Your first suggestion accepted by an author. The beginning of a track record.", tierColor: "text-amber-700 bg-amber-50 border-amber-200" },
+              { icon: Eye,       tier: "Silver",   label: "Sharp Eye",         desc: "60% or above acceptance rate across 5 or more suggestions. You are consistently improving manuscripts.", tierColor: "text-slate-600 bg-slate-50 border-slate-200" },
+              { icon: Repeat2,   tier: "Silver",   label: "Consistent Voice",  desc: "Accepted suggestions across 3 or more different projects. Your editorial judgement travels.", tierColor: "text-slate-600 bg-slate-50 border-slate-200" },
+              { icon: Users,     tier: "Bronze",   label: "Collaborator",      desc: "Joined as an active collaborator on 3 or more projects. You are a trusted part of multiple creative teams.", tierColor: "text-amber-700 bg-amber-50 border-amber-200" },
+              { icon: BadgeCheck,tier: "Gold",     label: "Trusted Voice",     desc: "75% or above acceptance rate across 10 or more suggestions. Authors know your suggestions are worth reading.", tierColor: "text-yellow-700 bg-yellow-50 border-yellow-300" },
+              { icon: Star,      tier: "Gold",     label: "Sought After",      desc: "Active collaborator on 5 or more projects. Authors compete for your attention.", tierColor: "text-yellow-700 bg-yellow-50 border-yellow-300" },
+              { icon: BookOpen,  tier: "Gold",     label: "Published Credit",  desc: "Your contributions appear in at least one published manuscript. Your words are in the world.", tierColor: "text-yellow-700 bg-yellow-50 border-yellow-300" },
+              { icon: Crown,     tier: "Platinum", label: "Master Editor",     desc: "90% or above acceptance rate across 10 or more suggestions. The highest standard of editorial quality.", tierColor: "text-[#F9F6EE] bg-[#1A1614] border-[#E8B84B]" },
+            ].map((a, i) => (
+              <motion.div
+                key={a.label}
+                {...inView(i * 0.06)}
+                className="flex gap-5 p-6 border-b border-r border-[#1A1614]/12 last:border-b-0 odd:border-r-2 even:border-r-0 [&:nth-last-child(2)]:border-b-0 hover:bg-[#F9F6EE] transition-colors group"
+              >
+                <div className="shrink-0 mt-0.5">
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] border ${a.tierColor}`}>
+                    <a.icon className="w-3 h-3" />
+                    {a.label}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-1">{a.tier}</p>
+                  <p className="text-sm text-[#1A1614]/70 leading-relaxed">{a.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Reputation score callout */}
+          <motion.div {...inView(0.1)} className="grid md:grid-cols-2 gap-0 border-2 border-[#1A1614]">
+            <div className="p-8 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1614]">
+              <div className="w-9 h-9 bg-[#E8B84B] flex items-center justify-center mb-5">
+                <TrendingUp className="w-4 h-4 text-[#1A1614]" />
+              </div>
+              <h3 className="font-bold text-[#1A1614] uppercase tracking-[0.1em] text-sm mb-3">Your reputation score</h3>
+              <p className="text-sm text-[#7A6B5E] leading-relaxed">
+                Every contributor profile carries a reputation score from 0–100, computed from acceptance rate, the number of different projects you have contributed to, and whether any of those projects reached publication. It rises as your track record deepens — and it cannot be gamed by volume alone.
+              </p>
+            </div>
+            <div className="p-8 bg-[#1A1614]">
+              <div className="w-9 h-9 bg-[#E8B84B]/20 flex items-center justify-center mb-5">
+                <BookMarked className="w-4 h-4 text-[#E8B84B]" />
+              </div>
+              <h3 className="font-bold text-[#F9F6EE] uppercase tracking-[0.1em] text-sm mb-3">Why it matters for authors</h3>
+              <p className="text-sm text-[#F9F6EE]/60 leading-relaxed">
+                When an author browses for collaborators, reputation achievements are shown directly on contributor profiles. A contributor with a <span className="text-[#E8B84B] font-semibold">Trusted Voice</span> badge and a <span className="text-[#E8B84B] font-semibold">Published Credit</span> is not self-described — those achievements are independently verified by the platform from real acceptance data.
+              </p>
+            </div>
           </motion.div>
         </div>
       </section>

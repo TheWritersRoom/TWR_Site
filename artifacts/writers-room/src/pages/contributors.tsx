@@ -7,6 +7,7 @@ import {
   Users, Search, Sparkles, X, BadgeCheck, Globe, CheckCircle2,
   BarChart2, Star, ChevronDown, ToggleLeft, ToggleRight, MessageSquare, Send, Briefcase,
 } from "lucide-react";
+import { AchievementPill, computeTopBadgeFromStats } from "@/components/reputation-badge";
 import { format } from "date-fns";
 
 const EDITING_SPECIALTIES = [
@@ -412,6 +413,15 @@ export default function Contributors() {
                                 <BadgeCheck className="w-3 h-3" /> Published
                               </span>
                             )}
+                            {(() => {
+                              const badge = computeTopBadgeFromStats(c.totalSuggestions, c.acceptRate);
+                              return badge ? (
+                                <AchievementPill
+                                  achievement={{ ...badge, description: "", earned: true }}
+                                  size="sm"
+                                />
+                              ) : null;
+                            })()}
                           </div>
                           {c.professionalTitle && (
                             <p className="text-xs text-[#7A6B5E] mt-0.5 font-medium">{c.professionalTitle}</p>
