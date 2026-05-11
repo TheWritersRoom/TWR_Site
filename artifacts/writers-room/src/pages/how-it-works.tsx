@@ -162,18 +162,22 @@ export default function HowItWorks() {
         </div>
         <ThickRule />
         <div className="px-6 md:px-14 py-2 flex items-center justify-between">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-[#7A6B5E] font-semibold hover:text-[#1A1614] transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back
-          </button>
+          <div className="flex items-center gap-6">
+            <button onClick={() => navigate("/how-it-works")} className="text-[11px] uppercase tracking-[0.16em] text-[#E8B84B] font-bold border-b border-[#E8B84B]">How it works</button>
+            <button onClick={() => navigate("/pricing")} className="text-[11px] uppercase tracking-[0.16em] text-[#1A1614] font-semibold hover:text-[#E8B84B] transition-colors">Pricing</button>
+          </div>
           <div className="flex items-center gap-4">
-            <button onClick={openAuthModal} className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#1A1614] hover:text-[#E8B84B] transition-colors">Sign in</button>
-            <button onClick={openAuthModal} className="px-4 py-1.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.16em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors">Join free</button>
+            {!user && (
+              <>
+                <button onClick={openAuthModal} className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#1A1614] hover:text-[#E8B84B] transition-colors">Sign in</button>
+                <button onClick={openAuthModal} className="px-4 py-1.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.16em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors">Join free</button>
+              </>
+            )}
+            {user && (
+              <button onClick={() => navigate("/")} className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#1A1614] hover:text-[#E8B84B] transition-colors">Dashboard</button>
+            )}
           </div>
         </div>
-        <Rule />
       </header>
 
       {/* ── HERO ── */}

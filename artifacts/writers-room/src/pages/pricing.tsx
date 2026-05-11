@@ -79,25 +79,29 @@ export default function Pricing() {
     <div className="min-h-screen bg-[#F9F6EE] text-[#1A1614] overflow-x-hidden">
 
       {/* ── NAV ── */}
-      <header className="fixed top-0 inset-x-0 z-40 bg-[#F9F6EE]/95 backdrop-blur-sm border-b-2 border-[#1A1614]">
+      <header className="fixed top-0 inset-x-0 z-40 bg-[#F9F6EE]/95 backdrop-blur-sm">
         <div className="border-b border-[#1A1614]/15 px-6 md:px-14 py-1.5 flex items-center justify-between">
           <span className="text-[10px] uppercase tracking-[0.22em] text-[#7A6B5E] font-semibold">Collaborative Writing Platform</span>
           <span className="text-[10px] uppercase tracking-[0.22em] text-[#7A6B5E] font-semibold">Free to join</span>
         </div>
-        <div className="px-6 md:px-14 py-3 flex items-center justify-between">
-          <button
-            onClick={() => navigate(user ? "/" : "/")}
-            className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-[#7A6B5E] font-semibold hover:text-[#1A1614] transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back
-          </button>
-          <button onClick={() => navigate("/")} className="font-serif font-bold text-2xl text-[#1A1614] hover:text-[#E8B84B] transition-colors">Writers Room</button>
+        <div className="px-6 md:px-14 py-3 text-center">
+          <button onClick={() => navigate("/")} className="font-serif font-bold text-2xl md:text-3xl tracking-[0.06em] text-[#1A1614] hover:text-[#E8B84B] transition-colors">Writers Room</button>
+        </div>
+        <ThickRule />
+        <div className="px-6 md:px-14 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <button onClick={() => navigate("/how-it-works")} className="text-[11px] uppercase tracking-[0.16em] text-[#1A1614] font-semibold hover:text-[#E8B84B] transition-colors">How it works</button>
+            <button onClick={() => navigate("/pricing")} className="text-[11px] uppercase tracking-[0.16em] text-[#E8B84B] font-bold border-b border-[#E8B84B]">Pricing</button>
+          </div>
           <div className="flex items-center gap-4">
             {!user && (
               <>
                 <button onClick={openAuthModal} className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#1A1614] hover:text-[#E8B84B] transition-colors">Sign in</button>
                 <button onClick={openAuthModal} className="px-4 py-1.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.16em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors">Join free</button>
               </>
+            )}
+            {user && (
+              <button onClick={() => navigate("/")} className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#1A1614] hover:text-[#E8B84B] transition-colors">Dashboard</button>
             )}
           </div>
         </div>
