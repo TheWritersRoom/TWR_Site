@@ -64,7 +64,7 @@ const AUTHOR_STEPS = [
   {
     n: "05",
     title: "Publish on your terms",
-    body: "When you're ready, publish with fine-grained visibility controls. Choose who can read, who can comment, and whether public feedback is enabled. Export as a polished EPUB or DOCX at any time.",
+    body: "When you're ready, publish within Writers Room — where your work joins a growing library of readable, discoverable projects — or export a formatted file ready for Amazon KDP, Apple Books, Kobo, and other platforms. Fine-grained visibility controls and public feedback settings apply either way.",
   },
 ];
 

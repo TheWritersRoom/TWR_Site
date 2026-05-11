@@ -1,6 +1,6 @@
 # Writers Room
 
-A collaborative writing platform where authors publish projects, invite editors, manage suggestions, and discover contributors.
+A collaborative writing and publishing platform where authors write or upload manuscripts, invite contributors to suggest edits, and publish — either within Writers Room itself or by exporting to external platforms.
 
 ## Run & Operate
 
@@ -42,8 +42,17 @@ A collaborative writing platform where authors publish projects, invite editors,
 - **Public Profiles**: `/profile/:id` — read-only public profile (no email exposed)
 - **In-app Messaging**: Authors message contributors directly; inbox visible on contributor's profile page
 - **Shortlist**: Authors star/bookmark contributors; shortlist shown on author's profile page
-- **Publishing**: Granular visibility and feedback controls; browse + rate published projects
+- **Publishing**: Granular visibility and feedback controls; browse + rate published projects in the Discover feed
+- **Export**: EPUB and DOCX export with KDP-compatible formatting for Amazon, Apple Books, Kobo, etc.
 - **Google OAuth**: Full sign-in/sign-up flow
+
+## Product Vision
+
+Writers Room is intended to be a publishing platform in its own right — not just a collaboration layer. Authors who choose to publish within Writers Room contribute to a growing repository of works that can be read and discovered directly on the platform.
+
+A companion app, **Readers Room**, is planned for the future. It will draw from this same story repository to provide a dedicated reading experience. Writers Room and Readers Room will share the same database and authentication; Writers Room controls what is published and at what visibility level, Readers Room surfaces it to a reading audience.
+
+Publishing within Writers Room is one option, not the only one. Authors can also export their work in formats ready for Amazon KDP, Apple Books, Kobo, and other platforms. The export pipeline (EPUB, DOCX with KDP-compatible styling) is already built.
 
 ## Gotchas
 

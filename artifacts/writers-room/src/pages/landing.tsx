@@ -20,8 +20,8 @@ const FEATURES = [
   { icon: <MessageSquare className="w-5 h-5" />, title: "Inline diff suggestions", desc: "Collaborators highlight any passage and propose a replacement. Authors see the original and the alternative side by side — accept or discard in one click." },
   { icon: <Shield className="w-5 h-5" />, title: "IP protection built in", desc: "Require contributors to sign an IP agreement before joining. Content is SHA-256 fingerprinted on demand and every view is logged." },
   { icon: <BarChart2 className="w-5 h-5" />, title: "Track who helps most", desc: "Per-project leaderboards and public acceptance-rate profiles show which contributors consistently improve the work." },
-  { icon: <Globe className="w-5 h-5" />, title: "Publish with fine-grained control", desc: "Choose who reads — all users, genre-matched readers, or contributors only — and whether public comments are open." },
-  { icon: <Telescope className="w-5 h-5" />, title: "Discover published works", desc: "Browse a curated feed of published projects in your favourite genres. Leave feedback and build your editorial reputation before you're even invited." },
+  { icon: <Globe className="w-5 h-5" />, title: "Publish here or export anywhere", desc: "Publish within Writers Room with fine-grained visibility controls, or export a KDP-ready file for Amazon, Apple Books, Kobo, and beyond. Your work, your destination." },
+  { icon: <Telescope className="w-5 h-5" />, title: "Discover published works", desc: "Browse a curated feed of works published within Writers Room. Read in your favourite genres, leave feedback, and build your editorial reputation." },
   { icon: <Award className="w-5 h-5" />, title: "Contribution certificates", desc: "Contributors download a signed PDF for every project — listing accepted suggestions, timestamps, and a cryptographic content fingerprint. Proof of creative work, forever." },
   { icon: <Mail className="w-5 h-5" />, title: "Direct messaging", desc: "Discuss a suggestion in depth, ask about a project, or simply introduce yourself. Every great collaboration starts with a conversation." },
 ];
@@ -31,7 +31,7 @@ const FOR_AUTHORS = [
   "Invite handpicked collaborators by email",
   "Review inline diff suggestions side by side",
   "Track acceptance rates to find your best collaborators",
-  "Publish with visibility controls and private feedback",
+  "Publish within Writers Room or export to KDP, Apple Books, Kobo",
 ];
 
 const FOR_CONTRIBUTORS = [
@@ -46,7 +46,7 @@ const STEPS = [
   { n: "I", title: "Create or join", desc: "Sign up as an Author, a Contributor, or both. Set your genre profile in under a minute." },
   { n: "II", title: "Start or upload your manuscript", desc: "Write from scratch inside Writers Room, or upload a book or script in any format. Either way it lands in a clean, readable view." },
   { n: "III", title: "Collaborate", desc: "Invited collaborators highlight passages and propose edits. Authors decide what to keep." },
-  { n: "IV", title: "Publish & collect feedback", desc: "When ready, publish with the audience and feedback settings that work for you." },
+  { n: "IV", title: "Publish & collect feedback", desc: "Publish within Writers Room to reach readers directly, or export a KDP-ready file for Amazon, Apple Books, Kobo, and more. Collect feedback either way." },
 ];
 
 const Rule = ({ className = "" }: { className?: string }) => (
@@ -171,7 +171,7 @@ export default function Landing() {
         {/* Editorial standfirst strip */}
         <div className="bg-[#F9F6EE] border-b-2 border-[#1A1614] px-6 md:px-14 py-6 text-center">
           <p className="text-sm md:text-base text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif italic">
-            "Writers Room is the platform where authors write or upload their manuscripts, invite genre-matched collaborators to suggest edits, and publish with total control over who reads — and who responds."
+            "Writers Room is the platform where authors write or upload their manuscripts, collaborate with genre-matched editors, and publish — within Writers Room itself, or out to Amazon, Apple Books, Kobo, and beyond."
           </p>
         </div>
       </section>
