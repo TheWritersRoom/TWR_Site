@@ -73,6 +73,7 @@ function AppContent() {
         <Switch>
           <Route path="/how-it-works" component={HowItWorks} />
           <Route path="/pricing" component={Pricing} />
+          <Route path="/profile/:id" component={PublicProfile} />
           <Route component={Landing} />
         </Switch>
         <AuthModal />

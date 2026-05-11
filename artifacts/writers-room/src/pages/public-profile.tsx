@@ -141,11 +141,36 @@ export default function PublicProfile() {
   const canMessage = !!user && !isOwnProfile;
 
   return (
-    <div className="p-6 md:p-10 max-w-3xl mx-auto">
-      {/* Back link */}
-      <Link href="/contributors" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-[#7A6B5E] hover:text-[#1A1614] transition-colors mb-6">
-        <ArrowLeft className="w-3.5 h-3.5" /> All Editors
-      </Link>
+    <div className={user ? "" : "min-h-screen bg-[#F9F6EE]"}>
+      {/* Public nav — shown only to unauthenticated visitors */}
+      {!user && (
+        <header className="border-b-2 border-[#1A1614] bg-[#F9F6EE]">
+          <div className="border-b border-[#1A1614]/15 px-6 md:px-14 py-1.5 flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-[0.22em] text-[#7A6B5E] font-semibold">Collaborative Writing Platform</span>
+            <span className="text-[10px] uppercase tracking-[0.22em] text-[#7A6B5E] font-semibold">Free to join</span>
+          </div>
+          <div className="px-6 md:px-14 py-3 flex items-center justify-between">
+            <Link href="/">
+              <span className="font-serif font-bold text-2xl text-[#1A1614] hover:text-[#E8B84B] transition-colors">Writers Room</span>
+            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/how-it-works">
+                <span className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#7A6B5E] hover:text-[#1A1614] transition-colors hidden sm:block">How it works</span>
+              </Link>
+              <Link href="/">
+                <span className="px-4 py-1.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.16em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors">Join free</span>
+              </Link>
+            </div>
+          </div>
+        </header>
+      )}
+      <div className="p-6 md:p-10 max-w-3xl mx-auto">
+      {/* Back link — only shown to logged-in members */}
+      {user && (
+        <Link href="/contributors" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-[#7A6B5E] hover:text-[#1A1614] transition-colors mb-6">
+          <ArrowLeft className="w-3.5 h-3.5" /> All Editors
+        </Link>
+      )}
 
       {/* Profile card */}
       <motion.div
@@ -428,6 +453,7 @@ export default function PublicProfile() {
           </motion.div>
         </div>
       )}
+    </div>
     </div>
   );
 }
