@@ -145,7 +145,7 @@ const TESTIMONIAL_PAIRS = [
 ];
 
 export default function HowItWorks() {
-  const { openAuthModal } = useAuth();
+  const { openAuthModal, user } = useAuth();
   const [, navigate] = useLocation();
 
   return (
