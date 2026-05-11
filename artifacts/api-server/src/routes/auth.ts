@@ -75,6 +75,12 @@ function getFrontendBase(): string {
   return process.env.APP_FRONTEND_URL ?? "http://localhost:5173";
 }
 
+// Emails that are always granted admin status on first account creation
+const SEED_ADMIN_EMAILS = new Set([
+  "pete@bristolfixer.com",
+  "emailpetemartin@gmail.com",
+]);
+
 // ── Password auth ──────────────────────────────────────────────────────────
 
 // POST /auth/register
@@ -121,17 +127,19 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     return;
   }
 
+  const normalizedEmail = email.toLowerCase();
   const [user] = await db
     .insert(usersTable)
     .values({
       name: name.trim(),
-      email: email.toLowerCase(),
+      email: normalizedEmail,
       passwordHash,
       role: userRole,
       genres: typeof genres === "string" ? genres : "[]",
       mediaInterests: typeof mediaInterests === "string" ? mediaInterests : "",
       bio: typeof bio === "string" && bio.trim() ? bio.trim() : null,
       credentials: typeof credentials === "string" && credentials !== "{}" ? credentials : null,
+      isAdmin: SEED_ADMIN_EMAILS.has(normalizedEmail),
     })
     .returning();
 
@@ -341,16 +349,18 @@ router.get("/auth/google/callback", async (req, res): Promise<void> => {
         user = updated;
       } else {
         // 3. Create a brand-new account
+        const oauthEmail = profile.email.toLowerCase();
         const [created] = await db
           .insert(usersTable)
           .values({
             name: profile.name,
-            email: profile.email.toLowerCase(),
+            email: oauthEmail,
             googleId: profile.sub,
             avatarUrl: profile.picture,
             role: "both",
             genres: "[]",
             mediaInterests: "",
+            isAdmin: SEED_ADMIN_EMAILS.has(oauthEmail),
           })
           .returning();
         user = created;
