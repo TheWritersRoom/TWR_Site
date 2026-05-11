@@ -181,7 +181,7 @@ export default function HowItWorks() {
       </header>
 
       {/* ── HERO ── */}
-      <section className="pt-44 pb-16 bg-[#1A1614]">
+      <section className="pt-44 pb-24 bg-[#1A1614]">
         <div className="px-6 md:px-14 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
             <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#E8B84B] mb-4">The Community</p>
