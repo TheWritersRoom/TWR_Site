@@ -87,6 +87,12 @@ export default function Landing() {
             >
               How it works
             </button>
+            <button
+              onClick={() => navigate("/pricing")}
+              className="text-[11px] uppercase tracking-[0.16em] text-[#1A1614] font-semibold hover:text-[#E8B84B] transition-colors"
+            >
+              Pricing
+            </button>
           </div>
           <div className="flex md:hidden">
             <PenTool className="w-4 h-4 text-[#1A1614]" />

@@ -25,6 +25,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/admin",        label: "Admin",            hidden: !user.isAdmin },
   ].filter((l) => !l.hidden);
 
+  const infoLinks = [
+    { href: "/how-it-works", label: "How it works" },
+    { href: "/pricing",      label: "Pricing"      },
+  ];
+
   return (
     <div className="flex min-h-screen w-full bg-[#F9F6EE]">
 
@@ -65,6 +70,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
+        {/* Info links */}
+        <div className="px-3 pb-2 border-t border-[#1A1614]/10 pt-2">
+          {infoLinks.map((link) => {
+            const active = location === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`block px-3 py-1.5 text-[9px] uppercase tracking-[0.16em] font-bold border-l-2 transition-all ${
+                  active
+                    ? "border-[#E8B84B] text-[#1A1614]"
+                    : "border-transparent text-[#7A6B5E]/70 hover:text-[#1A1614] hover:border-[#1A1614]/20"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </div>
+
         {/* User footer */}
         <div className="p-4 border-t-2 border-[#1A1614]">
           <Link href="/profile" className="flex items-center gap-3 mb-3 group">
@@ -89,11 +114,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             >
               Sign Out
             </button>
-            <Link href="/pricing">
-              <span className="flex items-center px-2.5 py-1.5 border border-[#E8B84B]/50 text-[#7A5A00] text-[9px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B]/10 hover:border-[#E8B84B] transition-colors whitespace-nowrap">
-                Pro
-              </span>
-            </Link>
           </div>
           <p className="mt-2 text-[8px] text-[#7A6B5E]/60 tracking-[0.1em] text-center">
             © {new Date().getFullYear()} Writers Room
