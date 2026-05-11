@@ -181,7 +181,7 @@ export default function HowItWorks() {
       </header>
 
       {/* ── HERO ── */}
-      <section className="pt-44 pb-24 bg-[#1A1614]">
+      <section className="pt-44 pb-24 bg-[#1A1614] min-h-[600px]">
         <div className="px-6 md:px-14 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
             <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#E8B84B] mb-4">The Community</p>
@@ -195,14 +195,14 @@ export default function HowItWorks() {
             </p>
           </motion.div>
         </div>
-
-        {/* Standfirst */}
-        <div className="border-b-2 border-[#1A1614] bg-[#F9F6EE] px-6 md:px-14 py-8 text-center">
-          <p className="text-base md:text-lg text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif">
-            Writers Room connects authors who want sharper manuscripts with contributors who want to do meaningful editorial work — on projects they care about, with recognition they have earned.
-          </p>
-        </div>
       </section>
+
+      {/* Standfirst */}
+      <div className="border-b-2 border-[#1A1614] bg-[#F9F6EE] px-6 md:px-14 py-8 text-center">
+        <p className="text-base md:text-lg text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif">
+          Writers Room connects authors who want sharper manuscripts with contributors who want to do meaningful editorial work — on projects they care about, with recognition they have earned.
+        </p>
+      </div>
 
       {/* ── COMMUNITY VALUES ── */}
       <section className="py-20 px-6 md:px-14 bg-[#F9F6EE]">
