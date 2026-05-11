@@ -2,27 +2,31 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
-import { Search, Users, BookText, Shield, ShieldOff, Activity, UserPlus, Globe, MessageSquare } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Search, Users, BookText, Shield, ShieldOff, Activity,
+  UserPlus, Globe, MessageSquare, TrendingUp, ChevronDown,
+  ChevronUp, Trash2, X, Check, BarChart2, PenTool, Star,
+  AlertTriangle, RefreshCw,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableHeader,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-} from "@/components/ui/table";
 import { useAuth } from "@/hooks/use-auth";
+
+// ── Types ──────────────────────────────────────────────────────────────────
 
 type AdminUser = {
   id: number;
   name: string;
   email: string;
   role: string;
+  bio: string | null;
   isAdmin: boolean;
   createdAt: string;
+  projectCount: number;
+  collaborationCount: number;
+  suggestionCount: number;
+  acceptedCount: number;
 };
 
 type Project = {
@@ -36,6 +40,15 @@ type Project = {
   createdAt: string;
 };
 
+type Stats = {
+  totalUsers: number;
+  totalProjects: number;
+  publishedProjects: number;
+  totalSuggestions: number;
+  acceptedSuggestions: number;
+  totalCollaborations: number;
+};
+
 type ActivityEvent = {
   type: "user_joined" | "project_published" | "feedback_submitted";
   actorName: string;
@@ -43,131 +56,243 @@ type ActivityEvent = {
   timestamp: string;
 };
 
+// ── Design helpers ─────────────────────────────────────────────────────────
+
 const ROLE_BADGE: Record<string, string> = {
-  author: "bg-[#E8B84B]/20 text-[#7A5A00] border-[#E8B84B]/40",
+  author:      "bg-[#E8B84B]/20 text-[#7A5A00] border-[#E8B84B]/50",
   contributor: "bg-[#F7C5D5]/30 text-[#8B2A50] border-[#F7C5D5]/60",
-  both: "bg-[#D4E8B0]/30 text-[#3A6020] border-[#D4E8B0]/60",
+  both:        "bg-[#D4E8B0]/30 text-[#3A6020] border-[#D4E8B0]/60",
 };
 
-const EVENT_META: Record<
-  ActivityEvent["type"],
-  { icon: React.ReactNode; label: string; color: string; bg: string }
-> = {
-  user_joined: {
-    icon: <UserPlus className="w-3.5 h-3.5" />,
-    label: "Joined",
-    color: "text-[#3A6020]",
-    bg: "bg-[#D4E8B0]/30 border-[#D4E8B0]/60",
-  },
-  project_published: {
-    icon: <Globe className="w-3.5 h-3.5" />,
-    label: "Published",
-    color: "text-[#7A5A00]",
-    bg: "bg-[#E8B84B]/20 border-[#E8B84B]/40",
-  },
-  feedback_submitted: {
-    icon: <MessageSquare className="w-3.5 h-3.5" />,
-    label: "Feedback",
-    color: "text-[#8B2A50]",
-    bg: "bg-[#F7C5D5]/30 border-[#F7C5D5]/60",
-  },
+const EVENT_META = {
+  user_joined:       { icon: <UserPlus className="w-3.5 h-3.5" />,      label: "Joined",    color: "text-emerald-700",  bg: "bg-emerald-50 border-emerald-200" },
+  project_published: { icon: <Globe className="w-3.5 h-3.5" />,          label: "Published", color: "text-[#7A5A00]",   bg: "bg-[#E8B84B]/20 border-[#E8B84B]/40" },
+  feedback_submitted:{ icon: <MessageSquare className="w-3.5 h-3.5" />,  label: "Feedback",  color: "text-[#8B2A50]",   bg: "bg-[#F7C5D5]/30 border-[#F7C5D5]/60" },
 };
 
-function ActivityFeed() {
-  const { data: events = [], isLoading, isError } = useQuery<ActivityEvent[]>({
-    queryKey: ["/api/admin/activity"],
-    queryFn: async () => {
-      const r = await fetch("/api/admin/activity", { credentials: "include" });
-      if (!r.ok) throw new Error(`Failed to load activity (${r.status})`);
-      return r.json();
-    },
-    refetchInterval: 30_000,
-  });
+// ── Stat card ──────────────────────────────────────────────────────────────
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-16">
-        <div className="w-6 h-6 border-2 border-[#1A1614] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="border-2 border-[#1A1614]/15 py-16 text-center space-y-1">
-        <p className="text-sm font-semibold text-[#1A1614]">Failed to load activity</p>
-        <p className="text-[11px] text-[#7A6B5E]">Check your connection or try refreshing the page.</p>
-      </div>
-    );
-  }
-
-  if (events.length === 0) {
-    return (
-      <div className="border-2 border-[#1A1614]/15 py-16 text-center text-[#7A6B5E] text-sm">
-        No recent activity to display.
-      </div>
-    );
-  }
-
+function StatCard({ label, value, sub, icon: Icon, accent = false }: {
+  label: string; value: number | null; sub?: string;
+  icon: React.ElementType; accent?: boolean;
+}) {
   return (
-    <ol className="border-2 border-[#1A1614]/15 divide-y divide-[#1A1614]/8">
-      {events.map((ev, i) => {
-        const meta = EVENT_META[ev.type];
-        const ago = formatDistanceToNow(new Date(ev.timestamp), { addSuffix: true });
-        const exact = format(new Date(ev.timestamp), "MMM d, yyyy 'at' h:mm a");
-
-        return (
-          <li key={i} className="flex items-start gap-4 px-5 py-4 hover:bg-[#F9F6EE] transition-colors">
-            <span
-              className={`inline-flex items-center justify-center w-7 h-7 border rounded-none mt-0.5 flex-shrink-0 ${meta.bg} ${meta.color}`}
-            >
-              {meta.icon}
-            </span>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-[#1A1614] leading-snug">
-                <span className="font-semibold">{ev.actorName}</span>
-                {ev.type === "user_joined" && (
-                  <span className="text-[#7A6B5E]"> joined the platform</span>
-                )}
-                {ev.type === "project_published" && (
-                  <>
-                    <span className="text-[#7A6B5E]"> published </span>
-                    <span className="font-semibold italic">{ev.targetTitle}</span>
-                  </>
-                )}
-                {ev.type === "feedback_submitted" && (
-                  <>
-                    <span className="text-[#7A6B5E]"> submitted feedback on </span>
-                    <span className="font-semibold italic">{ev.targetTitle}</span>
-                  </>
-                )}
-              </p>
-              <p className="text-[10px] text-[#7A6B5E] mt-0.5 tracking-[0.05em]" title={exact}>
-                {ago}
-              </p>
-            </div>
-            <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 text-[9px] uppercase tracking-[0.12em] font-bold border rounded-none flex-shrink-0 mt-1 ${meta.bg} ${meta.color}`}
-            >
-              {meta.label}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
+    <div className={`border-2 px-5 py-4 flex items-start gap-4 ${accent ? "border-[#E8B84B] bg-[#E8B84B]/8" : "border-[#1A1614]/15"}`}>
+      <div className={`w-9 h-9 flex items-center justify-center shrink-0 mt-0.5 ${accent ? "bg-[#E8B84B]/30 text-[#7A5A00]" : "bg-[#1A1614]/8 text-[#7A6B5E]"}`}>
+        <Icon className="w-4 h-4" />
+      </div>
+      <div>
+        <p className="text-[9px] uppercase tracking-[0.2em] font-bold text-[#7A6B5E]">{label}</p>
+        {value === null
+          ? <div className="w-12 h-7 bg-[#1A1614]/8 animate-pulse mt-1" />
+          : <p className="text-3xl font-serif font-bold text-[#1A1614] tabular-nums leading-tight mt-0.5">{value.toLocaleString()}</p>
+        }
+        {sub && <p className="text-[10px] text-[#7A6B5E] mt-0.5">{sub}</p>}
+      </div>
+    </div>
   );
 }
 
+// ── Delete confirmation modal ──────────────────────────────────────────────
+
+function DeleteModal({ user, onConfirm, onCancel, isPending }: {
+  user: AdminUser; onConfirm: () => void; onCancel: () => void; isPending: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative bg-[#F9F6EE] border-2 border-[#1A1614] p-8 max-w-md w-full mx-4 shadow-2xl"
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-red-50 border-2 border-red-200 flex items-center justify-center text-red-600">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#7A6B5E]">Irreversible action</p>
+            <h3 className="font-serif font-bold text-xl text-[#1A1614]">Delete user</h3>
+          </div>
+        </div>
+        <div className="border-t border-[#1A1614]/15 mb-4" />
+        <p className="text-sm text-[#1A1614] mb-1">You are about to permanently delete:</p>
+        <div className="bg-[#1A1614]/5 border border-[#1A1614]/15 px-4 py-3 mb-4">
+          <p className="font-bold text-[#1A1614]">{user.name}</p>
+          <p className="text-sm text-[#7A6B5E]">{user.email}</p>
+        </div>
+        <p className="text-sm text-[#7A6B5E] mb-6 leading-relaxed">
+          This will remove their account, all their projects, and all associated data. This cannot be undone.
+        </p>
+        <div className="flex gap-3">
+          <Button variant="outline" className="flex-1 rounded-none border-[#1A1614]/25" onClick={onCancel}>Cancel</Button>
+          <Button
+            className="flex-1 rounded-none bg-red-600 hover:bg-red-700 text-white border-0 gap-2"
+            onClick={onConfirm}
+            disabled={isPending}
+          >
+            {isPending ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            Delete permanently
+          </Button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ── User row with expandable detail ───────────────────────────────────────
+
+function UserRow({ u, isSelf, onToggleAdmin, onDelete, togglePending }: {
+  u: AdminUser;
+  isSelf: boolean;
+  onToggleAdmin: () => void;
+  onDelete: () => void;
+  togglePending: boolean;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const acceptRate = u.suggestionCount > 0
+    ? Math.round((u.acceptedCount / u.suggestionCount) * 100)
+    : null;
+
+  return (
+    <>
+      <tr
+        className={`border-b border-[#1A1614]/8 hover:bg-[#F9F6EE] cursor-pointer transition-colors ${expanded ? "bg-[#F9F6EE]" : ""}`}
+        onClick={() => setExpanded(e => !e)}
+      >
+        {/* Name + avatar */}
+        <td className="py-3 px-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 bg-[#1A1614] flex items-center justify-center shrink-0">
+              <span className="font-bold text-[11px] text-[#F9F6EE]">{u.name.charAt(0).toUpperCase()}</span>
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-[#1A1614] leading-tight">{u.name}</p>
+              <p className="text-[11px] text-[#7A6B5E]">{u.email}</p>
+            </div>
+          </div>
+        </td>
+
+        {/* Role */}
+        <td className="py-3 px-4">
+          <span className={`inline-block px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] font-bold border ${ROLE_BADGE[u.role] ?? "bg-[#1A1614]/5 text-[#7A6B5E] border-[#1A1614]/15"}`}>
+            {u.role}
+          </span>
+          {u.isAdmin && (
+            <span className="ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.1em] font-bold border bg-[#E8B84B]/20 text-[#7A5A00] border-[#E8B84B]/40">
+              <Shield className="w-2.5 h-2.5" />Admin
+            </span>
+          )}
+        </td>
+
+        {/* Stats */}
+        <td className="py-3 px-4 text-center tabular-nums">
+          <p className="text-sm font-bold text-[#1A1614]">{u.projectCount}</p>
+          <p className="text-[10px] text-[#7A6B5E]">projects</p>
+        </td>
+        <td className="py-3 px-4 text-center tabular-nums">
+          <p className="text-sm font-bold text-[#1A1614]">{u.suggestionCount}</p>
+          {acceptRate !== null && <p className="text-[10px] text-[#7A6B5E]">{acceptRate}% accepted</p>}
+        </td>
+        <td className="py-3 px-4 text-[#7A6B5E] text-sm tabular-nums">
+          {format(new Date(u.createdAt), "MMM d, yyyy")}
+        </td>
+        <td className="py-3 px-4">
+          {expanded ? <ChevronUp className="w-4 h-4 text-[#7A6B5E]" /> : <ChevronDown className="w-4 h-4 text-[#7A6B5E]" />}
+        </td>
+      </tr>
+
+      {/* Expanded detail row */}
+      <AnimatePresence>
+        {expanded && (
+          <tr>
+            <td colSpan={6} className="bg-[#F9F6EE] border-b-2 border-[#1A1614]/15 p-0">
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="px-6 py-5 flex flex-wrap gap-6 items-start">
+                  {/* Bio */}
+                  <div className="flex-1 min-w-[200px]">
+                    <p className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-1">Bio</p>
+                    <p className="text-sm text-[#1A1614] leading-relaxed">
+                      {u.bio || <span className="italic text-[#7A6B5E]">No bio provided.</span>}
+                    </p>
+                  </div>
+
+                  {/* Mini stats */}
+                  <div className="flex gap-4">
+                    {[
+                      { label: "Projects authored", value: u.projectCount, icon: BookText },
+                      { label: "Collaborations", value: u.collaborationCount, icon: Users },
+                      { label: "Suggestions", value: u.suggestionCount, icon: PenTool },
+                      { label: "Accepted", value: u.acceptedCount, icon: Check },
+                    ].map(s => (
+                      <div key={s.label} className="border border-[#1A1614]/12 px-3 py-2.5 min-w-[80px] text-center">
+                        <p className="text-xl font-serif font-bold text-[#1A1614] tabular-nums">{s.value}</p>
+                        <p className="text-[9px] uppercase tracking-[0.1em] text-[#7A6B5E] mt-0.5">{s.label}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 items-start">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isSelf || togglePending}
+                      onClick={e => { e.stopPropagation(); onToggleAdmin(); }}
+                      className={`h-8 px-3 text-[10px] uppercase tracking-[0.1em] font-bold rounded-none border gap-1.5 ${
+                        u.isAdmin
+                          ? "border-[#1A1614]/20 text-[#7A6B5E] hover:bg-[#1A1614]/5"
+                          : "border-[#E8B84B]/50 text-[#7A5A00] hover:bg-[#E8B84B]/10"
+                      } disabled:opacity-40`}
+                      title={isSelf ? "Cannot change your own admin status" : undefined}
+                    >
+                      {togglePending
+                        ? <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                        : u.isAdmin
+                          ? <><ShieldOff className="w-3 h-3" />Revoke admin</>
+                          : <><Shield className="w-3 h-3" />Grant admin</>
+                      }
+                    </Button>
+                    {!isSelf && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={e => { e.stopPropagation(); onDelete(); }}
+                        className="h-8 px-3 text-[10px] uppercase tracking-[0.1em] font-bold rounded-none border border-red-200 text-red-600 hover:bg-red-50 gap-1.5"
+                      >
+                        <Trash2 className="w-3 h-3" />Delete
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </td>
+          </tr>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+// ── Users tab ──────────────────────────────────────────────────────────────
+
 function UsersTab() {
   const [query, setQuery] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
+  const [roleFilter, setRoleFilter] = useState<string>("all");
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
 
-  const { data: users = [], isLoading } = useQuery<AdminUser[]>({
+  const { data: users = [], isLoading, refetch } = useQuery<AdminUser[]>({
     queryKey: ["/api/admin/users"],
     queryFn: async () => {
       const r = await fetch("/api/admin/users", { credentials: "include" });
-      if (!r.ok) throw new Error(`Failed to load users (${r.status})`);
+      if (!r.ok) throw new Error(`${r.status}`);
       return r.json();
     },
   });
@@ -175,248 +300,220 @@ function UsersTab() {
   const toggleAdmin = useMutation({
     mutationFn: async ({ id, isAdmin }: { id: number; isAdmin: boolean }) => {
       const r = await fetch(`/api/admin/users/${id}/admin`, {
-        method: "PATCH",
-        credentials: "include",
+        method: "PATCH", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isAdmin }),
       });
-      if (!r.ok) {
-        const err = await r.json().catch(() => ({}));
-        throw new Error(err.error ?? `Request failed (${r.status})`);
-      }
+      if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error ?? `Request failed (${r.status})`); }
       return r.json() as Promise<AdminUser>;
     },
     onSuccess: (updated) => {
-      queryClient.setQueryData<AdminUser[]>(["/api/admin/users"], (prev) =>
-        prev ? prev.map((u) => (u.id === updated.id ? updated : u)) : prev
+      queryClient.setQueryData<AdminUser[]>(["/api/admin/users"], prev =>
+        prev ? prev.map(u => u.id === updated.id ? { ...u, ...updated } : u) : prev
       );
     },
   });
 
-  const filtered = users.filter((u) => {
-    const q = query.toLowerCase();
-    return (
-      !q ||
-      u.name.toLowerCase().includes(q) ||
-      u.email.toLowerCase().includes(q) ||
-      u.role.toLowerCase().includes(q)
-    );
+  const deleteUser = useMutation({
+    mutationFn: async (id: number) => {
+      const r = await fetch(`/api/admin/users/${id}`, { method: "DELETE", credentials: "include" });
+      if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error ?? `Request failed (${r.status})`); }
+    },
+    onSuccess: (_, id) => {
+      queryClient.setQueryData<AdminUser[]>(["/api/admin/users"], prev => prev?.filter(u => u.id !== id));
+      setDeleteTarget(null);
+    },
   });
+
+  const filtered = users.filter(u => {
+    const q = query.toLowerCase();
+    const matchesQ = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    const matchesRole = roleFilter === "all" || u.role === roleFilter || (roleFilter === "admin" && u.isAdmin);
+    return matchesQ && matchesRole;
+  });
+
+  const roles = ["all", "author", "contributor", "both", "admin"];
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7A6B5E]" />
-        <Input
-          placeholder="Search by name, email, or role…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="pl-9 border-2 border-[#1A1614]/20 focus-visible:border-[#1A1614] focus-visible:ring-0 rounded-none h-10 text-sm"
+      {deleteTarget && (
+        <DeleteModal
+          user={deleteTarget}
+          onConfirm={() => deleteUser.mutate(deleteTarget.id)}
+          onCancel={() => setDeleteTarget(null)}
+          isPending={deleteUser.isPending}
         />
+      )}
+
+      {/* Toolbar */}
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7A6B5E]" />
+          <Input
+            placeholder="Search by name or email…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            className="pl-9 border-2 border-[#1A1614]/20 focus-visible:border-[#1A1614] focus-visible:ring-0 rounded-none h-9 text-sm"
+          />
+        </div>
+        <div className="flex gap-1">
+          {roles.map(r => (
+            <button
+              key={r}
+              onClick={() => setRoleFilter(r)}
+              className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] font-bold border transition-colors ${
+                roleFilter === r
+                  ? "bg-[#1A1614] text-[#F9F6EE] border-[#1A1614]"
+                  : "border-[#1A1614]/20 text-[#7A6B5E] hover:border-[#1A1614] hover:text-[#1A1614]"
+              }`}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+        <button onClick={() => refetch()} className="w-8 h-9 flex items-center justify-center border-2 border-[#1A1614]/20 hover:border-[#1A1614] text-[#7A6B5E] hover:text-[#1A1614] transition-colors">
+          <RefreshCw className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-16">
+        <div className="flex justify-center py-20">
           <div className="w-6 h-6 border-2 border-[#1A1614] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
         <div className="border-2 border-[#1A1614]/15 overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b-2 border-[#1A1614]/15 hover:bg-transparent">
-                <TableHead className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] py-3 px-4">
-                  Name
-                </TableHead>
-                <TableHead className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] py-3 px-4">
-                  Email
-                </TableHead>
-                <TableHead className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] py-3 px-4">
-                  Role
-                </TableHead>
-                <TableHead className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] py-3 px-4">
-                  Admin
-                </TableHead>
-                <TableHead className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] py-3 px-4">
-                  Joined
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b-2 border-[#1A1614]/15 bg-[#F9F6EE]">
+                {["User", "Role", "Projects", "Suggestions", "Joined", ""].map(h => (
+                  <th key={h} className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] py-3 px-4">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
               {filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12 text-[#7A6B5E] text-sm">
-                    {query ? "No users match your search." : "No users yet."}
-                  </TableCell>
-                </TableRow>
+                <tr>
+                  <td colSpan={6} className="text-center py-14 text-[#7A6B5E] text-sm">
+                    {query || roleFilter !== "all" ? "No users match your filters." : "No users yet."}
+                  </td>
+                </tr>
               ) : (
-                filtered.map((u) => {
-                  const isSelf = u.id === currentUser?.id;
-                  const isPending = toggleAdmin.isPending && toggleAdmin.variables?.id === u.id;
-                  return (
-                    <TableRow key={u.id} className="border-b border-[#1A1614]/8 hover:bg-[#F9F6EE]">
-                      <TableCell className="py-3 px-4 font-semibold text-[#1A1614] text-sm">
-                        {u.name}
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-[#7A6B5E] text-sm">
-                        {u.email}
-                      </TableCell>
-                      <TableCell className="py-3 px-4">
-                        <span
-                          className={`inline-block px-2.5 py-0.5 text-[10px] uppercase tracking-[0.12em] font-bold border rounded-none ${
-                            ROLE_BADGE[u.role] ?? "bg-[#1A1614]/5 text-[#7A6B5E] border-[#1A1614]/15"
-                          }`}
-                        >
-                          {u.role}
-                        </span>
-                      </TableCell>
-                      <TableCell className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          {u.isAdmin && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] font-bold border rounded-none bg-[#E8B84B]/20 text-[#7A5A00] border-[#E8B84B]/40">
-                              <Shield className="w-3 h-3" />
-                              Admin
-                            </span>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            disabled={isSelf || isPending}
-                            onClick={() => toggleAdmin.mutate({ id: u.id, isAdmin: !u.isAdmin })}
-                            className={`h-7 px-2 text-[10px] uppercase tracking-[0.1em] font-bold rounded-none border ${
-                              u.isAdmin
-                                ? "border-[#1A1614]/20 text-[#7A6B5E] hover:bg-[#1A1614]/5 hover:text-[#1A1614]"
-                                : "border-[#E8B84B]/40 text-[#7A5A00] hover:bg-[#E8B84B]/10"
-                            } disabled:opacity-40`}
-                            title={isSelf ? "You cannot change your own admin status" : undefined}
-                          >
-                            {isPending ? (
-                              <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
-                            ) : u.isAdmin ? (
-                              <><ShieldOff className="w-3 h-3 mr-1" />Revoke</>
-                            ) : (
-                              <><Shield className="w-3 h-3 mr-1" />Grant</>
-                            )}
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-[#7A6B5E] text-sm tabular-nums">
-                        {format(new Date(u.createdAt), "MMM d, yyyy")}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
+                filtered.map(u => (
+                  <UserRow
+                    key={u.id}
+                    u={u}
+                    isSelf={u.id === currentUser?.id}
+                    onToggleAdmin={() => toggleAdmin.mutate({ id: u.id, isAdmin: !u.isAdmin })}
+                    onDelete={() => setDeleteTarget(u)}
+                    togglePending={toggleAdmin.isPending && toggleAdmin.variables?.id === u.id}
+                  />
+                ))
               )}
-            </TableBody>
-          </Table>
+            </tbody>
+          </table>
         </div>
       )}
 
-      <p className="text-[10px] text-[#7A6B5E] tracking-[0.1em]">
-        {filtered.length} of {users.length} user{users.length !== 1 ? "s" : ""}
-      </p>
+      <div className="flex items-center justify-between text-[10px] text-[#7A6B5E] tracking-[0.1em]">
+        <span>{filtered.length} of {users.length} user{users.length !== 1 ? "s" : ""}</span>
+        <span>{users.filter(u => u.isAdmin).length} admin{users.filter(u => u.isAdmin).length !== 1 ? "s" : ""}</span>
+      </div>
     </div>
   );
 }
 
+// ── Projects tab ───────────────────────────────────────────────────────────
+
 function ProjectsTab() {
   const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"all" | "published" | "draft">("all");
 
   const { data: projects = [], isLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects/search/admin"],
-    queryFn: () => fetch("/api/projects/search").then((r) => r.json()),
+    queryFn: () => fetch("/api/projects/search").then(r => r.json()),
   });
 
-  const filtered = projects.filter((p) => {
+  const filtered = projects.filter(p => {
     const q = query.toLowerCase();
-    return (
-      !q ||
-      p.title.toLowerCase().includes(q) ||
-      (p.ownerName ?? "").toLowerCase().includes(q) ||
-      p.type.toLowerCase().includes(q)
-    );
+    const matchesQ = !q || p.title.toLowerCase().includes(q) || (p.ownerName ?? "").toLowerCase().includes(q) || p.type.toLowerCase().includes(q);
+    const matchesFilter = filter === "all" || (filter === "published" && p.isPublished) || (filter === "draft" && !p.isPublished);
+    return matchesQ && matchesFilter;
   });
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7A6B5E]" />
-        <Input
-          placeholder="Search by title, owner, or type…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="pl-9 border-2 border-[#1A1614]/20 focus-visible:border-[#1A1614] focus-visible:ring-0 rounded-none h-10 text-sm"
-        />
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7A6B5E]" />
+          <Input
+            placeholder="Search by title, owner, or type…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            className="pl-9 border-2 border-[#1A1614]/20 focus-visible:border-[#1A1614] focus-visible:ring-0 rounded-none h-9 text-sm"
+          />
+        </div>
+        <div className="flex gap-1">
+          {(["all", "published", "draft"] as const).map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] font-bold border transition-colors ${
+                filter === f ? "bg-[#1A1614] text-[#F9F6EE] border-[#1A1614]" : "border-[#1A1614]/20 text-[#7A6B5E] hover:border-[#1A1614] hover:text-[#1A1614]"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-16">
+        <div className="flex justify-center py-20">
           <div className="w-6 h-6 border-2 border-[#1A1614] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
         <div className="border-2 border-[#1A1614]/15 overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b-2 border-[#1A1614]/15 hover:bg-transparent">
-                <TableHead className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] py-3 px-4">
-                  Title
-                </TableHead>
-                <TableHead className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] py-3 px-4">
-                  Type
-                </TableHead>
-                <TableHead className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] py-3 px-4">
-                  Owner
-                </TableHead>
-                <TableHead className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] py-3 px-4">
-                  Published
-                </TableHead>
-                <TableHead className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] py-3 px-4">
-                  Rating
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b-2 border-[#1A1614]/15 bg-[#F9F6EE]">
+                {["Title", "Type", "Owner", "Status", "Rating", "Created"].map(h => (
+                  <th key={h} className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] py-3 px-4">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
               {filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12 text-[#7A6B5E] text-sm">
-                    {query ? "No projects match your search." : "No projects yet."}
-                  </TableCell>
-                </TableRow>
+                <tr>
+                  <td colSpan={6} className="text-center py-14 text-[#7A6B5E] text-sm">
+                    {query || filter !== "all" ? "No projects match your filters." : "No projects yet."}
+                  </td>
+                </tr>
               ) : (
-                filtered.map((p) => (
-                  <TableRow key={p.id} className="border-b border-[#1A1614]/8 hover:bg-[#F9F6EE]">
-                    <TableCell className="py-3 px-4 font-semibold text-[#1A1614] text-sm max-w-[220px] truncate">
-                      {p.title}
-                    </TableCell>
-                    <TableCell className="py-3 px-4">
-                      <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.12em] font-bold text-[#7A6B5E]">
-                        <BookText className="w-3 h-3" />
-                        {p.type}
+                filtered.map(p => (
+                  <tr key={p.id} className="border-b border-[#1A1614]/8 hover:bg-[#F9F6EE] transition-colors">
+                    <td className="py-3 px-4 font-semibold text-[#1A1614] text-sm max-w-[220px] truncate">{p.title}</td>
+                    <td className="py-3 px-4">
+                      <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.1em] font-bold text-[#7A6B5E]">
+                        <BookText className="w-3 h-3" />{p.type}
                       </span>
-                    </TableCell>
-                    <TableCell className="py-3 px-4 text-[#7A6B5E] text-sm">
-                      {p.ownerName ?? "—"}
-                    </TableCell>
-                    <TableCell className="py-3 px-4">
-                      <span
-                        className={`inline-block px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] font-bold border rounded-none ${
-                          p.isPublished
-                            ? "bg-[#D4E8B0]/40 text-[#3A6020] border-[#D4E8B0]"
-                            : "bg-[#1A1614]/5 text-[#7A6B5E] border-[#1A1614]/15"
-                        }`}
-                      >
-                        {p.isPublished ? "Yes" : "No"}
+                    </td>
+                    <td className="py-3 px-4 text-[#7A6B5E] text-sm">{p.ownerName ?? "—"}</td>
+                    <td className="py-3 px-4">
+                      <span className={`inline-block px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] font-bold border ${p.isPublished ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-[#1A1614]/5 text-[#7A6B5E] border-[#1A1614]/15"}`}>
+                        {p.isPublished ? "Published" : "Draft"}
                       </span>
-                    </TableCell>
-                    <TableCell className="py-3 px-4 text-[#7A6B5E] text-sm tabular-nums">
-                      {p.avgRating != null
-                        ? `${Number(p.avgRating).toFixed(1)} (${p.ratingCount})`
-                        : "—"}
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                    <td className="py-3 px-4 text-[#7A6B5E] text-sm tabular-nums">
+                      {p.avgRating != null ? `${Number(p.avgRating).toFixed(1)} (${p.ratingCount})` : "—"}
+                    </td>
+                    <td className="py-3 px-4 text-[#7A6B5E] text-sm tabular-nums">
+                      {format(new Date(p.createdAt), "MMM d, yyyy")}
+                    </td>
+                  </tr>
                 ))
               )}
-            </TableBody>
-          </Table>
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -427,109 +524,162 @@ function ProjectsTab() {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: number | null }) {
+// ── Activity tab ───────────────────────────────────────────────────────────
+
+function ActivityTab() {
+  const { data: events = [], isLoading, isError, refetch, isFetching } = useQuery<ActivityEvent[]>({
+    queryKey: ["/api/admin/activity"],
+    queryFn: async () => {
+      const r = await fetch("/api/admin/activity", { credentials: "include" });
+      if (!r.ok) throw new Error(`${r.status}`);
+      return r.json();
+    },
+    refetchInterval: 30_000,
+  });
+
+  if (isLoading) return <div className="flex justify-center py-20"><div className="w-6 h-6 border-2 border-[#1A1614] border-t-transparent rounded-full animate-spin" /></div>;
+
+  if (isError) return (
+    <div className="border-2 border-red-200 bg-red-50 py-12 text-center space-y-2">
+      <p className="text-sm font-semibold text-red-700">Failed to load activity</p>
+      <p className="text-xs text-red-500">Check your connection or try refreshing.</p>
+    </div>
+  );
+
   return (
-    <div className="border-2 border-[#1A1614]/15 px-6 py-4 flex flex-col gap-1 min-w-[140px]">
-      <span className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#7A6B5E]">
-        {label}
-      </span>
-      {value === null ? (
-        <div className="w-10 h-6 bg-[#1A1614]/8 animate-pulse rounded-none" />
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-[#7A6B5E]">Last {events.length} platform events. Auto-refreshes every 30 s.</p>
+        <button onClick={() => refetch()} className="flex items-center gap-1.5 text-xs font-semibold text-[#7A6B5E] hover:text-[#1A1614] transition-colors">
+          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />Refresh
+        </button>
+      </div>
+
+      {events.length === 0 ? (
+        <div className="border-2 border-[#1A1614]/15 py-16 text-center text-[#7A6B5E] text-sm">No activity yet.</div>
       ) : (
-        <span className="text-3xl font-serif font-bold text-[#1A1614] tabular-nums leading-tight">
-          {value.toLocaleString()}
-        </span>
+        <ol className="border-2 border-[#1A1614]/15 divide-y divide-[#1A1614]/8">
+          {events.map((ev, i) => {
+            const meta = EVENT_META[ev.type];
+            const ago = formatDistanceToNow(new Date(ev.timestamp), { addSuffix: true });
+            const exact = format(new Date(ev.timestamp), "MMM d, yyyy 'at' h:mm a");
+            return (
+              <li key={i} className="flex items-center gap-4 px-5 py-3.5 hover:bg-[#F9F6EE] transition-colors">
+                <span className={`inline-flex items-center justify-center w-7 h-7 border flex-shrink-0 ${meta.bg} ${meta.color}`}>{meta.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-[#1A1614] leading-snug">
+                    <span className="font-semibold">{ev.actorName}</span>
+                    {ev.type === "user_joined" && <span className="text-[#7A6B5E]"> joined the platform</span>}
+                    {ev.type === "project_published" && <><span className="text-[#7A6B5E]"> published </span><span className="font-semibold italic">{ev.targetTitle}</span></>}
+                    {ev.type === "feedback_submitted" && <><span className="text-[#7A6B5E]"> submitted feedback on </span><span className="font-semibold italic">{ev.targetTitle}</span></>}
+                  </p>
+                  <p className="text-[10px] text-[#7A6B5E] mt-0.5" title={exact}>{ago}</p>
+                </div>
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[9px] uppercase tracking-[0.12em] font-bold border flex-shrink-0 ${meta.bg} ${meta.color}`}>{meta.label}</span>
+              </li>
+            );
+          })}
+        </ol>
       )}
     </div>
   );
 }
 
+// ── Main dashboard ─────────────────────────────────────────────────────────
+
+const TABS = [
+  { id: "users",    label: "Users",    icon: Users },
+  { id: "activity", label: "Activity", icon: Activity },
+  { id: "projects", label: "Projects", icon: BookText },
+] as const;
+
+type TabId = typeof TABS[number]["id"];
+
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
+  const [activeTab, setActiveTab] = useState<TabId>("users");
 
-  const { data: users } = useQuery<AdminUser[]>({
-    queryKey: ["/api/admin/users"],
+  const { data: stats } = useQuery<Stats>({
+    queryKey: ["/api/admin/stats"],
     queryFn: async () => {
-      const r = await fetch("/api/admin/users", { credentials: "include" });
-      if (!r.ok) throw new Error(`Failed to load users (${r.status})`);
+      const r = await fetch("/api/admin/stats", { credentials: "include" });
+      if (!r.ok) throw new Error(`${r.status}`);
       return r.json();
     },
     enabled: !!user?.isAdmin,
   });
 
-  const { data: projects } = useQuery<Project[]>({
-    queryKey: ["/api/projects/search/admin"],
-    queryFn: () => fetch("/api/projects/search").then((r) => r.json()),
-    enabled: !!user?.isAdmin,
-  });
-
-  const totalUsers = users ? users.length : null;
-  const totalProjects = projects ? projects.length : null;
-  const publishedProjects = projects ? projects.filter((p) => p.isPublished).length : null;
-
   useEffect(() => {
-    if (!user?.isAdmin) {
-      navigate("/");
-    }
+    if (!user?.isAdmin) navigate("/");
   }, [user, navigate]);
 
   if (!user?.isAdmin) return null;
 
+  const acceptRate = stats && stats.totalSuggestions > 0
+    ? Math.round((stats.acceptedSuggestions / stats.totalSuggestions) * 100)
+    : null;
+
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
+      {/* Header */}
       <header className="mb-10">
-        <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">
-          System Overview
-        </p>
+        <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">System Overview</p>
         <div className="border-t-2 border-[#1A1614] mb-3" />
         <h1 className="text-4xl font-serif font-bold text-[#1A1614]">Admin Dashboard</h1>
-        <p className="text-[#7A6B5E] mt-1 text-base">
-          All registered users and projects on the platform.
-        </p>
-        <div className="flex flex-wrap gap-4 mt-6">
-          <StatCard label="Total Users" value={totalUsers} />
-          <StatCard label="Total Projects" value={totalProjects} />
-          <StatCard label="Published Projects" value={publishedProjects} />
+        <p className="text-[#7A6B5E] mt-1 text-sm">Full visibility and control over the Writers Room platform.</p>
+
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-0 border-2 border-[#1A1614]/15 mt-6">
+          {[
+            { label: "Users",            value: stats?.totalUsers ?? null,           icon: Users,      accent: false },
+            { label: "Projects",         value: stats?.totalProjects ?? null,         icon: BookText,   accent: false },
+            { label: "Published",        value: stats?.publishedProjects ?? null,     icon: Globe,      accent: false },
+            { label: "Suggestions",      value: stats?.totalSuggestions ?? null,      icon: PenTool,    accent: false },
+            { label: "Accepted",         value: stats?.acceptedSuggestions ?? null,   icon: Check,      accent: true  },
+            { label: "Collaborations",   value: stats?.totalCollaborations ?? null,   icon: Star,       accent: false },
+          ].map((s, i) => (
+            <div key={s.label} className={`px-5 py-4 border-r border-[#1A1614]/15 last:border-0 ${s.accent ? "bg-[#E8B84B]/8" : ""}`}>
+              <p className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-1">{s.label}</p>
+              {s.value === null
+                ? <div className="w-10 h-7 bg-[#1A1614]/8 animate-pulse" />
+                : <p className="text-2xl font-serif font-bold text-[#1A1614] tabular-nums">{s.value.toLocaleString()}</p>
+              }
+            </div>
+          ))}
         </div>
+        {acceptRate !== null && (
+          <p className="text-[10px] text-[#7A6B5E] mt-2 tracking-[0.08em]">
+            Platform acceptance rate: <span className="font-bold text-[#1A1614]">{acceptRate}%</span> of all suggestions have been accepted
+          </p>
+        )}
+
         <div className="border-t border-[#1A1614]/15 mt-6" />
       </header>
 
-      <Tabs defaultValue="activity">
-        <TabsList className="bg-transparent border-b-2 border-[#1A1614]/15 w-full justify-start rounded-none h-auto p-0 mb-8 gap-0">
-          <TabsTrigger
-            value="activity"
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#E8B84B] data-[state=active]:bg-transparent data-[state=active]:text-[#1A1614] data-[state=active]:shadow-none text-[#7A6B5E] px-5 py-2.5 text-[11px] uppercase tracking-[0.14em] font-bold -mb-[2px] flex items-center gap-2"
+      {/* Tabs */}
+      <div className="border-b-2 border-[#1A1614]/15 flex mb-8">
+        {TABS.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-5 py-2.5 text-[11px] uppercase tracking-[0.14em] font-bold border-b-2 -mb-[2px] transition-colors ${
+              activeTab === tab.id
+                ? "border-[#E8B84B] text-[#1A1614]"
+                : "border-transparent text-[#7A6B5E] hover:text-[#1A1614]"
+            }`}
           >
-            <Activity className="w-3.5 h-3.5" />
-            Activity
-          </TabsTrigger>
-          <TabsTrigger
-            value="users"
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#E8B84B] data-[state=active]:bg-transparent data-[state=active]:text-[#1A1614] data-[state=active]:shadow-none text-[#7A6B5E] px-5 py-2.5 text-[11px] uppercase tracking-[0.14em] font-bold -mb-[2px] flex items-center gap-2"
-          >
-            <Users className="w-3.5 h-3.5" />
-            Users
-          </TabsTrigger>
-          <TabsTrigger
-            value="projects"
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#E8B84B] data-[state=active]:bg-transparent data-[state=active]:text-[#1A1614] data-[state=active]:shadow-none text-[#7A6B5E] px-5 py-2.5 text-[11px] uppercase tracking-[0.14em] font-bold -mb-[2px] flex items-center gap-2"
-          >
-            <BookText className="w-3.5 h-3.5" />
-            Projects
-          </TabsTrigger>
-        </TabsList>
+            <tab.icon className="w-3.5 h-3.5" />{tab.label}
+            {tab.id === "users" && stats && (
+              <span className="ml-0.5 px-1.5 py-0.5 text-[9px] bg-[#1A1614]/8 text-[#7A6B5E] font-bold">{stats.totalUsers}</span>
+            )}
+          </button>
+        ))}
+      </div>
 
-        <TabsContent value="activity">
-          <ActivityFeed />
-        </TabsContent>
-        <TabsContent value="users">
-          <UsersTab />
-        </TabsContent>
-        <TabsContent value="projects">
-          <ProjectsTab />
-        </TabsContent>
-      </Tabs>
+      {activeTab === "users"    && <UsersTab />}
+      {activeTab === "activity" && <ActivityTab />}
+      {activeTab === "projects" && <ProjectsTab />}
     </div>
   );
 }
