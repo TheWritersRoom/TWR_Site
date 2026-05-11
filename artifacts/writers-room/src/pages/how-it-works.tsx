@@ -198,7 +198,7 @@ export default function HowItWorks() {
       </section>
 
       {/* Standfirst */}
-      <div className="border-b-2 border-[#1A1614] bg-[#F9F6EE] px-6 md:px-14 py-8 text-center">
+      <div className="bg-[#F9F6EE] px-6 md:px-14 py-8 text-center">
         <p className="text-base md:text-lg text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif">
           Writers Room connects authors who want sharper manuscripts with contributors who want to do meaningful editorial work — on projects they care about, with recognition they have earned.
         </p>
