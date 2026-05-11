@@ -43,8 +43,8 @@ const COMMUNITY_VALUES = [
 const AUTHOR_STEPS = [
   {
     n: "01",
-    title: "Upload your manuscript",
-    body: "Paste or upload your work in any format — PDF, DOCX, TXT, Markdown, RTF. Writers Room renders it into a clean, distraction-free reading view your collaborators will love.",
+    title: "Start or upload your manuscript",
+    body: "Write from scratch inside Writers Room, or bring existing work in any format — PDF, DOCX, TXT, Markdown, RTF. Either way, it lands in a clean, distraction-free reading view your collaborators will love.",
   },
   {
     n: "02",
@@ -273,7 +273,7 @@ export default function HowItWorks() {
               onClick={openAuthModal}
               className="flex items-center gap-2 px-8 py-3.5 bg-[#1A1614] text-[#F9F6EE] text-sm font-bold uppercase tracking-[0.12em] hover:bg-[#D94B1F] transition-colors"
             >
-              Upload your manuscript <ArrowRight className="w-4 h-4" />
+              Start your manuscript <ArrowRight className="w-4 h-4" />
             </button>
           </motion.div>
         </div>
@@ -544,7 +544,7 @@ export default function HowItWorks() {
             },
             {
               q: "Who owns my manuscript?",
-              a: "You do, completely. Uploading your work to Writers Room does not transfer any rights. We store it so your collaborators can read it. You can delete your project at any time and the content is permanently removed."
+              a: "You do, completely. Adding your work to Writers Room — whether written here or uploaded — does not transfer any rights. We store it so your collaborators can read it. You can delete your project at any time and the content is permanently removed."
             },
             {
               q: "What happens if a contributor's suggestion is accepted — do they own part of it?",
@@ -582,7 +582,7 @@ export default function HowItWorks() {
             </h2>
             <div className="border-t border-[#1A1614]/30 mb-6" />
             <p className="text-[#1A1614]/70 text-base mb-10 font-serif italic">
-              Free to join. No credit card. Upload your manuscript or build your contributor profile today.
+              Free to join. No credit card. Start writing, upload your manuscript, or build your contributor profile today.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button

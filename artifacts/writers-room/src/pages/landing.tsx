@@ -15,7 +15,7 @@ const inView = (delay = 0) => ({
 });
 
 const FEATURES = [
-  { icon: <Upload className="w-5 h-5" />, title: "Upload any format", desc: "PDF, DOCX, TXT, Markdown, RTF — paste or upload. Lands in a clean reading view instantly." },
+  { icon: <Upload className="w-5 h-5" />, title: "Write or upload", desc: "Start from a blank page or bring existing work in any format — PDF, DOCX, TXT, Markdown, RTF. Lands in a clean reading view instantly." },
   { icon: <Users className="w-5 h-5" />, title: "Invite your collaborators", desc: "Set your own room size and send targeted invites to contributors whose interests align with your work." },
   { icon: <MessageSquare className="w-5 h-5" />, title: "Inline edit suggestions", desc: "Collaborators highlight any passage and propose a replacement. Authors accept, discard, or annotate each one." },
   { icon: <BarChart2 className="w-5 h-5" />, title: "Track who helps most", desc: "An acceptance-rate leaderboard shows which collaborators consistently improve your work." },
@@ -24,7 +24,7 @@ const FEATURES = [
 ];
 
 const FOR_AUTHORS = [
-  "Upload books or scripts in any format",
+  "Write from scratch or upload in any format",
   "Invite handpicked collaborators by email",
   "Review inline diff suggestions side by side",
   "Track acceptance rates to find your best collaborators",
@@ -41,7 +41,7 @@ const FOR_CONTRIBUTORS = [
 
 const STEPS = [
   { n: "I", title: "Create or join", desc: "Sign up as an Author, a Contributor, or both. Set your genre profile in under a minute." },
-  { n: "II", title: "Upload your manuscript", desc: "Authors upload a book or script. The platform renders it into a clean, readable view." },
+  { n: "II", title: "Start or upload your manuscript", desc: "Write from scratch inside Writers Room, or upload a book or script in any format. Either way it lands in a clean, readable view." },
   { n: "III", title: "Collaborate", desc: "Invited collaborators highlight passages and propose edits. Authors decide what to keep." },
   { n: "IV", title: "Publish & collect feedback", desc: "When ready, publish with the audience and feedback settings that work for you." },
 ];
@@ -168,7 +168,7 @@ export default function Landing() {
         {/* Editorial standfirst strip */}
         <div className="bg-[#F9F6EE] border-b-2 border-[#1A1614] px-6 md:px-14 py-6 text-center">
           <p className="text-sm md:text-base text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif italic">
-            "Writers Room is the platform where authors upload their manuscripts, invite genre-matched collaborators to suggest edits, and publish with total control over who reads — and who responds."
+            "Writers Room is the platform where authors write or upload their manuscripts, invite genre-matched collaborators to suggest edits, and publish with total control over who reads — and who responds."
           </p>
         </div>
       </section>
@@ -284,7 +284,7 @@ export default function Landing() {
                 onClick={openAuthModal}
                 className="w-full py-3 bg-[#1A1614] text-[#F9F6EE] font-bold text-xs uppercase tracking-[0.14em] hover:bg-[#FDDCB5] transition-colors"
               >
-                Upload your manuscript
+                Start your manuscript
               </button>
             </motion.div>
 
@@ -335,7 +335,7 @@ export default function Landing() {
             </h2>
             <div className="border-t border-[#1A1614]/30 mb-6" />
             <p className="text-[#1A1614]/70 text-base mb-10 font-serif italic">
-              Free to join. No credit card. Start uploading and collaborating today.
+              Free to join. No credit card. Start writing or uploading and collaborate today.
             </p>
             <button
               onClick={openAuthModal}
