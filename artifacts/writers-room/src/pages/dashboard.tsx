@@ -1,17 +1,18 @@
 import { useState, useRef, useCallback } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, BookText, FileText, MessageSquareQuote, Calendar,
   Upload, PenLine, X, FileUp, Loader2, ChevronRight, AlignLeft, Check,
-  Shield, Users as UsersIcon
+  Shield, Users as UsersIcon, Zap,
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateProject } from "@workspace/api-client-react";
 import type { Project } from "@workspace/api-client-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { UpgradeModal } from "@/components/upgrade-modal";
 
 const GENRES = [
   "Long-form Fiction", "Non-fiction", "Short Story", "Poetry",
@@ -84,8 +85,10 @@ const inputCls = "w-full px-4 py-3 bg-white border-2 border-[#1A1614]/20 focus:b
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const [mode, setMode] = useState<CreationMode | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const { data: projects, isLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects", user?.id],
@@ -154,22 +157,29 @@ export default function Dashboard() {
     e.preventDefault();
     const canSubmit = newTitle && (contentMode === "full" ? newContent : synopsis);
     if (!user || !canSubmit) return;
-    await createProject.mutateAsync({
-      data: {
-        title: newTitle,
-        type: newType,
-        content: newContent,
-        userId: user.id,
-        collaboratorLimit: newLimit,
-        contentMode,
-        synopsis: contentMode === "synopsis" ? synopsis : null,
-        genres: JSON.stringify(selectedGenres),
-        ownershipTerms,
-        ownershipNotes: ownershipNotes.trim() || null,
-      } as any,
-    });
-    queryClient.invalidateQueries({ queryKey: ["/api/projects", user?.id] });
-    resetForm();
+    try {
+      await createProject.mutateAsync({
+        data: {
+          title: newTitle,
+          type: newType,
+          content: newContent,
+          userId: user.id,
+          collaboratorLimit: newLimit,
+          contentMode,
+          synopsis: contentMode === "synopsis" ? synopsis : null,
+          genres: JSON.stringify(selectedGenres),
+          ownershipTerms,
+          ownershipNotes: ownershipNotes.trim() || null,
+        } as any,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", user?.id] });
+      resetForm();
+    } catch (err: any) {
+      if (err?.status === 403 || err?.message?.includes("project_limit_reached")) {
+        resetForm();
+        setShowUpgradeModal(true);
+      }
+    }
   };
 
   if (isLoading) {
@@ -182,6 +192,7 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
+      {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} />}
 
       {/* Page header */}
       <header className="mb-10">
@@ -200,7 +211,15 @@ export default function Dashboard() {
           </div>
           {!mode && user?.role !== "contributor" && (
             <button
-              onClick={() => setMode("choose")}
+              onClick={() => {
+                const ownedProjects = (projects ?? []).filter(p => p.ownerId === user?.id);
+                const tier = (user as any)?.subscriptionTier ?? "free";
+                if (tier === "free" && ownedProjects.length >= 1) {
+                  setShowUpgradeModal(true);
+                } else {
+                  setMode("choose");
+                }
+              }}
               className="flex items-center gap-2 px-6 py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors"
             >
               <Plus className="w-4 h-4" /> New Project

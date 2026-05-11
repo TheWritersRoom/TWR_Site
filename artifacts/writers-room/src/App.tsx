@@ -18,6 +18,7 @@ import Admin from "@/pages/admin";
 import PublicProfile from "@/pages/public-profile";
 import NotFound from "@/pages/not-found";
 import HowItWorks from "@/pages/how-it-works";
+import Pricing from "@/pages/pricing";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,7 @@ function AuthenticatedRouter() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/how-it-works" component={HowItWorks} />
+        <Route path="/pricing" component={Pricing} />
         <Route path="/project/:id" component={ProjectDetail} />
         <Route path="/profile" component={Profile} />
         <Route path="/profile/:id" component={PublicProfile} />
@@ -70,6 +72,7 @@ function AppContent() {
       <>
         <Switch>
           <Route path="/how-it-works" component={HowItWorks} />
+          <Route path="/pricing" component={Pricing} />
           <Route component={Landing} />
         </Switch>
         <AuthModal />

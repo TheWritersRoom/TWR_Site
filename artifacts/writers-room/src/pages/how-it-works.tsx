@@ -535,8 +535,8 @@ export default function HowItWorks() {
 
           {[
             {
-              q: "Is it really free?",
-              a: "Yes. Writers Room is free to join for both authors and contributors. There are no subscription tiers, no per-project fees, and no commission on anything. The platform is built to serve the writing community, not extract from it."
+              q: "Is it free to join?",
+              a: "Yes. Writers Room is free to join for both authors and contributors. Every author account includes one full project with no restrictions. Contributors are always completely free — there is no upgrade path needed. Authors who want to run more than one project simultaneously can upgrade to Pro for £5 a month or £50 a year."
             },
             {
               q: "Who owns my manuscript?",

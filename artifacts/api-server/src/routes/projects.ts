@@ -113,6 +113,23 @@ router.post("/projects", async (req, res): Promise<void> => {
 
   const { userId, ...projectData } = parsed.data;
 
+  // ── Subscription gate: free authors limited to 1 project ──────────────────
+  const [owner] = await db
+    .select({ subscriptionTier: usersTable.subscriptionTier, role: usersTable.role })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId));
+
+  if (owner && owner.role !== "contributor" && owner.subscriptionTier === "free") {
+    const [{ n }] = await db
+      .select({ n: count() })
+      .from(projectsTable)
+      .where(eq(projectsTable.ownerId, userId));
+    if (Number(n) >= 1) {
+      res.status(403).json({ error: "project_limit_reached" });
+      return;
+    }
+  }
+
   const rawLimit = parseInt(req.body.collaboratorLimit, 10);
   const collaboratorLimit = !isNaN(rawLimit) && rawLimit >= 1 && rawLimit <= 50 ? rawLimit : 6;
 
@@ -121,14 +138,14 @@ router.post("/projects", async (req, res): Promise<void> => {
     .values({ ...projectData, ownerId: userId, collaboratorLimit })
     .returning();
 
-  const [owner] = await db
+  const [projectOwner] = await db
     .select({ name: usersTable.name })
     .from(usersTable)
     .where(eq(usersTable.id, project.ownerId));
 
   res.status(201).json({
     ...project,
-    ownerName: owner?.name ?? "",
+    ownerName: projectOwner?.name ?? "",
     pendingSuggestionsCount: 0,
     collaboratorsCount: 0,
   });

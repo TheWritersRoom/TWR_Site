@@ -82,13 +82,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </p>
             </div>
           </Link>
-          <button
-            onClick={logout}
-            className="w-full py-1.5 border border-[#1A1614]/25 text-[#7A6B5E] text-[9px] uppercase tracking-[0.18em] font-bold hover:border-[#1A1614] hover:text-[#1A1614] transition-colors"
-          >
-            Sign Out
-          </button>
-          <p className="mt-3 text-[8px] text-[#7A6B5E]/60 tracking-[0.1em] text-center">
+          <div className="flex gap-2 mb-2">
+            <button
+              onClick={logout}
+              className="flex-1 py-1.5 border border-[#1A1614]/25 text-[#7A6B5E] text-[9px] uppercase tracking-[0.18em] font-bold hover:border-[#1A1614] hover:text-[#1A1614] transition-colors"
+            >
+              Sign Out
+            </button>
+            <Link href="/pricing">
+              <span className="flex items-center px-2.5 py-1.5 border border-[#E8B84B]/50 text-[#7A5A00] text-[9px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B]/10 hover:border-[#E8B84B] transition-colors whitespace-nowrap">
+                Pro
+              </span>
+            </Link>
+          </div>
+          <p className="mt-2 text-[8px] text-[#7A6B5E]/60 tracking-[0.1em] text-center">
             © {new Date().getFullYear()} Writers Room
           </p>
         </div>
