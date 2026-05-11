@@ -352,13 +352,13 @@ export default function HowItWorks() {
                 {...inView(i * 0.06)}
                 className="flex gap-5 p-6 border-b border-r border-[#1A1614]/12 last:border-b-0 odd:border-r-2 even:border-r-0 [&:nth-last-child(2)]:border-b-0 hover:bg-[#F9F6EE] transition-colors group"
               >
-                <div className="shrink-0 mt-0.5">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] border ${a.tierColor}`}>
-                    <a.icon className="w-3 h-3" />
+                <div className="w-36 shrink-0 mt-0.5">
+                  <span className={`inline-flex w-full items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] border ${a.tierColor}`}>
+                    <a.icon className="w-3 h-3 shrink-0" />
                     {a.label}
                   </span>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-1">{a.tier}</p>
                   <p className="text-sm text-[#1A1614]/70 leading-relaxed">{a.desc}</p>
                 </div>
