@@ -78,9 +78,6 @@ export default function Landing() {
         <ThickRule />
         <div className="px-6 md:px-14 py-2 flex items-center justify-between">
           <div className="hidden md:flex items-center gap-6">
-            {["Authors", "Contributors", "Discover", "Pitches"].map((item) => (
-              <span key={item} className="text-[11px] uppercase tracking-[0.16em] text-[#1A1614] font-semibold hover:text-[#E8B84B] transition-colors cursor-default">{item}</span>
-            ))}
             <button
               onClick={() => navigate("/how-it-works")}
               className="text-[11px] uppercase tracking-[0.16em] text-[#1A1614] font-semibold hover:text-[#E8B84B] transition-colors"
