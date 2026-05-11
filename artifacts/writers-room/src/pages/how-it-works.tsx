@@ -198,14 +198,14 @@ export default function HowItWorks() {
       </section>
 
       {/* Standfirst */}
-      <div className="bg-[#F9F6EE] px-6 md:px-14 py-8 text-center">
+      <div className="bg-[#F9F6EE] px-6 md:px-14 py-5 text-center">
         <p className="text-base md:text-lg text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif">
           Writers Room connects authors who want sharper manuscripts with contributors who want to do meaningful editorial work — on projects they care about, with recognition they have earned.
         </p>
       </div>
 
       {/* ── COMMUNITY VALUES ── */}
-      <section className="py-20 px-6 md:px-14 bg-[#F9F6EE]">
+      <section className="pt-12 pb-20 px-6 md:px-14 bg-[#F9F6EE]">
         <div className="max-w-5xl mx-auto">
           <motion.div {...inView()} className="mb-12">
             <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">What we believe</p>
