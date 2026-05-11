@@ -17,6 +17,7 @@ import AuthCallback from "@/pages/auth-callback";
 import Admin from "@/pages/admin";
 import PublicProfile from "@/pages/public-profile";
 import NotFound from "@/pages/not-found";
+import HowItWorks from "@/pages/how-it-works";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,6 +33,7 @@ function AuthenticatedRouter() {
     <Layout>
       <Switch>
         <Route path="/" component={Dashboard} />
+        <Route path="/how-it-works" component={HowItWorks} />
         <Route path="/project/:id" component={ProjectDetail} />
         <Route path="/profile" component={Profile} />
         <Route path="/profile/:id" component={PublicProfile} />
@@ -66,7 +68,10 @@ function AppContent() {
   if (!user) {
     return (
       <>
-        <Landing />
+        <Switch>
+          <Route path="/how-it-works" component={HowItWorks} />
+          <Route component={Landing} />
+        </Switch>
         <AuthModal />
       </>
     );

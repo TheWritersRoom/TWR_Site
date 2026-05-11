@@ -1,0 +1,555 @@
+import { motion } from "framer-motion";
+import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
+import {
+  ArrowRight, PenTool, Users, MessageSquare, Star, BookOpen,
+  Check, Lightbulb, Award, Shield, Heart, Globe, ArrowLeft,
+  TrendingUp, Search, Mail, Handshake, Quote
+} from "lucide-react";
+
+const inView = (delay = 0) => ({
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true },
+  transition: { duration: 0.55, delay, ease: "easeOut" as const },
+});
+
+const Rule = ({ className = "" }: { className?: string }) => (
+  <div className={`border-t border-[#1A1614]/20 ${className}`} />
+);
+const ThickRule = ({ className = "" }: { className?: string }) => (
+  <div className={`border-t-2 border-[#1A1614] ${className}`} />
+);
+
+const COMMUNITY_VALUES = [
+  {
+    icon: Heart,
+    title: "Built on genuine collaboration",
+    body: "Writers Room is not a marketplace. There are no fees, no bidding, no gigs. Authors invite contributors whose taste and background genuinely align with their work, and contributors choose projects that excite them. Every interaction is rooted in a shared love of storytelling.",
+  },
+  {
+    icon: Handshake,
+    title: "Mutual respect, not extraction",
+    body: "Contributors are credited, certified, and recognised — not anonymous labour. When a suggestion is accepted, it becomes part of that contributor's permanent track record on the platform. Reputation is earned, not bought.",
+  },
+  {
+    icon: TrendingUp,
+    title: "A place to grow",
+    body: "Whether you are a debut novelist or an experienced screenwriter, the community gives you access to perspectives you would never get alone. Collaborators push your work further. Your acceptance rate tells you who your strongest creative partners are.",
+  },
+];
+
+const AUTHOR_STEPS = [
+  {
+    n: "01",
+    title: "Upload your manuscript",
+    body: "Paste or upload your work in any format — PDF, DOCX, TXT, Markdown, RTF. Writers Room renders it into a clean, distraction-free reading view your collaborators will love.",
+  },
+  {
+    n: "02",
+    title: "Set your collaboration terms",
+    body: "Choose how many collaborators you want, what they can see (full manuscript or synopsis only), and whether you want them to sign an IP agreement before joining. You are always in control.",
+  },
+  {
+    n: "03",
+    title: "Invite the right people",
+    body: "Browse contributor profiles by genre interest, media taste, and track record. Send targeted invites to the people most likely to improve your specific work — or post a Pitch and let contributors come to you.",
+  },
+  {
+    n: "04",
+    title: "Review suggestions inline",
+    body: "Every collaborator suggestion arrives as a tracked change — the original passage crossed out, the proposed replacement shown alongside it. Accept, discard, or discuss with a single click.",
+  },
+  {
+    n: "05",
+    title: "Publish on your terms",
+    body: "When you're ready, publish with fine-grained visibility controls. Choose who can read, who can comment, and whether public feedback is enabled. Export as a polished EPUB or DOCX at any time.",
+  },
+];
+
+const CONTRIBUTOR_STEPS = [
+  {
+    n: "01",
+    title: "Build your profile",
+    body: "Set your genre interests, favourite media, and preferred formats. A strong profile means the right authors find you first — people who are writing the kind of work you genuinely want to read.",
+  },
+  {
+    n: "02",
+    title: "Discover projects or respond to pitches",
+    body: "Browse the Pitches board for authors actively seeking collaborators, or explore published work in the Discover feed. When something catches your eye, send a join request with a short note about why you are the right fit.",
+  },
+  {
+    n: "03",
+    title: "Read and highlight",
+    body: "Once accepted, you read the manuscript in Writers Room's clean reading view. Highlight any passage that you think could be stronger, and propose your alternative — with an optional comment explaining your reasoning.",
+  },
+  {
+    n: "04",
+    title: "Build your track record",
+    body: "Every accepted suggestion adds to your public track record. Authors can see your acceptance rate, the genres you have worked in, and the projects you have contributed to. This is your reputation on the platform.",
+  },
+  {
+    n: "05",
+    title: "Download your certificate",
+    body: "For every project you contribute to, you can download a contribution certificate — a signed PDF listing your accepted suggestions, timestamps, and a cryptographic fingerprint of the manuscript. Proof of your creative work, forever.",
+  },
+];
+
+const COMMUNITY_FEATURES = [
+  {
+    icon: Search,
+    label: "Pitches board",
+    desc: "Authors post Pitches when they are actively looking for collaborators. Each pitch describes the project, the kind of help they need, and the contributor profile they are after. Browse, read, and apply in seconds.",
+  },
+  {
+    icon: Globe,
+    label: "Discover feed",
+    desc: "A curated feed of publicly published projects. Read work in your favourite genres, leave feedback, and discover authors whose voice resonates with you — before they even invite you.",
+  },
+  {
+    icon: Mail,
+    label: "Direct messaging",
+    desc: "Communicate directly with authors or contributors. Discuss a suggestion in more detail, ask a question about the project, or simply introduce yourself. Every collaboration starts with a conversation.",
+  },
+  {
+    icon: Star,
+    label: "Contribution leaderboard",
+    desc: "Each project has a leaderboard showing which contributors have had the most suggestions accepted. It creates a healthy, transparent record of who is doing the most to move the manuscript forward.",
+  },
+  {
+    icon: Shield,
+    label: "IP protection built in",
+    desc: "Authors can require contributors to sign an IP agreement before joining. Content is fingerprinted with SHA-256 on demand. Access logs record every view. The community runs on trust — and the tools to back it up.",
+  },
+  {
+    icon: Award,
+    label: "Contribution certificates",
+    desc: "Contributors can download a PDF certificate for every project — a permanent record of their creative contributions with a cryptographic content fingerprint. Recognition that exists outside the platform.",
+  },
+];
+
+const TESTIMONIAL_PAIRS = [
+  {
+    author: {
+      quote: "I had three beta readers before. Now I have eight collaborators who have collectively improved almost every chapter. The diff view means I can see every change at a glance and decide in seconds.",
+      name: "Fiction author",
+      role: "Novel in progress",
+    },
+    contributor: {
+      quote: "I've always wanted to get closer to the editing process, but there was never a real way in. Writers Room gave me a place to show what I can do, and now I have an acceptance rate I'm genuinely proud of.",
+      name: "Literary contributor",
+      role: "47 accepted suggestions",
+    },
+  },
+];
+
+export default function HowItWorks() {
+  const { openAuthModal } = useAuth();
+  const [, navigate] = useLocation();
+
+  return (
+    <div className="min-h-screen bg-[#F9F6EE] text-[#1A1614] overflow-x-hidden font-sans">
+
+      {/* ── NAV ── */}
+      <header className="fixed top-0 inset-x-0 z-40 bg-[#F9F6EE]/95 backdrop-blur-sm">
+        <div className="border-b border-[#1A1614]/15 px-6 md:px-14 py-1.5 flex items-center justify-between">
+          <span className="text-[10px] uppercase tracking-[0.22em] text-[#7A6B5E] font-semibold">Collaborative Writing Platform</span>
+          <span className="text-[10px] uppercase tracking-[0.22em] text-[#7A6B5E] font-semibold">Free to join</span>
+        </div>
+        <div className="px-6 md:px-14 py-3 text-center">
+          <button onClick={() => navigate("/")} className="font-serif font-bold text-2xl md:text-3xl tracking-[0.06em] text-[#1A1614] hover:text-[#E8B84B] transition-colors">Writers Room</button>
+        </div>
+        <ThickRule />
+        <div className="px-6 md:px-14 py-2 flex items-center justify-between">
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-[#7A6B5E] font-semibold hover:text-[#1A1614] transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back
+          </button>
+          <div className="flex items-center gap-4">
+            <button onClick={openAuthModal} className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#1A1614] hover:text-[#E8B84B] transition-colors">Sign in</button>
+            <button onClick={openAuthModal} className="px-4 py-1.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.16em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors">Join free</button>
+          </div>
+        </div>
+        <Rule />
+      </header>
+
+      {/* ── HERO ── */}
+      <section className="pt-[9rem] pb-0">
+        <div className="bg-[#1A1614] px-6 md:px-14 py-20 md:py-28 text-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+            <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#E8B84B] mb-4">The Community</p>
+            <ThickRule className="border-[#F9F6EE]/20 w-32 mx-auto mb-6" />
+            <h1 className="font-serif font-bold text-[clamp(2.6rem,7vw,5.5rem)] leading-[1.0] text-[#F9F6EE] mb-6">
+              How Writers Room<br />actually works
+            </h1>
+            <ThickRule className="border-[#F9F6EE]/20 w-32 mx-auto mb-8" />
+            <p className="font-serif italic text-[#F9F6EE]/70 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+              Not a marketplace. Not a gig platform. A community of writers and editors who make each other's work genuinely better.
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Standfirst */}
+        <div className="border-b-2 border-[#1A1614] bg-[#F9F6EE] px-6 md:px-14 py-8 text-center">
+          <p className="text-base md:text-lg text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif">
+            Writers Room connects authors who want sharper manuscripts with contributors who want to do meaningful editorial work — on projects they care about, with recognition they have earned.
+          </p>
+        </div>
+      </section>
+
+      {/* ── COMMUNITY VALUES ── */}
+      <section className="py-20 px-6 md:px-14 bg-[#F9F6EE]">
+        <div className="max-w-5xl mx-auto">
+          <motion.div {...inView()} className="mb-12">
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">What we believe</p>
+            <ThickRule className="mb-2" />
+            <h2 className="font-serif font-bold text-4xl md:text-5xl text-[#1A1614] mt-4">Community first</h2>
+            <Rule className="mt-4" />
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-0 border-2 border-[#1A1614]">
+            {COMMUNITY_VALUES.map((v, i) => (
+              <motion.div
+                key={v.title}
+                {...inView(i * 0.1)}
+                className="p-8 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1614] last:border-0 flex flex-col gap-4"
+              >
+                <div className="w-10 h-10 bg-[#E8B84B]/20 flex items-center justify-center text-[#1A1614]">
+                  <v.icon className="w-5 h-5" />
+                </div>
+                <h3 className="font-bold text-[#1A1614] text-sm uppercase tracking-[0.1em]">{v.title}</h3>
+                <p className="text-sm text-[#7A6B5E] leading-relaxed">{v.body}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOR AUTHORS ── */}
+      <section className="py-20 px-6 md:px-14 bg-[#FDDCB5]">
+        <div className="max-w-5xl mx-auto">
+          <motion.div {...inView()} className="mb-12">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-[#1A1614] flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-[#E8B84B]" />
+              </div>
+              <div>
+                <p className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#1A1614]/50">If you are an</p>
+                <h2 className="font-serif font-bold text-3xl md:text-4xl text-[#1A1614] leading-none">Author</h2>
+              </div>
+            </div>
+            <ThickRule className="border-[#1A1614]/30 mb-2 mt-4" />
+            <p className="font-serif italic text-[#1A1614]/70 text-base mt-4 max-w-2xl">
+              Your manuscript stays yours. Writers Room gives you the tools to open it to exactly the right people — and nothing more.
+            </p>
+            <Rule className="mt-4 border-[#1A1614]/20" />
+          </motion.div>
+
+          <div className="space-y-0">
+            {AUTHOR_STEPS.map((step, i) => (
+              <motion.div
+                key={step.n}
+                {...inView(i * 0.08)}
+                className="flex gap-6 md:gap-10 items-start border-b border-[#1A1614]/20 py-7 last:border-0"
+              >
+                <span className="font-serif font-bold text-4xl text-[#1A1614]/25 leading-none shrink-0 w-10 text-right">{step.n}</span>
+                <div>
+                  <h3 className="font-bold text-[#1A1614] uppercase tracking-[0.1em] text-sm mb-2">{step.title}</h3>
+                  <p className="text-sm text-[#1A1614]/65 leading-relaxed max-w-xl">{step.body}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div {...inView(0.2)} className="mt-10">
+            <button
+              onClick={openAuthModal}
+              className="flex items-center gap-2 px-8 py-3.5 bg-[#1A1614] text-[#F9F6EE] text-sm font-bold uppercase tracking-[0.12em] hover:bg-[#D94B1F] transition-colors"
+            >
+              Upload your manuscript <ArrowRight className="w-4 h-4" />
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── FOR CONTRIBUTORS ── */}
+      <section className="py-20 px-6 md:px-14 bg-[#1A1614]">
+        <div className="max-w-5xl mx-auto">
+          <motion.div {...inView()} className="mb-12">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-[#E8B84B] flex items-center justify-center">
+                <Star className="w-5 h-5 text-[#1A1614]" />
+              </div>
+              <div>
+                <p className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#F9F6EE]/40">If you are a</p>
+                <h2 className="font-serif font-bold text-3xl md:text-4xl text-[#F9F6EE] leading-none">Contributor</h2>
+              </div>
+            </div>
+            <div className="border-t-2 border-[#F9F6EE]/20 mt-4 mb-2" />
+            <p className="font-serif italic text-[#F9F6EE]/60 text-base mt-4 max-w-2xl">
+              Every acceptance is a recognition of your editorial instinct. Build a track record that speaks for itself.
+            </p>
+            <div className="border-t border-[#F9F6EE]/10 mt-4" />
+          </motion.div>
+
+          <div className="space-y-0">
+            {CONTRIBUTOR_STEPS.map((step, i) => (
+              <motion.div
+                key={step.n}
+                {...inView(i * 0.08)}
+                className="flex gap-6 md:gap-10 items-start border-b border-[#F9F6EE]/10 py-7 last:border-0"
+              >
+                <span className="font-serif font-bold text-4xl text-[#E8B84B]/40 leading-none shrink-0 w-10 text-right">{step.n}</span>
+                <div>
+                  <h3 className="font-bold text-[#F9F6EE] uppercase tracking-[0.1em] text-sm mb-2">{step.title}</h3>
+                  <p className="text-sm text-[#F9F6EE]/55 leading-relaxed max-w-xl">{step.body}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div {...inView(0.2)} className="mt-10">
+            <button
+              onClick={openAuthModal}
+              className="flex items-center gap-2 px-8 py-3.5 bg-[#E8B84B] text-[#1A1614] text-sm font-bold uppercase tracking-[0.12em] hover:bg-[#FDDCB5] transition-colors"
+            >
+              Join as a contributor <ArrowRight className="w-4 h-4" />
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── THE SUGGESTION SYSTEM ── */}
+      <section className="py-20 px-6 md:px-14 bg-[#F9F6EE]">
+        <div className="max-w-5xl mx-auto">
+          <motion.div {...inView()} className="mb-12">
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">How the editing works</p>
+            <ThickRule className="mb-2" />
+            <h2 className="font-serif font-bold text-4xl md:text-5xl text-[#1A1614] mt-4">The suggestion system</h2>
+            <Rule className="mt-4" />
+            <p className="text-sm text-[#7A6B5E] mt-6 max-w-2xl leading-relaxed">
+              At the heart of Writers Room is a tracked-change system designed for fiction and scripts, not spreadsheets or code. Here's how a suggestion travels from idea to accepted edit.
+            </p>
+          </motion.div>
+
+          {/* Visual flow */}
+          <div className="grid md:grid-cols-4 gap-0 border-2 border-[#1A1614] mb-12">
+            {[
+              { icon: PenTool, label: "Highlight", desc: "A contributor highlights any passage in the manuscript — a sentence, a paragraph, a line of dialogue." },
+              { icon: Lightbulb, label: "Propose", desc: "They write their alternative version and optionally add a comment explaining their reasoning." },
+              { icon: MessageSquare, label: "Review", desc: "The author sees the original and proposed text side by side as a clean diff, with the contributor's note." },
+              { icon: Check, label: "Decide", desc: "Accept to apply the change, or discard it. Either way, the contributor's record is updated instantly." },
+            ].map((s, i) => (
+              <motion.div
+                key={s.label}
+                {...inView(i * 0.1)}
+                className="p-6 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1614] last:border-0"
+              >
+                <div className="w-9 h-9 bg-[#E8B84B] flex items-center justify-center mb-4">
+                  <s.icon className="w-4 h-4 text-[#1A1614]" />
+                </div>
+                <h3 className="font-bold text-[#1A1614] uppercase tracking-[0.1em] text-xs mb-2">{s.label}</h3>
+                <p className="text-xs text-[#7A6B5E] leading-relaxed">{s.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Example callout */}
+          <motion.div {...inView(0.1)} className="border-l-4 border-[#E8B84B] bg-[#E8B84B]/8 p-6 md:p-8">
+            <p className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#7A6B5E] mb-4">An example suggestion</p>
+            <div className="space-y-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#7A6B5E] mb-1">Original</p>
+                <p className="text-sm text-[#C0392B] line-through decoration-[#C0392B]/60 font-serif leading-relaxed bg-red-50 px-3 py-2 rounded">
+                  He walked across the room and sat down at the table.
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#7A6B5E] mb-1">Suggested</p>
+                <p className="text-sm text-[#1A6B3A] font-serif leading-relaxed bg-emerald-50 px-3 py-2 rounded">
+                  He crossed to the table without looking at her.
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#7A6B5E] mb-1">Contributor's note</p>
+                <p className="text-sm text-[#7A6B5E] font-serif italic">"The original doesn't do any dramatic work. Adding the detail about her makes the tension visible without stating it."</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── COMMUNITY FEATURES ── */}
+      <section className="py-20 px-6 md:px-14 bg-[#1A1614] text-[#F9F6EE]">
+        <div className="max-w-5xl mx-auto">
+          <motion.div {...inView()} className="mb-12">
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#E8B84B] mb-2">The wider platform</p>
+            <div className="border-t-2 border-[#F9F6EE]/20 mb-2" />
+            <h2 className="font-serif font-bold text-4xl md:text-5xl text-[#F9F6EE] mt-4">Beyond the manuscript</h2>
+            <div className="border-t border-[#F9F6EE]/20 mt-4" />
+            <p className="text-sm text-[#F9F6EE]/55 mt-6 max-w-2xl leading-relaxed">
+              Writers Room is more than an editing tool. It is a community with its own rhythms — pitches, discovery, reputation, and recognition.
+            </p>
+          </motion.div>
+          <div className="grid md:grid-cols-3 gap-0">
+            {COMMUNITY_FEATURES.map((f, i) => (
+              <motion.div
+                key={f.label}
+                {...inView(i * 0.07)}
+                className="p-6 border border-[#F9F6EE]/10 hover:bg-[#F9F6EE]/5 transition-colors group"
+              >
+                <div className="w-8 h-8 bg-[#E8B84B]/15 text-[#E8B84B] flex items-center justify-center mb-4 group-hover:bg-[#E8B84B]/25 transition-colors">
+                  <f.icon className="w-4 h-4" />
+                </div>
+                <h3 className="font-bold text-[#F9F6EE] uppercase tracking-[0.08em] text-xs mb-2">{f.label}</h3>
+                <p className="text-sm text-[#F9F6EE]/55 leading-relaxed">{f.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ── */}
+      <section className="py-20 px-6 md:px-14 bg-[#F9F6EE]">
+        <div className="max-w-5xl mx-auto">
+          <motion.div {...inView()} className="mb-12">
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">From the community</p>
+            <ThickRule className="mb-2" />
+            <h2 className="font-serif font-bold text-4xl md:text-5xl text-[#1A1614] mt-4">In their own words</h2>
+            <Rule className="mt-4" />
+          </motion.div>
+
+          {TESTIMONIAL_PAIRS.map((pair, i) => (
+            <motion.div key={i} {...inView(i * 0.1)} className="grid md:grid-cols-2 gap-0 border-2 border-[#1A1614] mb-8">
+              <div className="p-8 md:p-10 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1614]">
+                <Quote className="w-6 h-6 text-[#E8B84B] mb-4" />
+                <p className="font-serif italic text-[#1A1614] text-base leading-relaxed mb-6">"{pair.author.quote}"</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#FDDCB5] flex items-center justify-center">
+                    <BookOpen className="w-4 h-4 text-[#1A1614]" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-[#1A1614] uppercase tracking-[0.1em]">{pair.author.name}</p>
+                    <p className="text-[11px] text-[#7A6B5E]">{pair.author.role}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-8 md:p-10 bg-[#E8B84B]">
+                <Quote className="w-6 h-6 text-[#1A1614]/40 mb-4" />
+                <p className="font-serif italic text-[#1A1614] text-base leading-relaxed mb-6">"{pair.contributor.quote}"</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#1A1614] flex items-center justify-center">
+                    <Star className="w-4 h-4 text-[#E8B84B]" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-[#1A1614] uppercase tracking-[0.1em]">{pair.contributor.name}</p>
+                    <p className="text-[11px] text-[#1A1614]/60">{pair.contributor.role}</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section className="py-20 px-6 md:px-14 bg-[#F9F6EE] border-t-2 border-[#1A1614]">
+        <div className="max-w-3xl mx-auto">
+          <motion.div {...inView()} className="mb-12">
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">Common questions</p>
+            <ThickRule className="mb-2" />
+            <h2 className="font-serif font-bold text-4xl text-[#1A1614] mt-4">Good to know</h2>
+            <Rule className="mt-4" />
+          </motion.div>
+
+          {[
+            {
+              q: "Is it really free?",
+              a: "Yes. Writers Room is free to join for both authors and contributors. There are no subscription tiers, no per-project fees, and no commission on anything. The platform is built to serve the writing community, not extract from it."
+            },
+            {
+              q: "Who owns my manuscript?",
+              a: "You do, completely. Uploading your work to Writers Room does not transfer any rights. We store it so your collaborators can read it. You can delete your project at any time and the content is permanently removed."
+            },
+            {
+              q: "What happens if a contributor's suggestion is accepted — do they own part of it?",
+              a: "No. Contributions are made under the project's IP agreement, which authors can set before collaborators join. The default agreement makes clear that accepted suggestions become part of the author's work under the author's copyright. Contribution certificates record what was contributed, but they do not confer ownership."
+            },
+            {
+              q: "Can I be both an author and a contributor?",
+              a: "Absolutely. Many of our members run their own projects while contributing to others. Your author dashboard and your contributor profile are separate, so you can keep your roles distinct or let them inform each other."
+            },
+            {
+              q: "How do contributors get discovered?",
+              a: "Authors search for contributors by genre, media interest, and track record. A strong profile with a good acceptance rate and relevant genre tags will put you in front of the right authors. You can also apply directly to pitches posted on the Pitches board."
+            },
+            {
+              q: "What is the Pitches board?",
+              a: "Authors who are actively looking for collaborators can post a Pitch — a short description of their project and what kind of contributors they are after. Contributors browse these and send a join request directly. It is the fastest way to find a project that suits you."
+            },
+          ].map((item, i) => (
+            <motion.div key={i} {...inView(i * 0.05)} className="border-b border-[#1A1614]/20 py-6 last:border-0">
+              <h3 className="font-bold text-[#1A1614] text-sm uppercase tracking-[0.08em] mb-3">{item.q}</h3>
+              <p className="text-sm text-[#7A6B5E] leading-relaxed">{item.a}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section className="py-24 px-6 md:px-14 bg-[#E8B84B] text-[#1A1614]">
+        <div className="max-w-3xl mx-auto text-center">
+          <motion.div {...inView()}>
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#1A1614]/60 mb-4">Ready?</p>
+            <div className="border-t-2 border-[#1A1614]/30 mb-6" />
+            <h2 className="font-serif font-bold text-5xl md:text-6xl text-[#1A1614] mb-4 leading-tight">
+              Join the room.
+            </h2>
+            <div className="border-t border-[#1A1614]/30 mb-6" />
+            <p className="text-[#1A1614]/70 text-base mb-10 font-serif italic">
+              Free to join. No credit card. Upload your manuscript or build your contributor profile today.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button
+                onClick={openAuthModal}
+                className="flex items-center gap-2 px-8 py-3.5 bg-[#D94B1F] text-[#F9F6EE] text-sm font-bold uppercase tracking-[0.12em] hover:bg-[#C23A14] transition-colors"
+              >
+                Start as an author <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={openAuthModal}
+                className="px-8 py-3.5 border-2 border-[#1A1614] text-[#1A1614] text-sm font-bold uppercase tracking-[0.12em] hover:bg-[#1A1614] hover:text-[#E8B84B] transition-colors"
+              >
+                Join as a contributor
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="bg-[#1A1614] text-[#F9F6EE]/60 px-6 md:px-14 py-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+            <div>
+              <p className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#E8B84B] mb-1">Writers Room</p>
+              <p className="font-serif font-bold text-xl text-[#F9F6EE]">The platform for serious<br />collaborative writing.</p>
+            </div>
+            <button
+              onClick={openAuthModal}
+              className="px-6 py-2.5 border border-[#F9F6EE]/20 text-[#F9F6EE] text-xs uppercase tracking-[0.14em] font-bold hover:border-[#E8B84B] hover:text-[#E8B84B] transition-colors"
+            >
+              Get started
+            </button>
+          </div>
+          <div className="border-t border-[#F9F6EE]/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-2 text-xs">
+            <span className="uppercase tracking-[0.12em] text-[10px]">© {new Date().getFullYear()} Writers Room</span>
+            <button onClick={() => navigate("/")} className="uppercase tracking-[0.12em] text-[10px] hover:text-[#E8B84B] transition-colors">← Back to home</button>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
