@@ -11,6 +11,16 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/use-auth";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -285,6 +295,7 @@ function UsersTab() {
   const [query, setQuery] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [pendingAction, setPendingAction] = useState<{ id: number; name: string; grantAdmin: boolean } | null>(null);
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
 
@@ -403,7 +414,7 @@ function UsersTab() {
                     key={u.id}
                     u={u}
                     isSelf={u.id === currentUser?.id}
-                    onToggleAdmin={() => toggleAdmin.mutate({ id: u.id, isAdmin: !u.isAdmin })}
+                    onToggleAdmin={() => setPendingAction({ id: u.id, name: u.name, grantAdmin: !u.isAdmin })}
                     onDelete={() => setDeleteTarget(u)}
                     togglePending={toggleAdmin.isPending && toggleAdmin.variables?.id === u.id}
                   />
@@ -418,6 +429,50 @@ function UsersTab() {
         <span>{filtered.length} of {users.length} user{users.length !== 1 ? "s" : ""}</span>
         <span>{users.filter(u => u.isAdmin).length} admin{users.filter(u => u.isAdmin).length !== 1 ? "s" : ""}</span>
       </div>
+
+      <AlertDialog open={!!pendingAction} onOpenChange={(open) => { if (!open) setPendingAction(null); }}>
+        <AlertDialogContent className="rounded-none border-2 border-[#1A1614]/20 max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-serif text-xl text-[#1A1614]">
+              {pendingAction?.grantAdmin
+                ? `Grant admin to ${pendingAction.name}?`
+                : `Revoke admin from ${pendingAction?.name}?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-[#7A6B5E] text-sm">
+              {pendingAction?.grantAdmin
+                ? `This will give ${pendingAction.name} full admin privileges on the platform.`
+                : `This will remove admin privileges from ${pendingAction?.name}.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel
+              className="rounded-none border-2 border-[#1A1614]/20 text-[#7A6B5E] hover:bg-[#1A1614]/5 hover:text-[#1A1614] text-[11px] uppercase tracking-[0.1em] font-bold"
+              onClick={() => setPendingAction(null)}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className={`rounded-none border-2 text-[11px] uppercase tracking-[0.1em] font-bold ${
+                pendingAction?.grantAdmin
+                  ? "bg-[#E8B84B]/20 border-[#E8B84B]/60 text-[#7A5A00] hover:bg-[#E8B84B]/40"
+                  : "bg-[#1A1614]/5 border-[#1A1614]/20 text-[#1A1614] hover:bg-[#1A1614]/10"
+              }`}
+              onClick={() => {
+                if (pendingAction) {
+                  toggleAdmin.mutate({ id: pendingAction.id, isAdmin: pendingAction.grantAdmin });
+                  setPendingAction(null);
+                }
+              }}
+            >
+              {pendingAction?.grantAdmin ? (
+                <><Shield className="w-3 h-3 mr-1" />Grant</>
+              ) : (
+                <><ShieldOff className="w-3 h-3 mr-1" />Revoke</>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
