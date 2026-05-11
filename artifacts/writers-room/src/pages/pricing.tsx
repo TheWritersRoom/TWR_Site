@@ -108,7 +108,7 @@ export default function Pricing() {
       </header>
 
       {/* ── HERO ── */}
-      <section className="pt-44 pb-24 px-6 md:px-14 bg-[#1A1614] min-h-[600px]">
+      <section className="pt-44 pb-36 px-6 md:px-14 bg-[#1A1614] min-h-[600px]">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#E8B84B] mb-4">Simple, honest pricing</p>
