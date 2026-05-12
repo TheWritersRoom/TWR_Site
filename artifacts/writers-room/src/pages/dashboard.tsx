@@ -56,14 +56,46 @@ async function extractTextFromFile(file: File): Promise<string> {
     pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.mjs`;
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    const pages: string[] = [];
+    const pageTexts: string[] = [];
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
-      const pageText = textContent.items.map((item: any) => item.str).join(" ");
-      pages.push(pageText);
+      const items = textContent.items as any[];
+      if (!items.length) { pageTexts.push(""); continue; }
+
+      // Group text items into lines by Y coordinate (rounded to integer)
+      const buckets = new Map<number, string[]>();
+      const ys: number[] = [];
+      for (const item of items) {
+        if (!item.str) continue;
+        const y = Math.round(item.transform[5]);
+        if (!buckets.has(y)) { buckets.set(y, []); ys.push(y); }
+        buckets.get(y)!.push(item.str);
+      }
+
+      // Sort Y descending = top-to-bottom reading order
+      ys.sort((a, b) => b - a);
+      const lineObjs = ys
+        .map(y => ({ y, text: buckets.get(y)!.join("").trim() }))
+        .filter(l => l.text);
+
+      // Find median line gap to detect paragraph breaks (gap > 1.8× median)
+      const gaps: number[] = [];
+      for (let j = 0; j < lineObjs.length - 1; j++) gaps.push(lineObjs[j].y - lineObjs[j + 1].y);
+      const medianGap = gaps.length
+        ? [...gaps].sort((a, b) => a - b)[Math.floor(gaps.length / 2)]
+        : 12;
+
+      const lines: string[] = [];
+      for (let j = 0; j < lineObjs.length; j++) {
+        lines.push(lineObjs[j].text);
+        if (j < lineObjs.length - 1 && lineObjs[j].y - lineObjs[j + 1].y > medianGap * 1.8) {
+          lines.push(""); // blank line = paragraph break
+        }
+      }
+      pageTexts.push(lines.join("\n"));
     }
-    return pages.join("\n\n");
+    return pageTexts.join("\n\n");
   }
   if (ext === "docx") {
     const mammoth = await import("mammoth");

@@ -72,6 +72,11 @@ export default function ProjectDetail() {
   const [kdpModalOpen, setKdpModalOpen] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
 
+  // ── View options ───────────────────────────────────────────────────────────
+  const [fontSize, setFontSize] = useState<"sm" | "base" | "lg" | "xl">("base");
+  const [lineSpacing, setLineSpacing] = useState<"relaxed" | "loose">("relaxed");
+  const [pageBreakMode, setPageBreakMode] = useState(false);
+
   type FeedbackItem = {
     id: number;
     projectId: number;
@@ -380,18 +385,59 @@ export default function ProjectDetail() {
       );
     }
 
-    // Book projects: plain text with suggestion highlights
-    let html = project.content;
-    if (suggestions && suggestionFilter === "pending") {
-      suggestions.forEach(sug => {
-        if (sug.status === "pending") {
-           const mark = `<mark class="bg-yellow-200/40 border-b-2 border-yellow-400 text-inherit cursor-pointer rounded px-0.5 transition-colors hover:bg-yellow-300/50" title="Suggestion by ${sug.submitterName}">${sug.originalText}</mark>`;
-           html = html.split(sug.originalText).join(mark);
-        }
-      });
+    // Book projects: paragraph-aware rendering with view options
+    const fontSizeClass = { sm: "text-sm", base: "text-base", lg: "text-lg", xl: "text-xl" }[fontSize];
+    const leadingClass = { relaxed: "leading-relaxed", loose: "leading-loose" }[lineSpacing];
+    const proseClass = `font-serif ${fontSizeClass} ${leadingClass} text-[#1A1614]`;
+
+    const applyHighlights = (text: string) => {
+      let html = text;
+      if (suggestions && suggestionFilter === "pending") {
+        suggestions.forEach(sug => {
+          if (sug.status === "pending") {
+            const mark = `<mark class="bg-yellow-200/40 border-b-2 border-yellow-400 text-inherit cursor-pointer rounded px-0.5 transition-colors hover:bg-yellow-300/50" title="Suggestion by ${sug.submitterName}">${sug.originalText}</mark>`;
+            html = html.split(sug.originalText).join(mark);
+          }
+        });
+      }
+      return html;
+    };
+
+    const textToHtml = (text: string) =>
+      text.split(/\n\n+/).map(p => `<p class="mb-4 last:mb-0">${p.replace(/\n/g, "<br/>")}</p>`).join("");
+
+    if (pageBreakMode) {
+      const paragraphs = project.content.split(/\n\n+/);
+      const pages: string[][] = [[]];
+      let wc = 0;
+      const WORDS_PER_PAGE = 500;
+      for (const para of paragraphs) {
+        const pw = para.trim().split(/\s+/).filter(Boolean).length;
+        if (wc > 0 && wc + pw > WORDS_PER_PAGE) { pages.push([]); wc = 0; }
+        pages[pages.length - 1].push(para);
+        wc += pw;
+      }
+      return (
+        <div className="space-y-10">
+          {pages.map((pageParas, i) => (
+            <div key={i} className="relative bg-white border border-[#1A1614]/10 shadow-sm px-10 py-14">
+              <div
+                className={proseClass}
+                dangerouslySetInnerHTML={{ __html: applyHighlights(textToHtml(pageParas.join("\n\n"))) }}
+              />
+              <div className="absolute bottom-4 right-8 text-xs text-[#7A6B5E]/40 font-serif select-none">{i + 1}</div>
+            </div>
+          ))}
+        </div>
+      );
     }
-    html = html.replace(/\n/g, "<br/>");
-    return <div dangerouslySetInnerHTML={{ __html: html }} />;
+
+    return (
+      <div
+        className={proseClass}
+        dangerouslySetInnerHTML={{ __html: applyHighlights(textToHtml(project.content)) }}
+      />
+    );
   };
 
   // Word count for prose content (not shown for scripts — the ScriptEditor has its own)
@@ -484,6 +530,44 @@ export default function ProjectDetail() {
              )}
           </div>
         </header>
+
+        {/* View options toolbar — prose projects only */}
+        {project.type !== "script" && (
+          <div className="sticky top-[73px] z-10 border-b border-[#1A1614]/10 px-8 py-2 bg-[#FAF8F5]/95 backdrop-blur-sm flex items-center gap-5 text-[11px] text-[#7A6B5E]">
+            <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-[#7A6B5E]/60 hidden sm:block">View</span>
+            <div className="flex items-center gap-0.5">
+              {(["sm","base","lg","xl"] as const).map((s, i) => (
+                <button
+                  key={s}
+                  onClick={() => setFontSize(s)}
+                  className={`px-2.5 py-1 border transition-colors ${fontSize === s ? "border-[#1A1614] text-[#1A1614] bg-[#1A1614]/5 font-semibold" : "border-transparent hover:border-[#1A1614]/25 hover:text-[#1A1614]"}`}
+                  title={["Small","Medium","Large","X-Large"][i]}
+                >
+                  <span style={{ fontSize: [11,13,15,17][i] }}>A</span>
+                </button>
+              ))}
+            </div>
+            <div className="w-px h-4 bg-[#1A1614]/15" />
+            <div className="flex items-center gap-0.5">
+              {(["relaxed","loose"] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setLineSpacing(s)}
+                  className={`px-2.5 py-1 border transition-colors text-[10px] uppercase tracking-[0.1em] font-semibold ${lineSpacing === s ? "border-[#1A1614] text-[#1A1614] bg-[#1A1614]/5" : "border-transparent hover:border-[#1A1614]/25 hover:text-[#1A1614]"}`}
+                >
+                  {s === "relaxed" ? "Normal" : "Spacious"}
+                </button>
+              ))}
+            </div>
+            <div className="w-px h-4 bg-[#1A1614]/15" />
+            <button
+              onClick={() => setPageBreakMode(b => !b)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 border transition-colors text-[10px] uppercase tracking-[0.1em] font-semibold ${pageBreakMode ? "border-[#1A1614] text-[#1A1614] bg-[#1A1614]/5" : "border-transparent hover:border-[#1A1614]/25 hover:text-[#1A1614]"}`}
+            >
+              Pages
+            </button>
+          </div>
+        )}
 
         <div className="max-w-3xl mx-auto px-8 py-16 lg:py-24">
           <div 
