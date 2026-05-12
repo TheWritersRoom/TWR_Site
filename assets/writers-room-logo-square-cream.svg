@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&amp;family=DM+Sans:wght@600&amp;display=swap');
+    </style>
+  </defs>
+
+  <!-- Cream background -->
+  <rect width="400" height="400" fill="#F9F6EE"/>
+
+  <!-- Outer border: thick dark -->
+  <rect x="0" y="0" width="400" height="400" fill="none" stroke="#1A1614" stroke-width="3"/>
+
+  <!-- Inner inset border: thin -->
+  <rect x="12" y="12" width="376" height="376" fill="none" stroke="#1A1614" stroke-width="1" opacity="0.25"/>
+
+  <!-- Gold full-width bands top and bottom -->
+  <rect x="0" y="0" width="400" height="38" fill="#1A1614"/>
+  <rect x="0" y="362" width="400" height="38" fill="#1A1614"/>
+
+  <!-- Top band text -->
+  <text x="200" y="24" font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="600" letter-spacing="4" fill="#E8B84B" text-anchor="middle">COLLABORATIVE WRITING PLATFORM</text>
+
+  <!-- Bottom band text -->
+  <text x="200" y="387" font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="600" letter-spacing="4" fill="#7A6B5E" text-anchor="middle">EST. 2025</text>
+
+  <!-- Gold rule below top band -->
+  <rect x="0" y="38" width="400" height="2.5" fill="#E8B84B"/>
+
+  <!-- Gold rule above bottom band -->
+  <rect x="0" y="359.5" width="400" height="2.5" fill="#E8B84B"/>
+
+  <!-- WR monogram -->
+  <text x="200" y="195" font-family="'Playfair Display', Georgia, 'Times New Roman', serif" font-size="96" font-weight="700" fill="#1A1614" text-anchor="middle" letter-spacing="-2">WR</text>
+
+  <!-- Thin divider -->
+  <rect x="50" y="210" width="300" height="1" fill="#1A1614" opacity="0.2"/>
+
+  <!-- "WRITERS ROOM" wordmark -->
+  <text x="200" y="245" font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="600" letter-spacing="8" fill="#1A1614" text-anchor="middle">WRITERS ROOM</text>
+</svg>

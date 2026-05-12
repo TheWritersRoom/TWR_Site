@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&amp;family=DM+Sans:wght@600&amp;display=swap');
+    </style>
+  </defs>
+
+  <!-- White/transparent background -->
+  <rect width="400" height="400" fill="#FFFFFF"/>
+
+  <!-- Heavy outer border -->
+  <rect x="0" y="0" width="400" height="400" fill="none" stroke="#1A1614" stroke-width="6"/>
+
+  <!-- Gold corner accents -->
+  <rect x="0" y="0" width="30" height="6" fill="#E8B84B"/>
+  <rect x="0" y="0" width="6" height="30" fill="#E8B84B"/>
+  <rect x="370" y="0" width="30" height="6" fill="#E8B84B"/>
+  <rect x="394" y="0" width="6" height="30" fill="#E8B84B"/>
+  <rect x="0" y="394" width="30" height="6" fill="#E8B84B"/>
+  <rect x="0" y="370" width="6" height="30" fill="#E8B84B"/>
+  <rect x="370" y="394" width="30" height="6" fill="#E8B84B"/>
+  <rect x="394" y="370" width="6" height="30" fill="#E8B84B"/>
+
+  <!-- Top rule -->
+  <rect x="30" y="90" width="340" height="2" fill="#1A1614"/>
+
+  <!-- WR monogram -->
+  <text x="200" y="190" font-family="'Playfair Display', Georgia, 'Times New Roman', serif" font-size="96" font-weight="700" fill="#1A1614" text-anchor="middle" letter-spacing="-2">WR</text>
+
+  <!-- Thin divider -->
+  <rect x="30" y="205" width="340" height="1" fill="#1A1614" opacity="0.2"/>
+
+  <!-- "WRITERS ROOM" -->
+  <text x="200" y="238" font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="600" letter-spacing="8" fill="#1A1614" text-anchor="middle">WRITERS ROOM</text>
+
+  <!-- Bottom divider -->
+  <rect x="30" y="256" width="340" height="1" fill="#1A1614" opacity="0.2"/>
+
+  <!-- Tagline -->
+  <text x="200" y="290" font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif" font-size="8" font-weight="600" letter-spacing="3.5" fill="#7A6B5E" text-anchor="middle">COLLABORATIVE WRITING PLATFORM</text>
+
+  <!-- Bottom rule -->
+  <rect x="30" y="310" width="340" height="2" fill="#1A1614"/>
+</svg>

@@ -18,3 +18,27 @@ id = "DkoDyW-6OQkdjwInlwVdM"
 uri = "file://assets/writers-room-logo-compact.svg"
 type = "image"
 title = "Logo — Compact square (monogram)"
+
+[[outputs]]
+id = "-BJvKIMessun8KarWZu_K"
+uri = "file://assets/writers-room-logo-square-gold.svg"
+type = "image"
+title = "Square — Gold background"
+
+[[outputs]]
+id = "znFpYlPIrKyAHjpkM5g2x"
+uri = "file://assets/writers-room-logo-square-dark.svg"
+type = "image"
+title = "Square — Dark background"
+
+[[outputs]]
+id = "GtODYjdm2NrKFR2x6-mFI"
+uri = "file://assets/writers-room-logo-square-outline.svg"
+type = "image"
+title = "Square — White with corner accents"
+
+[[outputs]]
+id = "rZNaq9XJ0GZE8tXFXnKbJ"
+uri = "file://assets/writers-room-logo-square-cream.svg"
+type = "image"
+title = "Square — Cream with dark bands"
