@@ -42,3 +42,9 @@ id = "rZNaq9XJ0GZE8tXFXnKbJ"
 uri = "file://assets/writers-room-logo-square-cream.svg"
 type = "image"
 title = "Square — Cream with dark bands"
+
+[[outputs]]
+id = "DH_SRI_TTJSLHEbttngIM"
+uri = "file://assets/writers-room-logo-square-gold.png"
+type = "image"
+title = "Writers Room — Gold square logo (PNG)"
