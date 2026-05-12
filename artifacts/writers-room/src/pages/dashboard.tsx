@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, BookText, FileText, MessageSquareQuote, Calendar,
   Upload, PenLine, X, FileUp, Loader2, ChevronRight, AlignLeft, Check,
-  Shield, Users as UsersIcon, Zap,
+  Shield, Users as UsersIcon, Zap, Trash2,
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/use-auth";
@@ -662,7 +662,26 @@ export default function Dashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               key={project.id}
+              className="relative group/card"
             >
+              {user?.subscriptionTier === "pro" && project.ownerId === user?.id && (
+                <button
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    if (!confirm(`Delete "${project.title}"? This cannot be undone.`)) return;
+                    await fetch(`/api/projects/${project.id}`, {
+                      method: "DELETE",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ userId: user.id }),
+                    });
+                    queryClient.invalidateQueries({ queryKey: ["/api/projects", user?.id] });
+                  }}
+                  className="absolute top-2 right-2 z-10 p-1.5 bg-white border border-[#1A1614]/15 text-[#7A6B5E] hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors opacity-0 group-hover/card:opacity-100"
+                  title="Delete project"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
               <Link
                 href={`/project/${project.id}`}
                 className="block h-full bg-white border border-[#1A1614]/15 p-6 hover:border-[#E8B84B] hover:shadow-sm transition-all group"

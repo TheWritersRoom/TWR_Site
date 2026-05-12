@@ -81,6 +81,10 @@ const SEED_ADMIN_EMAILS = new Set([
   "emailpetemartin@gmail.com",
 ]);
 
+const SEED_PRO_EMAILS = new Set([
+  "m.roberts@gmx.co.uk",
+]);
+
 // ── Password auth ──────────────────────────────────────────────────────────
 
 // POST /auth/register
@@ -140,6 +144,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
       bio: typeof bio === "string" && bio.trim() ? bio.trim() : null,
       credentials: typeof credentials === "string" && credentials !== "{}" ? credentials : null,
       isAdmin: SEED_ADMIN_EMAILS.has(normalizedEmail),
+      subscriptionTier: SEED_PRO_EMAILS.has(normalizedEmail) ? "pro" : "free",
     })
     .returning();
 
@@ -361,6 +366,7 @@ router.get("/auth/google/callback", async (req, res): Promise<void> => {
             genres: "[]",
             mediaInterests: "",
             isAdmin: SEED_ADMIN_EMAILS.has(oauthEmail),
+            subscriptionTier: SEED_PRO_EMAILS.has(oauthEmail) ? "pro" : "free",
           })
           .returning();
         user = created;
