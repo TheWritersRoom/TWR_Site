@@ -77,6 +77,11 @@ export default function ProjectDetail() {
   const [lineSpacing, setLineSpacing] = useState<"relaxed" | "loose">("relaxed");
   const [pageBreakMode, setPageBreakMode] = useState(false);
 
+  // ── Prose edit mode ────────────────────────────────────────────────────────
+  const [editMode, setEditMode] = useState(false);
+  const [editContent, setEditContent] = useState("");
+  const [isSavingContent, setIsSavingContent] = useState(false);
+
   type FeedbackItem = {
     id: number;
     projectId: number;
@@ -447,6 +452,22 @@ export default function ProjectDetail() {
     return stripped ? stripped.split(" ").filter(Boolean).length : 0;
   }, [project?.content, project?.type]);
 
+  const handleSaveContent = async () => {
+    if (!user) return;
+    setIsSavingContent(true);
+    try {
+      await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, content: editContent }),
+      });
+      queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
+      setEditMode(false);
+    } finally {
+      setIsSavingContent(false);
+    }
+  };
+
   const handleSaveScript = async (newContent: string) => {
     if (!user) return;
     await fetch(`/api/projects/${projectId}`, {
@@ -510,16 +531,45 @@ export default function ProjectDetail() {
                  Edit Script
                </button>
              )}
-             {isOwner && project.type !== "script" && (
-               <button
-                 onClick={() => setKdpModalOpen(true)}
-                 className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors"
-               >
-                 <BookOpen className="w-4 h-4" />
-                 Export for Kindle
-               </button>
+             {isOwner && project.type !== "script" && !editMode && (
+               <>
+                 <button
+                   onClick={() => { setEditContent(project.content ?? ""); setEditMode(true); }}
+                   className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                 >
+                   <Edit3 className="w-4 h-4" />
+                   Edit
+                 </button>
+                 <button
+                   onClick={() => setKdpModalOpen(true)}
+                   className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors"
+                 >
+                   <BookOpen className="w-4 h-4" />
+                   Export for Kindle
+                 </button>
+               </>
              )}
-             {isOwner && (
+             {isOwner && project.type !== "script" && editMode && (
+               <>
+                 <button
+                   onClick={() => setEditMode(false)}
+                   className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold border border-[#1A1614]/20 text-[#7A6B5E] hover:bg-[#1A1614]/5 transition-colors"
+                 >
+                   Cancel
+                 </button>
+                 <button
+                   onClick={handleSaveContent}
+                   disabled={isSavingContent}
+                   className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50"
+                 >
+                   {isSavingContent
+                     ? <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                     : <Check className="w-4 h-4" />}
+                   Save
+                 </button>
+               </>
+             )}
+             {isOwner && !editMode && (
                <button
                  onClick={() => setPublishModalOpen(true)}
                  className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-foreground text-background hover:bg-foreground/90 transition-colors"
@@ -531,8 +581,8 @@ export default function ProjectDetail() {
           </div>
         </header>
 
-        {/* View options toolbar — prose projects only */}
-        {project.type !== "script" && (
+        {/* View options toolbar — prose projects, read mode only */}
+        {project.type !== "script" && !editMode && (
           <div className="sticky top-[73px] z-10 border-b border-[#1A1614]/10 px-8 py-2 bg-[#FAF8F5]/95 backdrop-blur-sm flex items-center gap-5 text-[11px] text-[#7A6B5E]">
             <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-[#7A6B5E]/60 hidden sm:block">View</span>
             <div className="flex items-center gap-0.5">
@@ -570,12 +620,22 @@ export default function ProjectDetail() {
         )}
 
         <div className="max-w-3xl mx-auto px-8 py-16 lg:py-24">
+          {editMode ? (
+            <textarea
+              value={editContent}
+              onChange={e => setEditContent(e.target.value)}
+              className="w-full min-h-[70vh] bg-white border border-[#1A1614]/15 px-8 py-10 font-serif text-base leading-relaxed text-[#1A1614] resize-none focus:outline-none focus:border-[#1A1614]/40 shadow-sm"
+              placeholder="Write your manuscript here…"
+              autoFocus
+            />
+          ) : (
           <div 
             ref={contentRef}
             className="manuscript outline-none"
           >
             {renderContent()}
           </div>
+          )}
 
           {/* Word count bar — prose projects only */}
           {project.type !== "script" && proseWordCount > 0 && (
