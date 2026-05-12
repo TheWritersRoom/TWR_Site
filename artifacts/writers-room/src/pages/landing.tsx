@@ -1,9 +1,10 @@
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import {
   Upload, Users, MessageSquare, BarChart2, Globe, Telescope,
-  ArrowRight, Check, BookOpen, Star, PenTool, Shield, Award, Mail
+  ArrowRight, Check, BookOpen, Star, Shield, Award, Mail, Menu, X
 } from "lucide-react";
 import typewriterRoom from "@/assets/writers-room-banner.jpg";
 
@@ -60,6 +61,9 @@ const ThickRule = ({ className = "" }: { className?: string }) => (
 export default function Landing() {
   const { openAuthModal } = useAuth();
   const [, navigate] = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const goTo = (path: string) => { setMenuOpen(false); navigate(path); };
 
   return (
     <div className="min-h-screen bg-[#F9F6EE] text-[#1A1614] overflow-x-hidden font-sans">
@@ -80,39 +84,45 @@ export default function Landing() {
         {/* Nav links strip */}
         <ThickRule />
         <div className="px-6 md:px-14 py-2 flex items-center justify-between">
+          {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-6">
-            <button
-              onClick={() => navigate("/how-it-works")}
-              className="text-[11px] uppercase tracking-[0.16em] text-[#1A1614] font-semibold hover:text-[#E8B84B] transition-colors"
-            >
-              How it works
-            </button>
-            <button
-              onClick={() => navigate("/pricing")}
-              className="text-[11px] uppercase tracking-[0.16em] text-[#1A1614] font-semibold hover:text-[#E8B84B] transition-colors"
-            >
-              Pricing
-            </button>
+            <button onClick={() => navigate("/how-it-works")} className="text-[11px] uppercase tracking-[0.16em] text-[#1A1614] font-semibold hover:text-[#E8B84B] transition-colors">How it works</button>
+            <button onClick={() => navigate("/pricing")} className="text-[11px] uppercase tracking-[0.16em] text-[#1A1614] font-semibold hover:text-[#E8B84B] transition-colors">Pricing</button>
           </div>
-          <div className="flex md:hidden">
-            <PenTool className="w-4 h-4 text-[#1A1614]" />
-          </div>
+
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMenuOpen(o => !o)}
+            className="flex md:hidden p-1 text-[#1A1614] hover:text-[#E8B84B] transition-colors"
+            aria-label="Menu"
+          >
+            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+
           <div className="flex items-center gap-4">
-            <button
-              onClick={openAuthModal}
-              className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#1A1614] hover:text-[#FDDCB5] transition-colors"
-            >
-              Sign in
-            </button>
-            <button
-              onClick={openAuthModal}
-              className="px-4 py-1.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.16em] font-bold hover:bg-[#FDDCB5] transition-colors"
-            >
-              Subscribe
-            </button>
+            <button onClick={openAuthModal} className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#1A1614] hover:text-[#FDDCB5] transition-colors">Sign in</button>
+            <button onClick={openAuthModal} className="px-4 py-1.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.16em] font-bold hover:bg-[#FDDCB5] transition-colors">Subscribe</button>
           </div>
         </div>
         <Rule />
+
+        {/* Mobile dropdown */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden overflow-hidden border-t-2 border-[#1A1614] bg-[#F9F6EE]"
+            >
+              <div className="flex flex-col divide-y divide-[#1A1614]/10">
+                <button onClick={() => goTo("/how-it-works")} className="px-6 py-4 text-left text-[11px] uppercase tracking-[0.18em] font-bold text-[#1A1614] hover:bg-[#E8B84B]/10 transition-colors">How it works</button>
+                <button onClick={() => goTo("/pricing")} className="px-6 py-4 text-left text-[11px] uppercase tracking-[0.18em] font-bold text-[#1A1614] hover:bg-[#E8B84B]/10 transition-colors">Pricing</button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* ── HERO ── */}
