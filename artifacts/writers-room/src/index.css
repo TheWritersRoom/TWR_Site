@@ -139,6 +139,48 @@
   .manuscript {
     @apply font-serif text-lg leading-relaxed text-foreground/90;
   }
+
+  /* ── Prose rich-text editor ──────────────────────────────────── */
+  .prose-editor-content {
+    @apply font-serif text-lg leading-relaxed text-[#1A1614] min-h-[60vh];
+  }
+
+  .prose-editor-content p {
+    @apply my-4 leading-[1.85];
+  }
+
+  .prose-editor-content h1 {
+    @apply font-serif font-bold text-3xl tracking-tight mt-10 mb-4 text-[#1A1614];
+  }
+
+  .prose-editor-content h2 {
+    @apply font-serif font-semibold text-2xl tracking-tight mt-8 mb-3 text-[#1A1614];
+  }
+
+  .prose-editor-content h3 {
+    @apply font-serif font-semibold text-xl tracking-tight mt-6 mb-2 text-[#1A1614];
+  }
+
+  .prose-editor-content strong {
+    @apply font-bold text-[#1A1614];
+  }
+
+  .prose-editor-content em {
+    @apply italic;
+  }
+
+  .prose-editor-content u {
+    @apply underline underline-offset-2;
+  }
+
+  .prose-editor-content > *:first-child {
+    @apply mt-0;
+  }
+
+  .prose-editor-content p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    @apply text-[#7A6B5E]/50 pointer-events-none float-left h-0;
+  }
 }
 
 @layer utilities {

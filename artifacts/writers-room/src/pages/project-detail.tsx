@@ -13,6 +13,7 @@ import { IpProtectionPanel } from "@/components/ip-protection-panel";
 import { useQuery, useMutation, useQueryClient as useQC } from "@tanstack/react-query";
 import { PublishModal } from "@/components/publish-modal";
 import { ScriptEditor } from "@/components/script-editor";
+import { ProseEditor } from "@/components/prose-editor";
 import { KdpExportModal } from "@/components/kdp-export-modal";
 import { parseFountain } from "@/utils/fountain";
 import { useAuth } from "@/hooks/use-auth";
@@ -621,12 +622,9 @@ export default function ProjectDetail() {
 
         <div className="max-w-3xl mx-auto px-8 py-16 lg:py-24">
           {editMode ? (
-            <textarea
-              value={editContent}
-              onChange={e => setEditContent(e.target.value)}
-              className="w-full min-h-[70vh] bg-white border border-[#1A1614]/15 px-8 py-10 font-serif text-base leading-relaxed text-[#1A1614] resize-none focus:outline-none focus:border-[#1A1614]/40 shadow-sm"
-              placeholder="Write your manuscript here…"
-              autoFocus
+            <ProseEditor
+              initialContent={editContent}
+              onChange={setEditContent}
             />
           ) : (
           <div 
