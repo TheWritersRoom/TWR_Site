@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="220" viewBox="0 0 900 220">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&amp;family=DM+Sans:wght@600&amp;display=swap');
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="220" fill="#1A1614"/>
+
+  <!-- Top thick rule -->
+  <rect x="0" y="0" width="900" height="3" fill="#E8B84B"/>
+
+  <!-- Metadata strip -->
+  <text x="40" y="23" font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="600" letter-spacing="3.5" fill="#7A6B5E">COLLABORATIVE WRITING PLATFORM</text>
+  <text x="860" y="23" font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="600" letter-spacing="3.5" fill="#7A6B5E" text-anchor="end">EST. 2025</text>
+
+  <!-- Thin rule below metadata -->
+  <rect x="0" y="33" width="900" height="1" fill="#F9F6EE" opacity="0.12"/>
+
+  <!-- Main wordmark -->
+  <text x="450" y="148" font-family="'Playfair Display', Georgia, 'Times New Roman', serif" font-size="82" font-weight="700" fill="#F9F6EE" text-anchor="middle" letter-spacing="5">Writers Room</text>
+
+  <!-- Golden accent bar beneath wordmark -->
+  <rect x="375" y="158" width="150" height="2.5" fill="#E8B84B"/>
+
+  <!-- Thin rule -->
+  <rect x="0" y="173" width="900" height="1" fill="#F9F6EE" opacity="0.12"/>
+
+  <!-- Tagline strip -->
+  <text x="450" y="193" font-family="'DM Sans', 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="600" letter-spacing="4" fill="#7A6B5E" text-anchor="middle">WHERE GREAT WRITING GETS MADE</text>
+
+  <!-- Bottom thick rule -->
+  <rect x="0" y="217" width="900" height="3" fill="#E8B84B"/>
+</svg>

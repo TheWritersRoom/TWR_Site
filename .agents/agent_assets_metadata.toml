@@ -1,0 +1,20 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "9Py0PRxCpxeK7HxBu_4hh"
+uri = "file://assets/writers-room-logo-light.svg"
+type = "image"
+title = "Logo — Light (cream background)"
+
+[[outputs]]
+id = "p6SYdeArW5vBCxN56o8_6"
+uri = "file://assets/writers-room-logo-dark.svg"
+type = "image"
+title = "Logo — Dark (black background)"
+
+[[outputs]]
+id = "DkoDyW-6OQkdjwInlwVdM"
+uri = "file://assets/writers-room-logo-compact.svg"
+type = "image"
+title = "Logo — Compact square (monogram)"
