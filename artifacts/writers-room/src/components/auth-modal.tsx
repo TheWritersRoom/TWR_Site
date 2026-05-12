@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import type { UserRole } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { PenLine, Users, Layers, ChevronRight, Check, X, Eye, EyeOff, ToggleLeft, ToggleRight } from "lucide-react";
+import { ChevronRight, Check, X, Eye, EyeOff, ToggleLeft, ToggleRight } from "lucide-react";
 
 const EDITING_SPECIALTIES = [
   "Developmental Editing", "Line Editing", "Copy Editing", "Proofreading",
@@ -108,26 +108,6 @@ function SocialButtons() {
   );
 }
 
-const ROLE_OPTIONS = [
-  {
-    value: "author" as UserRole,
-    label: "Author",
-    description: "Create and own projects, manage suggestions",
-    icon: <PenLine className="w-5 h-5" />,
-  },
-  {
-    value: "contributor" as UserRole,
-    label: "Contributor / Editor",
-    description: "Give feedback and suggest edits on others' work",
-    icon: <Users className="w-5 h-5" />,
-  },
-  {
-    value: "both" as UserRole,
-    label: "Both",
-    description: "Write your own projects and collaborate on others'",
-    icon: <Layers className="w-5 h-5" />,
-  },
-];
 
 const GENRES = [
   "Film & TV Script", "Long-form Fiction", "Non-fiction", "Short Story",
@@ -201,11 +181,10 @@ export function AuthModal() {
 
   if (isLoading || !authModalOpen) return null;
 
-  // Roles that need the interests step (step 2)
-  const hasInterestsStep = suRole === "contributor" || suRole === "both";
-  // Credentials is always the last step — step 2 for authors, step 3 for contributor/both
-  const credentialsStep: 2 | 3 = hasInterestsStep ? 3 : 2;
-  const totalSteps = hasInterestsStep ? 3 : 2;
+  // Everyone follows the same 2-step flow: basic info → profile/credentials
+  const hasInterestsStep = false;
+  const credentialsStep: 2 | 3 = 2;
+  const totalSteps = 2;
 
   const switchMode = (m: "signin" | "signup") => {
     setMode(m);
@@ -491,42 +470,13 @@ export function AuthModal() {
                       <p className="text-xs text-muted-foreground mt-1 ml-1">Minimum 8 characters</p>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2 ml-1">I want to join as</label>
-                      <div className="space-y-2">
-                        {ROLE_OPTIONS.map((r) => (
-                          <button
-                            key={r.value}
-                            type="button"
-                            onClick={() => setSuRole(r.value)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all ${
-                              suRole === r.value
-                                ? "border-primary bg-primary/8 text-foreground"
-                                : "border-input bg-background/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                            }`}
-                          >
-                            <div className={`p-1.5 rounded-lg transition-colors ${suRole === r.value ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                              {r.icon}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-sm text-foreground">{r.label}</p>
-                              <p className="text-xs text-muted-foreground">{r.description}</p>
-                            </div>
-                            <div className={`w-4 h-4 rounded-full border-2 shrink-0 transition-colors flex items-center justify-center ${suRole === r.value ? "border-primary bg-primary" : "border-input"}`}>
-                              {suRole === r.value && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
                     <Button
                       type="submit"
                       className="w-full mt-2 text-lg h-14"
                       disabled={!suName || !suEmail || !suPassword}
                     >
                       <span className="flex items-center gap-2">
-                        {hasInterestsStep ? "Next: Your Interests" : "Next: Your Credentials"}
+                        Continue
                         <ChevronRight className="w-4 h-4" />
                       </span>
                     </Button>

@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import {
-  Check, Zap, ArrowLeft, ArrowRight, Shield, Users, BookText,
-  Award, Star, Crown,
+  Check, Zap, ArrowLeft, ArrowRight, Shield, BookText,
+  Star, Crown,
 } from "lucide-react";
 
 const inView = (delay = 0) => ({
@@ -38,32 +38,18 @@ const PRO_FEATURES = [
   { text: "Early access to new features" },
 ];
 
-const CONTRIBUTOR_FEATURES = [
-  { text: "Contribute to unlimited projects" },
-  { text: "Build your reputation & earn achievements" },
-  { text: "Public contributor profile" },
-  { text: "Contribution certificates" },
-  { text: "Apply to any open pitch" },
-  { text: "Direct messaging with authors" },
-  { text: "Always free — no upgrade path needed" },
-];
-
 const FAQS = [
   {
-    q: "Can I try authoring before deciding?",
-    a: "Yes. Every account gets one free project with the full feature set — no credit card required. You only need Pro when you want to run a second project simultaneously.",
+    q: "What does Free include?",
+    a: "Everything you need to get started — one active project with the full collaboration toolkit, IP protection, contributor agreements, SHA-256 fingerprinting, contribution certificates, EPUB & DOCX export, Pitches board access, and direct messaging. No credit card required.",
   },
   {
     q: "What happens to my project if I don't upgrade?",
-    a: "Nothing. Your existing project remains fully active. You just can't create a new one until you either upgrade or finish and archive the current project.",
+    a: "Nothing. Your existing project stays fully active. You simply can't open a second one until you upgrade to Pro or archive the current project.",
   },
   {
-    q: "Are contributors really free forever?",
-    a: "Yes, completely. Contributing to projects, building your reputation, earning achievements, downloading certificates — all of it is free with no restrictions.",
-  },
-  {
-    q: "What if I'm both an author and a contributor?",
-    a: "You get one free project as an author and unlimited contributor access. Pro unlocks unlimited authored projects — your contributor activity is never restricted.",
+    q: "Can I contribute to other people's projects on Free?",
+    a: "Yes, absolutely. Collaborating on others' projects — leaving suggestions, building your reputation, earning achievements, downloading certificates — is included in Free with no restrictions.",
   },
   {
     q: "When will payments be available?",
@@ -114,7 +100,7 @@ export default function Pricing() {
             <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#E8B84B] mb-4">Simple, honest pricing</p>
             <div className="border-t border-[#F9F6EE]/20 w-24 mx-auto mb-6" />
             <h1 className="font-serif font-bold text-[clamp(2.4rem,6vw,4.5rem)] text-[#F9F6EE] leading-tight mb-6">
-              Free for contributors.<br />Pro for prolific authors.
+              Free to start.<br />Pro when you're ready.
             </h1>
             <div className="border-t border-[#F9F6EE]/20 w-24 mx-auto mb-6" />
             <p className="font-serif italic text-[#F9F6EE]/65 text-lg max-w-2xl mx-auto leading-relaxed">
@@ -127,17 +113,17 @@ export default function Pricing() {
       {/* ── PLANS ── */}
       <section className="py-16 px-6 md:px-14">
         <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-0 border-2 border-[#1A1614]">
+          <div className="grid md:grid-cols-2 gap-0 border-2 border-[#1A1614]">
 
-            {/* Free author */}
-            <motion.div {...inView(0)} className="p-8 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1614]">
+            {/* Free */}
+            <motion.div {...inView(0)} className="p-8 md:p-10 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1614]">
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
                   <BookText className="w-4 h-4 text-[#7A6B5E]" />
-                  <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#7A6B5E]">Author · Free</p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#7A6B5E]">Free</p>
                 </div>
-                <p className="font-serif font-bold text-4xl text-[#1A1614]">£0</p>
-                <p className="text-sm text-[#7A6B5E] mt-1">Forever. No credit card.</p>
+                <p className="font-serif font-bold text-5xl text-[#1A1614]">£0</p>
+                <p className="text-sm text-[#7A6B5E] mt-2">Forever. No credit card. One project, the full platform.</p>
               </div>
               <ThickRule className="mb-6" />
               <ul className="space-y-3 mb-8">
@@ -157,7 +143,7 @@ export default function Pricing() {
             </motion.div>
 
             {/* Pro */}
-            <motion.div {...inView(0.08)} className="p-8 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1614] bg-[#E8B84B]/8 relative">
+            <motion.div {...inView(0.08)} className="p-8 md:p-10 bg-[#E8B84B]/8 relative">
               <div className="absolute top-0 left-0 right-0 flex justify-center -translate-y-1/2">
                 <span className="bg-[#E8B84B] text-[#1A1614] px-4 py-1 text-[10px] uppercase tracking-[0.18em] font-bold border-2 border-[#1A1614]">
                   Most popular
@@ -166,10 +152,10 @@ export default function Pricing() {
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
                   <Zap className="w-4 h-4 text-[#E8B84B]" />
-                  <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#7A5A00]">Author · Pro</p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#7A5A00]">Pro</p>
                 </div>
-                <p className="font-serif font-bold text-4xl text-[#1A1614]">£5<span className="text-lg font-sans font-normal text-[#7A6B5E]">/mo</span></p>
-                <p className="text-sm text-[#7A6B5E] mt-1">or £50/year — save £10</p>
+                <p className="font-serif font-bold text-5xl text-[#1A1614]">£5<span className="text-xl font-sans font-normal text-[#7A6B5E]">/mo</span></p>
+                <p className="text-sm text-[#7A6B5E] mt-2">or £50/year — save £10. Unlimited projects, priority listing.</p>
               </div>
               <ThickRule className="mb-6" />
               <ul className="space-y-3 mb-8">
@@ -189,33 +175,6 @@ export default function Pricing() {
               </button>
               <p className="text-center text-[10px] text-[#7A6B5E] mt-2">We'll notify you when payments go live.</p>
             </motion.div>
-
-            {/* Contributor */}
-            <motion.div {...inView(0.16)} className="p-8 bg-[#1A1614]">
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <Users className="w-4 h-4 text-[#E8B84B]" />
-                  <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#E8B84B]">Contributor</p>
-                </div>
-                <p className="font-serif font-bold text-4xl text-[#F9F6EE]">Free</p>
-                <p className="text-sm text-[#F9F6EE]/50 mt-1">Always. No exceptions.</p>
-              </div>
-              <div className="border-t-2 border-[#F9F6EE]/20 mb-6" />
-              <ul className="space-y-3 mb-8">
-                {CONTRIBUTOR_FEATURES.map(f => (
-                  <li key={f.text} className="flex items-start gap-2.5 text-sm text-[#F9F6EE]/65">
-                    <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-[#E8B84B]" />
-                    {f.text}
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={openAuthModal}
-                className="w-full py-2.5 border-2 border-[#E8B84B] text-[#E8B84B] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors"
-              >
-                {user ? "Your current access" : "Join as contributor"}
-              </button>
-            </motion.div>
           </div>
         </div>
       </section>
@@ -228,11 +187,10 @@ export default function Pricing() {
             <ThickRule className="mb-2" />
             <h2 className="font-serif font-bold text-3xl md:text-4xl text-[#1A1614] mt-4">Why not just free everything?</h2>
           </motion.div>
-          <div className="grid md:grid-cols-3 gap-0 border-2 border-[#1A1614]">
+          <div className="grid md:grid-cols-2 gap-0 border-2 border-[#1A1614]">
             {[
               { icon: Shield, title: "Quality over volume", body: "A platform where anyone can open unlimited simultaneous projects is one where most projects are abandoned. One free project creates focus. The work gets done." },
-              { icon: Award, title: "Contributors first", body: "Contributors should never have to pay to participate. The reputation system, certificates, and matching tools are free because that is where the real editorial work happens." },
-              { icon: Star, title: "Pro is for prolific authors", body: "If you are running three projects at once, you are getting significant value from the platform. £5 a month is the cost of one paperback. We think that is fair." },
+              { icon: Star, title: "Pro is for prolific writers", body: "If you are running three projects at once, you are getting significant value from the platform. £5 a month is the cost of one paperback. We think that is fair." },
             ].map((item, i) => (
               <motion.div key={item.title} {...inView(i * 0.1)} className="p-7 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1614] last:border-0">
                 <div className="w-9 h-9 bg-[#E8B84B]/20 flex items-center justify-center mb-4">

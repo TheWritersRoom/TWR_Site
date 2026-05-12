@@ -43,7 +43,7 @@ const FOR_CONTRIBUTORS = [
 ];
 
 const STEPS = [
-  { n: "I", title: "Create or join", desc: "Sign up as an Author, a Contributor, or both. Set your genre profile in under a minute." },
+  { n: "I", title: "Create or join", desc: "Sign up free in under a minute. Write your own projects, collaborate on others', or do both — your account covers everything." },
   { n: "II", title: "Start or upload your manuscript", desc: "Write from scratch inside Writers Room, or upload a book or script in any format. Either way it lands in a clean, readable view." },
   { n: "III", title: "Collaborate", desc: "Invited collaborators highlight passages and propose edits. Authors decide what to keep." },
   { n: "IV", title: "Publish & collect feedback", desc: "Publish within Writers Room to reach readers directly, or export a KDP-ready file for Amazon, Apple Books, Kobo, and more. Collect feedback either way." },
