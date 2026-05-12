@@ -7,7 +7,7 @@ import {
   Search, Users, BookText, Shield, ShieldOff, Activity,
   UserPlus, Globe, MessageSquare, TrendingUp, ChevronDown,
   ChevronUp, Trash2, X, Check, BarChart2, PenTool, Star,
-  AlertTriangle, RefreshCw,
+  AlertTriangle, RefreshCw, Zap,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ type AdminUser = {
   role: string;
   bio: string | null;
   isAdmin: boolean;
+  subscriptionTier: string;
   createdAt: string;
   projectCount: number;
   collaborationCount: number;
@@ -153,12 +154,14 @@ function DeleteModal({ user, onConfirm, onCancel, isPending }: {
 
 // ── User row with expandable detail ───────────────────────────────────────
 
-function UserRow({ u, isSelf, onToggleAdmin, onDelete, togglePending }: {
+function UserRow({ u, isSelf, onToggleAdmin, onToggleTier, onDelete, togglePending, tierPending }: {
   u: AdminUser;
   isSelf: boolean;
   onToggleAdmin: () => void;
+  onToggleTier: () => void;
   onDelete: () => void;
   togglePending: boolean;
+  tierPending: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const acceptRate = u.suggestionCount > 0
@@ -192,6 +195,11 @@ function UserRow({ u, isSelf, onToggleAdmin, onDelete, togglePending }: {
           {u.isAdmin && (
             <span className="ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.1em] font-bold border bg-[#E8B84B]/20 text-[#7A5A00] border-[#E8B84B]/40">
               <Shield className="w-2.5 h-2.5" />Admin
+            </span>
+          )}
+          {u.subscriptionTier === "pro" && (
+            <span className="ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.1em] font-bold border bg-violet-50 text-violet-700 border-violet-200">
+              <Zap className="w-2.5 h-2.5" />Pro
             </span>
           )}
         </td>
@@ -249,7 +257,7 @@ function UserRow({ u, isSelf, onToggleAdmin, onDelete, togglePending }: {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2 items-start">
+                  <div className="flex gap-2 items-start flex-wrap">
                     <Button
                       variant="outline"
                       size="sm"
@@ -267,6 +275,24 @@ function UserRow({ u, isSelf, onToggleAdmin, onDelete, togglePending }: {
                         : u.isAdmin
                           ? <><ShieldOff className="w-3 h-3" />Revoke admin</>
                           : <><Shield className="w-3 h-3" />Grant admin</>
+                      }
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={tierPending}
+                      onClick={e => { e.stopPropagation(); onToggleTier(); }}
+                      className={`h-8 px-3 text-[10px] uppercase tracking-[0.1em] font-bold rounded-none border gap-1.5 ${
+                        u.subscriptionTier === "pro"
+                          ? "border-violet-200 text-violet-600 hover:bg-violet-50"
+                          : "border-violet-300 text-violet-700 hover:bg-violet-50"
+                      } disabled:opacity-40`}
+                    >
+                      {tierPending
+                        ? <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                        : u.subscriptionTier === "pro"
+                          ? <><Zap className="w-3 h-3" />Revoke pro</>
+                          : <><Zap className="w-3 h-3" />Grant pro</>
                       }
                     </Button>
                     {!isSelf && (
@@ -352,6 +378,32 @@ function UsersTab() {
     },
   });
 
+  const setTier = useMutation({
+    mutationFn: async ({ id, subscriptionTier }: { id: number; subscriptionTier: string }) => {
+      const r = await fetch(`/api/admin/users/${id}/tier`, {
+        method: "PATCH", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscriptionTier }),
+      });
+      if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error ?? `Request failed (${r.status})`); }
+      return r.json() as Promise<{ id: number; name: string; subscriptionTier: string }>;
+    },
+    onSuccess: (updated) => {
+      queryClient.setQueryData<AdminUser[]>(["/api/admin/users"], prev =>
+        prev ? prev.map(u => u.id === updated.id ? { ...u, subscriptionTier: updated.subscriptionTier } : u) : prev
+      );
+      toast({
+        title: updated.subscriptionTier === "pro" ? "Pro granted" : "Pro revoked",
+        description: updated.subscriptionTier === "pro"
+          ? `Account upgraded to pro.`
+          : `Account returned to free tier.`,
+      });
+    },
+    onError: () => {
+      toast({ title: "Failed to update tier", variant: "destructive" });
+    },
+  });
+
   const filtered = users.filter(u => {
     const q = query.toLowerCase();
     const matchesQ = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
@@ -431,8 +483,10 @@ function UsersTab() {
                     u={u}
                     isSelf={u.id === currentUser?.id}
                     onToggleAdmin={() => setPendingAction({ id: u.id, name: u.name, grantAdmin: !u.isAdmin })}
+                    onToggleTier={() => setTier.mutate({ id: u.id, subscriptionTier: u.subscriptionTier === "pro" ? "free" : "pro" })}
                     onDelete={() => setDeleteTarget(u)}
                     togglePending={toggleAdmin.isPending && toggleAdmin.variables?.id === u.id}
+                    tierPending={setTier.isPending && setTier.variables?.id === u.id}
                   />
                 ))
               )}

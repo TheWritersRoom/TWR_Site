@@ -78,6 +78,7 @@ router.get("/admin/users", requireAdmin, async (_req, res): Promise<void> => {
       role: usersTable.role,
       bio: usersTable.bio,
       isAdmin: usersTable.isAdmin,
+      subscriptionTier: usersTable.subscriptionTier,
       createdAt: usersTable.createdAt,
     })
     .from(usersTable)
@@ -113,6 +114,26 @@ router.get("/admin/users", requireAdmin, async (_req, res): Promise<void> => {
   }));
 
   res.json(result);
+});
+
+// ── Set subscription tier ────────────────────────────────────────────────────
+
+router.patch("/admin/users/:id/tier", requireAdmin, async (req, res): Promise<void> => {
+  const targetId = parseInt(req.params.id, 10);
+  if (isNaN(targetId)) { res.status(400).json({ error: "Invalid user id" }); return; }
+
+  const { subscriptionTier } = req.body;
+  if (!["free", "pro"].includes(subscriptionTier)) {
+    res.status(400).json({ error: "subscriptionTier must be 'free' or 'pro'" });
+    return;
+  }
+
+  const [updated] = await db.update(usersTable).set({ subscriptionTier })
+    .where(eq(usersTable.id, targetId))
+    .returning({ id: usersTable.id, name: usersTable.name, email: usersTable.email, subscriptionTier: usersTable.subscriptionTier });
+
+  if (!updated) { res.status(404).json({ error: "User not found" }); return; }
+  res.json(updated);
 });
 
 // ── Toggle admin ─────────────────────────────────────────────────────────────
