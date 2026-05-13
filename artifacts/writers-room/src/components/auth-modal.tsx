@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useFreeSlots } from "@/hooks/use-free-slots";
 import type { UserRole } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -148,6 +149,7 @@ type WorkEntry = { title: string; year: string; publisher: string };
 
 export function AuthModal() {
   const { register, signIn, isLoading, authModalOpen, closeAuthModal } = useAuth();
+  const freeSlots = useFreeSlots();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [error, setError] = useState("");
@@ -431,6 +433,17 @@ export function AuthModal() {
                   <div className="text-center mb-6">
                     <h1 className="text-3xl font-serif font-semibold text-foreground">Join Writers Room</h1>
                     <p className="text-muted-foreground mt-1 text-sm">Create your account to start collaborating.</p>
+                    {freeSlots !== null && freeSlots > 0 && (
+                      <div className="mt-3 inline-flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full">
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-400" />
+                        </span>
+                        <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wide">
+                          {freeSlots} free Pro {freeSlots === 1 ? "account" : "accounts"} left — you'll get Pro free
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <form onSubmit={handleSignUpStep1} className="space-y-4">

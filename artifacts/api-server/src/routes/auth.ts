@@ -4,6 +4,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { randomUUID } from "crypto";
 import { db, usersTable, authTokensTable, userSessionsTable, referralCodesTable, referredUsersTable } from "@workspace/db";
+import { sql } from "drizzle-orm";
 import { awardInk } from "../lib/ink";
 
 const scryptAsync = promisify(scrypt);
@@ -135,6 +136,14 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   const normalizedEmail = email.toLowerCase();
   const { referralCode } = req.body ?? {};
 
+  // Atomically claim a free Pro slot if any remain
+  const slotResult = await db.execute(
+    sql`UPDATE platform_settings SET value = (value::int - 1)::text
+        WHERE key = 'free_pro_slots' AND value::int > 0
+        RETURNING value::int AS remaining`
+  );
+  const claimedProSlot = (slotResult.rows?.length ?? 0) > 0;
+
   const [user] = await db
     .insert(usersTable)
     .values({
@@ -147,7 +156,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
       bio: typeof bio === "string" && bio.trim() ? bio.trim() : null,
       credentials: typeof credentials === "string" && credentials !== "{}" ? credentials : null,
       isAdmin: SEED_ADMIN_EMAILS.has(normalizedEmail),
-      subscriptionTier: SEED_PRO_EMAILS.has(normalizedEmail) ? "pro" : "free",
+      subscriptionTier: (SEED_PRO_EMAILS.has(normalizedEmail) || claimedProSlot) ? "pro" : "free",
     })
     .returning();
 

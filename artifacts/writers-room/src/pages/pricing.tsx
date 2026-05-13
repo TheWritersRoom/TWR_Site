@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useFreeSlots } from "@/hooks/use-free-slots";
 import {
   Check, Zap, ArrowLeft, ArrowRight, Shield, BookText,
   Star, Crown,
@@ -60,6 +61,7 @@ const FAQS = [
 export default function Pricing() {
   const [, navigate] = useLocation();
   const { user, openAuthModal } = useAuth();
+  const freeSlots = useFreeSlots();
 
   return (
     <div className="min-h-screen bg-[#F9F6EE] text-[#1A1614] overflow-x-hidden">
@@ -167,13 +169,26 @@ export default function Pricing() {
                 ))}
               </ul>
               <button
-                disabled
-                className="w-full py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Coming soon"
+                onClick={openAuthModal}
+                className="w-full py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors"
               >
-                Coming soon
+                {user ? "You're on Pro" : "Claim your free Pro account"}
               </button>
-              <p className="text-center text-[10px] text-[#7A6B5E] mt-2">We'll notify you when payments go live.</p>
+
+              {freeSlots !== null && freeSlots > 0 && (
+                <div className="mt-3 flex items-center justify-center gap-2">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E8B84B] opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#E8B84B]" />
+                  </span>
+                  <p className="text-[10px] text-[#7A5A00] font-bold uppercase tracking-[0.14em]">
+                    {freeSlots} of 300 free accounts remaining
+                  </p>
+                </div>
+              )}
+              {freeSlots === 0 && (
+                <p className="text-center text-[10px] text-[#7A6B5E] mt-2">Free Pro accounts fully claimed — paid plans coming soon.</p>
+              )}
             </motion.div>
           </div>
         </div>

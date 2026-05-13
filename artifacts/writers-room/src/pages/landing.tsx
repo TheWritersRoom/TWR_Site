@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
+import { useFreeSlots } from "@/hooks/use-free-slots";
 import { useLocation } from "wouter";
 import {
   Upload, Users, MessageSquare, BarChart2, Globe, Telescope,
@@ -64,6 +65,7 @@ export default function Landing() {
   const { openAuthModal } = useAuth();
   const [, navigate] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const freeSlots = useFreeSlots();
 
   const goTo = (path: string) => { setMenuOpen(false); navigate(path); };
 
@@ -174,6 +176,29 @@ export default function Landing() {
                 Join as contributor
               </button>
             </div>
+
+            {freeSlots !== null && freeSlots > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+                className="mt-6 inline-flex items-center gap-2.5 bg-[#1A1614]/80 backdrop-blur-sm px-5 py-2.5 cursor-pointer"
+                onClick={openAuthModal}
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E8B84B] opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E8B84B]" />
+                </span>
+                <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#E8B84B]">
+                  {freeSlots} free Pro {freeSlots === 1 ? "account" : "accounts"} remaining
+                </span>
+              </motion.div>
+            )}
+            {freeSlots === 0 && (
+              <p className="mt-5 text-[11px] uppercase tracking-[0.14em] text-[#1A1614]/50 font-semibold">
+                Free Pro accounts · Fully claimed
+              </p>
+            )}
           </motion.div>
 
           {/* Bottom teal accent */}

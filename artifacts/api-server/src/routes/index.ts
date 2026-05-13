@@ -18,6 +18,7 @@ import reputationRouter from "./reputation";
 import plannersRouter from "./planners";
 import inkRouter from "./ink";
 import referralsRouter from "./referrals";
+import settingsRouter from "./settings";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use(reputationRouter);
 router.use(plannersRouter);
 router.use(inkRouter);
 router.use(referralsRouter);
+router.use(settingsRouter);
 
 export default router;
