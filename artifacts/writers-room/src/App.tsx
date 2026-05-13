@@ -19,6 +19,7 @@ import PublicProfile from "@/pages/public-profile";
 import NotFound from "@/pages/not-found";
 import HowItWorks from "@/pages/how-it-works";
 import Pricing from "@/pages/pricing";
+import PlannerPage from "@/pages/planner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,6 +45,7 @@ function AuthenticatedRouter() {
         <Route path="/pitches" component={Pitches} />
         <Route path="/pitch/:id" component={PitchDetail} />
         <Route path="/admin" component={Admin} />
+        <Route path="/planner/:id" component={PlannerPage} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

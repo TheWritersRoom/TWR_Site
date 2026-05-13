@@ -15,6 +15,7 @@ import bookmarksRouter from "./bookmarks";
 import versionsRouter from "./versions";
 import ipProtectionRouter from "./ip-protection";
 import reputationRouter from "./reputation";
+import plannersRouter from "./planners";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(suggestionsRouter);
 router.use(exportRouter);
 router.use(adminRouter);
 router.use(reputationRouter);
+router.use(plannersRouter);
 
 export default router;

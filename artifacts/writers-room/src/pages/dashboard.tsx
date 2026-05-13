@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, BookText, FileText, MessageSquareQuote, Calendar,
   Upload, PenLine, X, FileUp, Loader2, ChevronRight, AlignLeft, Check,
-  Shield, Users as UsersIcon, Zap, Trash2,
+  Shield, Users as UsersIcon, Zap, Trash2, LayoutGrid, Film, BookOpen, ArrowRight,
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/use-auth";
@@ -127,6 +127,41 @@ export default function Dashboard() {
     enabled: !!user,
     queryFn: () => fetch(`/api/projects?userId=${user!.id}`).then((r) => r.json()),
   });
+
+  type PlannerSummary = {
+    id: number; title: string; mediaType: string;
+    cardCount: number; completeCount: number; updatedAt: string;
+  };
+  const { data: planners = [] } = useQuery<PlannerSummary[]>({
+    queryKey: ["/api/planners", user?.id],
+    enabled: !!user,
+    queryFn: () => fetch(`/api/planners?userId=${user!.id}`).then((r) => r.json()),
+  });
+
+  const [showNewPlanner, setShowNewPlanner] = useState(false);
+  const [newPlannerTitle, setNewPlannerTitle] = useState("");
+  const [newPlannerType, setNewPlannerType] = useState<"tv" | "book" | "serial" | "other">("tv");
+  const [creatingPlanner, setCreatingPlanner] = useState(false);
+
+  const createPlanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !newPlannerTitle.trim()) return;
+    setCreatingPlanner(true);
+    try {
+      const res = await fetch("/api/planners", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ownerId: user.id, title: newPlannerTitle.trim(), mediaType: newPlannerType }),
+      });
+      const planner = await res.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/planners", user?.id] });
+      setShowNewPlanner(false);
+      setNewPlannerTitle("");
+      navigate(`/planner/${planner.id}`);
+    } finally {
+      setCreatingPlanner(false);
+    }
+  };
 
   const createProject = useCreateProject();
   const [newTitle, setNewTitle] = useState("");
@@ -754,6 +789,129 @@ export default function Dashboard() {
           ))}
         </div>
       )}
+
+      {/* ── Structure Planners section ── */}
+      <section className="mt-16">
+        <div className="flex items-end justify-between mb-5">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">Structure Planners</p>
+            <div className="border-t-2 border-[#1A1614] mb-3" />
+            <h2 className="text-2xl font-serif font-bold text-[#1A1614]">Plan your structure</h2>
+            <p className="text-[#7A6B5E] text-sm mt-0.5">Map out episodes, chapters, or arcs before you write.</p>
+          </div>
+          <button
+            onClick={() => setShowNewPlanner(true)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors shrink-0"
+          >
+            <Plus className="w-4 h-4" /> New Planner
+          </button>
+        </div>
+
+        <AnimatePresence>
+          {showNewPlanner && (
+            <motion.form
+              key="new-planner"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              onSubmit={createPlanner}
+              className="mb-6 bg-white border-2 border-[#1A1614] px-6 py-5 flex flex-col sm:flex-row items-end gap-4"
+            >
+              <div className="flex-1 w-full">
+                <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-1.5">Planner title</label>
+                <input
+                  autoFocus
+                  value={newPlannerTitle}
+                  onChange={(e) => setNewPlannerTitle(e.target.value)}
+                  placeholder="e.g. Dark Waters — Series 1"
+                  className="w-full px-4 py-2.5 bg-white border-2 border-[#1A1614]/20 focus:border-[#1A1614] outline-none text-sm font-medium text-[#1A1614]"
+                />
+              </div>
+              <div className="w-full sm:w-44">
+                <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-1.5">Type</label>
+                <select
+                  value={newPlannerType}
+                  onChange={(e) => setNewPlannerType(e.target.value as any)}
+                  className="w-full px-3 py-2.5 bg-white border-2 border-[#1A1614]/20 focus:border-[#1A1614] outline-none text-sm text-[#1A1614]"
+                >
+                  <option value="tv">TV Series</option>
+                  <option value="book">Novel / Long-form</option>
+                  <option value="serial">Serial Fiction</option>
+                  <option value="other">Blank</option>
+                </select>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => { setShowNewPlanner(false); setNewPlannerTitle(""); }}
+                  className="px-4 py-2.5 border border-[#1A1614]/25 text-[#7A6B5E] text-[11px] uppercase tracking-[0.12em] font-bold hover:border-[#1A1614] hover:text-[#1A1614] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingPlanner || !newPlannerTitle.trim()}
+                  className="px-5 py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.12em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors disabled:opacity-40"
+                >
+                  {creatingPlanner ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create"}
+                </button>
+              </div>
+            </motion.form>
+          )}
+        </AnimatePresence>
+
+        {planners.length === 0 && !showNewPlanner ? (
+          <div className="border-2 border-dashed border-[#1A1614]/15 py-14 px-6 flex flex-col items-center gap-3 text-center">
+            <LayoutGrid className="w-8 h-8 text-[#7A6B5E]/40" />
+            <p className="text-[#1A1614] font-serif font-bold text-lg">No planners yet</p>
+            <p className="text-sm text-[#7A6B5E] max-w-sm">
+              Use a Structure Planner to map out your TV series, novel chapters, or serial arcs — episode by episode, card by card.
+            </p>
+            <button
+              onClick={() => setShowNewPlanner(true)}
+              className="mt-2 flex items-center gap-2 px-5 py-2 border-2 border-[#1A1614] text-[11px] uppercase tracking-[0.14em] font-bold text-[#1A1614] hover:bg-[#1A1614] hover:text-[#F9F6EE] transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" /> Create your first planner
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {planners.map((p) => {
+              const pct = p.cardCount ? Math.round((p.completeCount / p.cardCount) * 100) : 0;
+              const MediaIcon = p.mediaType === "book" ? BookOpen : Film;
+              return (
+                <Link key={p.id} href={`/planner/${p.id}`}>
+                  <div className="bg-white border border-[#1A1614]/15 px-6 py-4 flex items-center gap-5 hover:border-[#E8B84B] hover:shadow-sm transition-all cursor-pointer group">
+                    <div className="p-2.5 border border-[#1A1614]/15 text-[#7A6B5E] group-hover:bg-[#E8B84B] group-hover:border-[#E8B84B] group-hover:text-[#1A1614] transition-colors shrink-0">
+                      <LayoutGrid className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-serif font-bold text-base text-[#1A1614] group-hover:text-[#E8B84B] transition-colors truncate" style={{ fontFamily: "'Playfair Display', serif" }}>
+                          {p.title}
+                        </h3>
+                        <span className="shrink-0 flex items-center gap-1 text-[10px] text-[#7A6B5E] border border-[#1A1614]/10 px-1.5 py-0.5 rounded-full">
+                          <MediaIcon className="w-2.5 h-2.5" />
+                          <span className="capitalize">{p.mediaType === "tv" ? "TV" : p.mediaType}</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="h-1 bg-[#1A1614]/10 rounded-full overflow-hidden w-28">
+                          <div className="h-full bg-[#E8B84B] rounded-full" style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="text-[10px] text-[#7A6B5E]">
+                          {p.completeCount}/{p.cardCount} complete · {p.cardCount} card{p.cardCount !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-[#7A6B5E]/30 group-hover:text-[#1A1614] group-hover:translate-x-0.5 transition-all shrink-0" />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
