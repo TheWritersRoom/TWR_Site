@@ -66,3 +66,9 @@ id = "7cpekM48oYdelg9-nuoZw"
 uri = "file://writers-room-market.pdf"
 type = "pdf"
 title = "Writers Room — Investor Briefing"
+
+[[outputs]]
+id = "rGtxh75vs8IJrnyOpvbfH"
+uri = "file://writers-room-onepager.pdf"
+type = "pdf"
+title = "Writers Room — Investor One-Pager"
