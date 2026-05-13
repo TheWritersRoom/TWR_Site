@@ -714,6 +714,18 @@ function TeamPanel({
 
       <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-5">
 
+        {/* Find collaborators link */}
+        {isOwner && (
+          <Link
+            href="/contributors"
+            className="flex items-center gap-2 px-4 py-3 bg-[#E8B84B]/10 border border-[#E8B84B]/40 hover:bg-[#E8B84B]/20 transition-colors text-sm font-semibold text-[#1A1614]"
+          >
+            <Users className="w-4 h-4 text-[#E8B84B]" />
+            Find collaborators for this planner
+            <span className="ml-auto text-[10px] uppercase tracking-[0.12em] font-bold text-[#7A6B5E]">Browse →</span>
+          </Link>
+        )}
+
         {/* Add contributor form */}
         {isOwner && (
           <div className="border border-[#1A1614]/12 bg-white p-4 flex flex-col gap-3">
