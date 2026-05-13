@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
 import { desc, eq, isNotNull, sql, count } from "drizzle-orm";
-import { db, usersTable, projectsTable, feedbackTable, collaboratorsTable, suggestionsTable } from "@workspace/db";
+import { db, usersTable, projectsTable, feedbackTable, collaboratorsTable, suggestionsTable, referredUsersTable } from "@workspace/db";
 import { requireAdmin } from "../middleware/require-admin";
+import { awardInk } from "../lib/ink";
 
 const router: IRouter = Router();
 
@@ -133,6 +134,21 @@ router.patch("/admin/users/:id/tier", requireAdmin, async (req, res): Promise<vo
     .returning({ id: usersTable.id, name: usersTable.name, email: usersTable.email, subscriptionTier: usersTable.subscriptionTier });
 
   if (!updated) { res.status(404).json({ error: "User not found" }); return; }
+
+  // If upgrading to Pro, award the Pro ink bonus to whoever referred this user
+  if (subscriptionTier === "pro") {
+    const [referral] = await db
+      .select()
+      .from(referredUsersTable)
+      .where(eq(referredUsersTable.referredId, targetId));
+    if (referral && !referral.proInkAwarded) {
+      await awardInk(referral.referrerId, 50, "referral_pro_upgrade").catch(() => {});
+      await db.update(referredUsersTable)
+        .set({ proInkAwarded: true })
+        .where(eq(referredUsersTable.id, referral.id));
+    }
+  }
+
   res.json(updated);
 });
 

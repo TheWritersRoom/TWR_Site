@@ -3,7 +3,8 @@ import { eq, lt } from "drizzle-orm";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { randomUUID } from "crypto";
-import { db, usersTable, authTokensTable, userSessionsTable } from "@workspace/db";
+import { db, usersTable, authTokensTable, userSessionsTable, referralCodesTable, referredUsersTable } from "@workspace/db";
+import { awardInk } from "../lib/ink";
 
 const scryptAsync = promisify(scrypt);
 const router: IRouter = Router();
@@ -132,6 +133,8 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   }
 
   const normalizedEmail = email.toLowerCase();
+  const { referralCode } = req.body ?? {};
+
   const [user] = await db
     .insert(usersTable)
     .values({
@@ -147,6 +150,23 @@ router.post("/auth/register", async (req, res): Promise<void> => {
       subscriptionTier: SEED_PRO_EMAILS.has(normalizedEmail) ? "pro" : "free",
     })
     .returning();
+
+  // Handle referral: award ink to referrer on signup
+  if (referralCode && typeof referralCode === "string") {
+    const [codeRecord] = await db
+      .select()
+      .from(referralCodesTable)
+      .where(eq(referralCodesTable.code, referralCode.toUpperCase().trim()));
+    if (codeRecord && codeRecord.userId !== user.id) {
+      await db.insert(referredUsersTable).values({
+        referrerId: codeRecord.userId,
+        referredId: user.id,
+        signupInkAwarded: true,
+        proInkAwarded: false,
+      }).onConflictDoNothing();
+      await awardInk(codeRecord.userId, 15, "referral_signup").catch(() => {});
+    }
+  }
 
   await createSession(user.id, res);
   res.status(201).json(safeUser(user));

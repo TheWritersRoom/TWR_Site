@@ -265,6 +265,14 @@ router.patch("/projects/:id/join-requests/:requestId", async (req, res): Promise
     }
     // Add as collaborator
     await db.insert(collaboratorsTable).values({ projectId, userId: joinReq.userId }).onConflictDoNothing();
+
+    // Award ink to the project owner for accepting a join request
+    const [invitee] = await db.select({ subscriptionTier: usersTable.subscriptionTier })
+      .from(usersTable).where(eq(usersTable.id, joinReq.userId));
+    await awardInk(ownerId, 5, "invite_accepted", projectId).catch(() => {});
+    if (invitee?.subscriptionTier === "pro") {
+      await awardInk(ownerId, 15, "invite_accepted_pro_bonus", projectId).catch(() => {});
+    }
   }
 
   const [updated] = await db

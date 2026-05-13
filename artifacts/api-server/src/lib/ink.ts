@@ -5,7 +5,11 @@ export type InkReason =
   | "suggestion_accepted"
   | "collaborator_added"
   | "published_credit"
-  | "historical_seed";
+  | "historical_seed"
+  | "referral_signup"
+  | "referral_pro_upgrade"
+  | "invite_accepted"
+  | "invite_accepted_pro_bonus";
 
 export async function awardInk(
   userId: number,

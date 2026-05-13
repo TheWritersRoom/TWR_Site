@@ -424,6 +424,10 @@ export default function HowItWorks() {
                   { action: "Suggestion accepted", amount: "+10", note: "When an author accepts your edit" },
                   { action: "Joined as collaborator", amount: "+5", note: "Each new project you join" },
                   { action: "Published project credit", amount: "+25", note: "When a project you worked on is published" },
+                  { action: "Referral — new signup", amount: "+15", note: "Someone joins using your referral code" },
+                  { action: "Referral — Pro upgrade", amount: "+50", note: "A referred member upgrades to a paid plan" },
+                  { action: "Collaboration invite accepted", amount: "+5", note: "A collaborator you invite joins your project" },
+                  { action: "Pro collaborator bonus", amount: "+15", note: "Bonus when the invited collaborator is a Pro member" },
                 ].map((row) => (
                   <div key={row.action} className="flex items-center justify-between gap-4 py-2.5 border-b border-[#1A1614]/15 last:border-0">
                     <div>

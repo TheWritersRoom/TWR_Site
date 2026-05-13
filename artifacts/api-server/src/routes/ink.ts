@@ -5,11 +5,15 @@ import { db, inkLedgerTable, projectsTable } from "@workspace/db";
 const router: IRouter = Router();
 
 const REASON_LABELS: Record<string, string> = {
-  suggestion_submitted: "Suggestion submitted",
-  suggestion_accepted:  "Suggestion accepted",
-  collaborator_added:   "Joined as collaborator",
-  published_credit:     "Published project credit",
-  historical_seed:      "Activity credit",
+  suggestion_submitted:      "Suggestion submitted",
+  suggestion_accepted:       "Suggestion accepted",
+  collaborator_added:        "Joined as collaborator",
+  published_credit:          "Published project credit",
+  historical_seed:           "Activity credit",
+  referral_signup:           "Referral — new member joined",
+  referral_pro_upgrade:      "Referral — member upgraded to Pro",
+  invite_accepted:           "Collaborator accepted your invitation",
+  invite_accepted_pro_bonus: "Pro collaborator bonus",
 };
 
 router.get("/users/:id/ink", async (req, res): Promise<void> => {

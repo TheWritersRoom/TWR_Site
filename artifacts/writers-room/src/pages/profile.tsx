@@ -593,6 +593,20 @@ export default function Profile() {
     queryFn: () => fetch(`/api/users/${user!.id}/ink`).then((r) => r.json()),
   });
 
+  const { data: referralData } = useQuery<{ code: string }>({
+    queryKey: ["/api/users", user?.id, "referral-code"],
+    enabled: !!user,
+    queryFn: () => fetch(`/api/users/${user!.id}/referral-code`).then((r) => r.json()),
+  });
+
+  const [codeCopied, setCodeCopied] = useState(false);
+  const copyCode = () => {
+    if (!referralData?.code) return;
+    navigator.clipboard.writeText(referralData.code);
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  };
+
   const markRead = useMutation({
     mutationFn: (id: number) =>
       fetch(`/api/messages/${id}/read`, { method: "PATCH" }).then((r) => r.json()),
@@ -915,6 +929,26 @@ export default function Profile() {
               </div>
             ) : (
               <p className="text-xs text-[#7A6B5E] italic">No Ink earned yet — submit suggestions and collaborate to start building your balance.</p>
+            )}
+
+            {referralData?.code && (
+              <div className="mt-5 pt-4 border-t border-[#1A1614]/10">
+                <p className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-2">Your referral code</p>
+                <p className="text-[11px] text-[#7A6B5E] mb-3">
+                  Share this code when someone signs up — you earn <span className="font-semibold text-[#E8B84B]">+15 Ink</span> on signup and <span className="font-semibold text-[#E8B84B]">+50 Ink</span> if they upgrade to Pro.
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-bold tracking-[0.2em] text-sm text-[#1A1614] bg-[#E8B84B]/15 border border-[#E8B84B]/40 px-3 py-1.5 select-all">
+                    {referralData.code}
+                  </span>
+                  <button
+                    onClick={copyCode}
+                    className="text-[10px] uppercase tracking-[0.15em] font-bold px-3 py-1.5 border border-[#1A1614]/20 text-[#7A6B5E] hover:border-[#E8B84B] hover:text-[#E8B84B] transition-colors"
+                  >
+                    {codeCopied ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>

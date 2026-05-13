@@ -17,6 +17,7 @@ import ipProtectionRouter from "./ip-protection";
 import reputationRouter from "./reputation";
 import plannersRouter from "./planners";
 import inkRouter from "./ink";
+import referralsRouter from "./referrals";
 
 const router: IRouter = Router();
 
@@ -38,5 +39,6 @@ router.use(adminRouter);
 router.use(reputationRouter);
 router.use(plannersRouter);
 router.use(inkRouter);
+router.use(referralsRouter);
 
 export default router;
