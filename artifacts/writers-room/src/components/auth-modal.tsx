@@ -73,7 +73,7 @@ export function AuthModal() {
   const [suName, setSuName] = useState("");
   const [suEmail, setSuEmail] = useState("");
   const [suPassword, setSuPassword] = useState("");
-  const [suRole, setSuRole] = useState<UserRole>("both");
+  const suRole = "both" as const;
   const [suGenres, setSuGenres] = useState<string[]>([]);
   const [suMedia, setSuMedia] = useState("");
 
@@ -659,69 +659,63 @@ export function AuthModal() {
                       </div>
                     </div>
 
-                    {/* Editing specialties — contributors/both only */}
-                    {(suRole === "contributor" || suRole === "both") && (
-                      <div>
-                        <label className="block text-sm font-semibold text-foreground mb-2">
-                          Editing specialties
-                          <span className="ml-1.5 text-xs font-normal text-muted-foreground">select all that apply</span>
-                        </label>
-                        <div className="flex flex-wrap gap-1.5">
-                          {EDITING_SPECIALTIES.map((s) => {
-                            const sel = suSpecialties.includes(s);
-                            return (
-                              <button
-                                key={s}
-                                type="button"
-                                onClick={() => setSuSpecialties((prev) => sel ? prev.filter((x) => x !== s) : [...prev, s])}
-                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${sel ? "bg-primary text-primary-foreground border-primary" : "bg-background border-input text-muted-foreground hover:border-primary/50 hover:text-foreground"}`}
-                              >
-                                {sel && <Check className="w-3 h-3" />}
-                                {s}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Experience level — contributors/both only */}
-                    {(suRole === "contributor" || suRole === "both") && (
-                      <div>
-                        <label className="block text-sm font-semibold text-foreground mb-2">
-                          Experience level
-                          <span className="ml-1.5 text-xs font-normal text-muted-foreground">optional</span>
-                        </label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {EXPERIENCE_LEVELS.map((lvl) => (
-                            <button
-                              key={lvl.value}
-                              type="button"
-                              onClick={() => setSuExperience(suExperience === lvl.value ? "" : lvl.value)}
-                              className={`px-3 py-2 rounded-xl text-left border-2 transition-all ${suExperience === lvl.value ? "border-primary bg-primary/8 text-foreground" : "border-input bg-background/50 text-muted-foreground hover:border-primary/40"}`}
-                            >
-                              <p className="text-xs font-bold">{lvl.label}</p>
-                              <p className="text-[11px] font-normal opacity-70">{lvl.desc}</p>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Available for new projects — contributors/both only */}
-                    {(suRole === "contributor" || suRole === "both") && (
-                      <label className="flex items-center justify-between gap-4 cursor-pointer group">
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">Available for new projects</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">Shows authors you're open to collaboration requests</p>
-                        </div>
-                        <button type="button" onClick={() => setSuAvailableForWork((v) => !v)} aria-label="Toggle available">
-                          {suAvailableForWork
-                            ? <ToggleRight className="w-9 h-9 text-emerald-500" />
-                            : <ToggleLeft className="w-9 h-9 text-muted-foreground/40" />}
-                        </button>
+                    {/* Editing specialties */}
+                    <div>
+                      <label className="block text-sm font-semibold text-foreground mb-2">
+                        Editing specialties
+                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">select all that apply</span>
                       </label>
-                    )}
+                      <div className="flex flex-wrap gap-1.5">
+                        {EDITING_SPECIALTIES.map((s) => {
+                          const sel = suSpecialties.includes(s);
+                          return (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => setSuSpecialties((prev) => sel ? prev.filter((x) => x !== s) : [...prev, s])}
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${sel ? "bg-primary text-primary-foreground border-primary" : "bg-background border-input text-muted-foreground hover:border-primary/50 hover:text-foreground"}`}
+                            >
+                              {sel && <Check className="w-3 h-3" />}
+                              {s}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Experience level */}
+                    <div>
+                      <label className="block text-sm font-semibold text-foreground mb-2">
+                        Experience level
+                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">optional</span>
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {EXPERIENCE_LEVELS.map((lvl) => (
+                          <button
+                            key={lvl.value}
+                            type="button"
+                            onClick={() => setSuExperience(suExperience === lvl.value ? "" : lvl.value)}
+                            className={`px-3 py-2 rounded-xl text-left border-2 transition-all ${suExperience === lvl.value ? "border-primary bg-primary/8 text-foreground" : "border-input bg-background/50 text-muted-foreground hover:border-primary/40"}`}
+                          >
+                            <p className="text-xs font-bold">{lvl.label}</p>
+                            <p className="text-[11px] font-normal opacity-70">{lvl.desc}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Available for new projects */}
+                    <label className="flex items-center justify-between gap-4 cursor-pointer group">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">Available for new projects</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Shows authors you're open to collaboration requests</p>
+                      </div>
+                      <button type="button" onClick={() => setSuAvailableForWork((v) => !v)} aria-label="Toggle available">
+                        {suAvailableForWork
+                          ? <ToggleRight className="w-9 h-9 text-emerald-500" />
+                          : <ToggleLeft className="w-9 h-9 text-muted-foreground/40" />}
+                      </button>
+                    </label>
 
                     <Button
                       type="button"

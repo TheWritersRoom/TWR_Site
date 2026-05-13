@@ -70,10 +70,9 @@ type ActivityEvent = {
 
 // ── Design helpers ─────────────────────────────────────────────────────────
 
-const ROLE_BADGE: Record<string, string> = {
-  author:      "bg-[#E8B84B]/20 text-[#7A5A00] border-[#E8B84B]/50",
-  contributor: "bg-[#F7C5D5]/30 text-[#8B2A50] border-[#F7C5D5]/60",
-  both:        "bg-[#D4E8B0]/30 text-[#3A6020] border-[#D4E8B0]/60",
+const TIER_BADGE: Record<string, string> = {
+  pro:  "bg-violet-50 text-violet-700 border-violet-200",
+  free: "bg-[#1A1614]/5 text-[#7A6B5E] border-[#1A1614]/15",
 };
 
 const EVENT_META = {
@@ -187,19 +186,15 @@ function UserRow({ u, isSelf, onToggleAdmin, onToggleTier, onDelete, togglePendi
           </div>
         </td>
 
-        {/* Role */}
+        {/* Tier */}
         <td className="py-3 px-4">
-          <span className={`inline-block px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] font-bold border ${ROLE_BADGE[u.role] ?? "bg-[#1A1614]/5 text-[#7A6B5E] border-[#1A1614]/15"}`}>
-            {u.role}
+          <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] font-bold border ${TIER_BADGE[u.subscriptionTier] ?? TIER_BADGE.free}`}>
+            {u.subscriptionTier === "pro" && <Zap className="w-2.5 h-2.5" />}
+            {u.subscriptionTier}
           </span>
           {u.isAdmin && (
             <span className="ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.1em] font-bold border bg-[#E8B84B]/20 text-[#7A5A00] border-[#E8B84B]/40">
               <Shield className="w-2.5 h-2.5" />Admin
-            </span>
-          )}
-          {u.subscriptionTier === "pro" && (
-            <span className="ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.1em] font-bold border bg-violet-50 text-violet-700 border-violet-200">
-              <Zap className="w-2.5 h-2.5" />Pro
             </span>
           )}
         </td>
@@ -321,7 +316,7 @@ function UserRow({ u, isSelf, onToggleAdmin, onToggleTier, onDelete, togglePendi
 function UsersTab() {
   const [query, setQuery] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
-  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [tierFilter, setTierFilter] = useState<string>("all");
   const [pendingAction, setPendingAction] = useState<{ id: number; name: string; grantAdmin: boolean } | null>(null);
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
@@ -407,11 +402,11 @@ function UsersTab() {
   const filtered = users.filter(u => {
     const q = query.toLowerCase();
     const matchesQ = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
-    const matchesRole = roleFilter === "all" || u.role === roleFilter || (roleFilter === "admin" && u.isAdmin);
-    return matchesQ && matchesRole;
+    const matchesTier = tierFilter === "all" || u.subscriptionTier === tierFilter || (tierFilter === "admin" && u.isAdmin);
+    return matchesQ && matchesTier;
   });
 
-  const roles = ["all", "author", "contributor", "both", "admin"];
+  const tiers = ["all", "free", "pro", "admin"];
 
   return (
     <div className="space-y-4">
@@ -436,17 +431,17 @@ function UsersTab() {
           />
         </div>
         <div className="flex gap-1">
-          {roles.map(r => (
+          {tiers.map(t => (
             <button
-              key={r}
-              onClick={() => setRoleFilter(r)}
+              key={t}
+              onClick={() => setTierFilter(t)}
               className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] font-bold border transition-colors ${
-                roleFilter === r
+                tierFilter === t
                   ? "bg-[#1A1614] text-[#F9F6EE] border-[#1A1614]"
                   : "border-[#1A1614]/20 text-[#7A6B5E] hover:border-[#1A1614] hover:text-[#1A1614]"
               }`}
             >
-              {r}
+              {t}
             </button>
           ))}
         </div>
@@ -464,7 +459,7 @@ function UsersTab() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b-2 border-[#1A1614]/15 bg-[#F9F6EE]">
-                {["User", "Role", "Projects", "Suggestions", "Joined", ""].map(h => (
+                {["User", "Tier", "Projects", "Suggestions", "Joined", ""].map(h => (
                   <th key={h} className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] py-3 px-4">{h}</th>
                 ))}
               </tr>
@@ -473,7 +468,7 @@ function UsersTab() {
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-14 text-[#7A6B5E] text-sm">
-                    {query || roleFilter !== "all" ? "No users match your filters." : "No users yet."}
+                    {query || tierFilter !== "all" ? "No users match your filters." : "No users yet."}
                   </td>
                 </tr>
               ) : (
