@@ -6,7 +6,7 @@ import {
   ChevronLeft, Users, MessageSquare, Check, X, 
   Send, AlertCircle, Edit3, BarChart2, Trophy, Mail,
   BookOpen, Globe, Lock, Eye, MessageCircle, Minus, Plus,
-  UserPlus, Clock, CheckCircle, XCircle, Film, Shield, AlignLeft, History, ShieldCheck
+  UserPlus, Clock, CheckCircle, XCircle, Film, Shield, AlignLeft, History, ShieldCheck, FileText
 } from "lucide-react";
 import { VersionHistoryPanel } from "@/components/version-history-panel";
 import { IpProtectionPanel } from "@/components/ip-protection-panel";
@@ -86,6 +86,7 @@ export default function ProjectDetail() {
   // ── Synopsis editing ───────────────────────────────────────────────────────
   const [synopsisDraft, setSynopsisDraft] = useState<string | null>(null);
   const [isSavingSynopsis, setIsSavingSynopsis] = useState(false);
+  const [synopsisOpen, setSynopsisOpen] = useState(false);
 
   const handleSaveSynopsis = async () => {
     if (synopsisDraft === null || !user) return;
@@ -515,91 +516,146 @@ export default function ProjectDetail() {
     <div className="flex h-screen overflow-hidden bg-[#FAF8F5]">
       {/* Main Editor Area */}
       <div className="flex-1 overflow-y-auto relative scroll-smooth">
-        <header className="sticky top-0 z-10 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-border/50 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="p-2 rounded-full hover:bg-black/5 transition-colors">
-              <ChevronLeft className="w-5 h-5 text-foreground" />
-            </Link>
-            <div>
-              <h1 className="font-serif font-bold text-xl text-foreground">{project.title}</h1>
-              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                <p className="text-xs text-muted-foreground uppercase tracking-widest">{project.type} • By {project.ownerName}</p>
-                {(() => {
-                  let genres: string[] = [];
-                  try { genres = JSON.parse(project.genres ?? "[]"); } catch {}
-                  return genres.length > 0 ? genres.map((g) => (
-                    <span key={g} className="text-[9px] uppercase tracking-[0.18em] font-bold px-2 py-0.5 border border-[#1A1614]/15 text-[#7A6B5E] bg-[#F9F6EE]">{g}</span>
-                  )) : null;
-                })()}
+        <header className="sticky top-0 z-10 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-border/50">
+          <div className="px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link href="/" className="p-2 rounded-full hover:bg-black/5 transition-colors">
+                <ChevronLeft className="w-5 h-5 text-foreground" />
+              </Link>
+              <div>
+                <h1 className="font-serif font-bold text-xl text-foreground">{project.title}</h1>
+                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest">{project.type} • By {project.ownerName}</p>
+                  {(() => {
+                    let genres: string[] = [];
+                    try { genres = JSON.parse(project.genres ?? "[]"); } catch {}
+                    return genres.length > 0 ? genres.map((g) => (
+                      <span key={g} className="text-[9px] uppercase tracking-[0.18em] font-bold px-2 py-0.5 border border-[#1A1614]/15 text-[#7A6B5E] bg-[#F9F6EE]">{g}</span>
+                    )) : null;
+                  })()}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-             {project.isPublished && (
-               <div className="flex items-center gap-1.5 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold border border-emerald-200">
-                 <Globe className="w-3.5 h-3.5" /> Published
+            <div className="flex items-center gap-3">
+               {project.isPublished && (
+                 <div className="flex items-center gap-1.5 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold border border-emerald-200">
+                   <Globe className="w-3.5 h-3.5" /> Published
+                 </div>
+               )}
+               <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-semibold border border-primary/20">
+                 {project.role}
                </div>
-             )}
-             <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-semibold border border-primary/20">
-               {project.role}
-             </div>
-             {isOwner && project.type === "script" && (
-               <button
-                 onClick={() => setScriptEditorOpen(true)}
-                 className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-               >
-                 <Film className="w-4 h-4" />
-                 Edit Script
-               </button>
-             )}
-             {isOwner && project.type !== "script" && !editMode && (
-               <>
+               {isOwner && (
                  <button
-                   onClick={() => { setEditContent(project.content ?? ""); setEditMode(true); }}
+                   onClick={() => { setSynopsisOpen(o => !o); setSynopsisDraft(null); }}
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${synopsisOpen ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"}`}
+                 >
+                   <FileText className="w-3.5 h-3.5" />
+                   Synopsis
+                 </button>
+               )}
+               {isOwner && project.type === "script" && (
+                 <button
+                   onClick={() => setScriptEditorOpen(true)}
                    className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
                  >
-                   <Edit3 className="w-4 h-4" />
-                   Edit
+                   <Film className="w-4 h-4" />
+                   Edit Script
                  </button>
+               )}
+               {isOwner && project.type !== "script" && !editMode && (
+                 <>
+                   <button
+                     onClick={() => { setEditContent(project.content ?? ""); setEditMode(true); }}
+                     className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                   >
+                     <Edit3 className="w-4 h-4" />
+                     Edit
+                   </button>
+                   <button
+                     onClick={() => setKdpModalOpen(true)}
+                     className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors"
+                   >
+                     <BookOpen className="w-4 h-4" />
+                     Export for Kindle
+                   </button>
+                 </>
+               )}
+               {isOwner && project.type !== "script" && editMode && (
+                 <>
+                   <button
+                     onClick={() => setEditMode(false)}
+                     className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold border border-[#1A1614]/20 text-[#7A6B5E] hover:bg-[#1A1614]/5 transition-colors"
+                   >
+                     Cancel
+                   </button>
+                   <button
+                     onClick={handleSaveContent}
+                     disabled={isSavingContent}
+                     className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50"
+                   >
+                     {isSavingContent
+                       ? <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                       : <Check className="w-4 h-4" />}
+                     Save
+                   </button>
+                 </>
+               )}
+               {isOwner && !editMode && (
                  <button
-                   onClick={() => setKdpModalOpen(true)}
-                   className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors"
+                   onClick={() => setPublishModalOpen(true)}
+                   className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-foreground text-background hover:bg-foreground/90 transition-colors"
                  >
                    <BookOpen className="w-4 h-4" />
-                   Export for Kindle
+                   {project.isPublished ? "Publishing" : "Publish"}
                  </button>
-               </>
-             )}
-             {isOwner && project.type !== "script" && editMode && (
-               <>
-                 <button
-                   onClick={() => setEditMode(false)}
-                   className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold border border-[#1A1614]/20 text-[#7A6B5E] hover:bg-[#1A1614]/5 transition-colors"
-                 >
-                   Cancel
-                 </button>
-                 <button
-                   onClick={handleSaveContent}
-                   disabled={isSavingContent}
-                   className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50"
-                 >
-                   {isSavingContent
-                     ? <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                     : <Check className="w-4 h-4" />}
-                   Save
-                 </button>
-               </>
-             )}
-             {isOwner && !editMode && (
-               <button
-                 onClick={() => setPublishModalOpen(true)}
-                 className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-foreground text-background hover:bg-foreground/90 transition-colors"
-               >
-                 <BookOpen className="w-4 h-4" />
-                 {project.isPublished ? "Publishing" : "Publish"}
-               </button>
-             )}
+               )}
+            </div>
           </div>
+
+          {/* Collapsible synopsis panel — owner only */}
+          {isOwner && synopsisOpen && (
+            <div className="border-t border-border/50 px-6 py-4 bg-[#FAF8F5]/95">
+              <div className="max-w-3xl flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-muted-foreground">Project Synopsis</p>
+                  <div className="flex items-center gap-3">
+                    {synopsisDraft !== null && (
+                      <>
+                        <button
+                          onClick={() => setSynopsisDraft(null)}
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleSaveSynopsis}
+                          disabled={isSavingSynopsis}
+                          className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
+                        >
+                          {isSavingSynopsis
+                            ? <div className="w-3 h-3 border border-primary border-t-transparent rounded-full animate-spin" />
+                            : <Check className="w-3 h-3" />}
+                          Save
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <textarea
+                  value={synopsisDraft ?? (project.synopsis ?? "")}
+                  onChange={(e) => setSynopsisDraft(e.target.value)}
+                  placeholder="Write a synopsis. When content mode is 'Synopsis', collaborators see this instead of the full manuscript."
+                  className="w-full min-h-[90px] text-sm bg-white/70 border border-border rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary resize-none text-foreground placeholder:text-muted-foreground/50 leading-relaxed"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  {project.contentMode === "synopsis"
+                    ? "Collaborators currently see this synopsis — full manuscript is hidden."
+                    : "Collaborators see the full manuscript. Use Publish settings to switch to synopsis-only mode."}
+                </p>
+              </div>
+            </div>
+          )}
         </header>
 
         {/* View options toolbar — prose projects, read mode only */}
@@ -1205,41 +1261,6 @@ export default function ProjectDetail() {
 
           {activeTab === 'insights' && isOwner && (
             <div className="space-y-4">
-              {/* Synopsis editor */}
-              <div className="bg-card rounded-2xl border border-border shadow-sm p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold text-foreground">Project Synopsis</h4>
-                  {synopsisDraft !== null && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setSynopsisDraft(null)}
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleSaveSynopsis}
-                        disabled={isSavingSynopsis}
-                        className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
-                      >
-                        {isSavingSynopsis ? "Saving…" : "Save"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <textarea
-                  value={synopsisDraft ?? (project.synopsis ?? "")}
-                  onChange={(e) => setSynopsisDraft(e.target.value)}
-                  placeholder="Write a synopsis for your project. When content mode is set to 'synopsis', collaborators will see this instead of the full manuscript."
-                  className="w-full min-h-[120px] text-sm bg-secondary/40 border border-input rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary resize-none text-foreground placeholder:text-muted-foreground/60 leading-relaxed"
-                />
-                <p className="text-[10px] text-muted-foreground">
-                  {project.contentMode === "synopsis"
-                    ? "Collaborators currently see this synopsis (content mode: synopsis)."
-                    : "Collaborators see the full manuscript. Switch to 'Synopsis' mode in Publish settings to show only this."}
-                </p>
-              </div>
-
               <div className="flex items-center gap-2 mb-2">
                 <Trophy className="w-4 h-4 text-amber-500" />
                 <h4 className="text-sm font-bold text-foreground">Contributor Leaderboard</h4>
