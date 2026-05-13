@@ -1,0 +1,159 @@
+import { useState } from "react";
+import { Link } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
+import { formatDistanceToNow } from "date-fns";
+import { Mail, MailOpen, User, ArrowLeft } from "lucide-react";
+
+type Message = {
+  id: number;
+  fromUserId: number;
+  fromName: string;
+  body: string;
+  isRead: boolean;
+  createdAt: string;
+};
+
+export default function Inbox() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [selected, setSelected] = useState<Message | null>(null);
+
+  const { data: messages = [], isLoading } = useQuery<Message[]>({
+    queryKey: ["/api/messages/inbox", user?.id],
+    enabled: !!user?.id,
+    queryFn: () => fetch(`/api/messages/inbox?userId=${user!.id}`).then((r) => r.json()),
+  });
+
+  const markRead = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/messages/${id}/read`, { method: "PATCH" }).then((r) => r.json()),
+    onSuccess: (_, id) => {
+      queryClient.setQueryData<Message[]>(["/api/messages/inbox", user?.id], (prev) =>
+        prev?.map((m) => (m.id === id ? { ...m, isRead: true } : m)) ?? []
+      );
+    },
+  });
+
+  const handleSelect = (msg: Message) => {
+    setSelected(msg);
+    if (!msg.isRead) markRead.mutate(msg.id);
+  };
+
+  const unread = messages.filter((m) => !m.isRead).length;
+
+  return (
+    <div className="min-h-screen bg-[#F9F6EE]">
+      {/* Header */}
+      <div className="border-b-2 border-[#1A1614] px-6 py-4 flex items-center gap-4">
+        <div>
+          <p className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#7A6B5E]">Messages</p>
+          <h1 className="font-serif font-bold text-2xl text-[#1A1614]" style={{ fontFamily: "'Playfair Display', serif" }}>
+            Inbox
+          </h1>
+        </div>
+        {unread > 0 && (
+          <span className="px-2 py-0.5 bg-[#E8B84B] text-[#1A1614] text-[10px] font-bold uppercase tracking-[0.1em]">
+            {unread} new
+          </span>
+        )}
+      </div>
+
+      <div className="flex h-[calc(100vh-81px)]">
+        {/* Message list */}
+        <div className="w-full md:w-80 border-r-2 border-[#1A1614] overflow-y-auto shrink-0">
+          {isLoading ? (
+            <div className="p-8 text-center">
+              <div className="w-5 h-5 border-2 border-[#1A1614] border-t-transparent rounded-full animate-spin mx-auto" />
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="p-10 text-center">
+              <Mail className="w-8 h-8 text-[#7A6B5E]/30 mx-auto mb-3" />
+              <p className="text-sm font-semibold text-[#7A6B5E]">No messages yet</p>
+              <p className="text-xs text-[#7A6B5E]/60 mt-1">Messages from other writers will appear here.</p>
+            </div>
+          ) : (
+            messages.map((msg) => {
+              const isActive = selected?.id === msg.id;
+              return (
+                <button
+                  key={msg.id}
+                  onClick={() => handleSelect(msg)}
+                  className={`w-full text-left px-4 py-3.5 border-b border-[#1A1614]/10 transition-colors ${
+                    isActive
+                      ? "bg-[#E8B84B]/15 border-l-2 border-l-[#E8B84B]"
+                      : "hover:bg-[#1A1614]/4"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-[#1A1614] flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="text-xs font-bold text-[#F9F6EE]">
+                        {msg.fromName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-0.5">
+                        <span className={`text-xs font-bold truncate ${msg.isRead ? "text-[#7A6B5E]" : "text-[#1A1614]"}`}>
+                          {msg.fromName}
+                        </span>
+                        <span className="text-[9px] text-[#7A6B5E]/60 shrink-0">
+                          {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
+                        </span>
+                      </div>
+                      <p className={`text-[11px] truncate leading-relaxed ${msg.isRead ? "text-[#7A6B5E]/70" : "text-[#1A1614]"}`}>
+                        {msg.body}
+                      </p>
+                    </div>
+                    {!msg.isRead && (
+                      <div className="w-2 h-2 bg-[#E8B84B] rounded-full shrink-0 mt-1.5" />
+                    )}
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
+
+        {/* Message detail */}
+        <div className="flex-1 hidden md:flex flex-col">
+          {selected ? (
+            <div className="flex flex-col h-full">
+              <div className="border-b border-[#1A1614]/15 px-8 py-5 flex items-center gap-4">
+                <div className="w-10 h-10 bg-[#1A1614] flex items-center justify-center shrink-0">
+                  <span className="text-sm font-bold text-[#F9F6EE]">
+                    {selected.fromName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-[#1A1614]">{selected.fromName}</p>
+                  <p className="text-[10px] text-[#7A6B5E]">
+                    {formatDistanceToNow(new Date(selected.createdAt), { addSuffix: true })}
+                  </p>
+                </div>
+                <div className="ml-auto">
+                  <Link
+                    href={`/profile/${selected.fromUserId}`}
+                    className="flex items-center gap-1.5 px-3 py-1.5 border border-[#1A1614]/20 text-[10px] font-bold uppercase tracking-[0.1em] text-[#7A6B5E] hover:border-[#1A1614] hover:text-[#1A1614] transition-colors"
+                  >
+                    <User className="w-3 h-3" />
+                    View profile
+                  </Link>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto px-8 py-6">
+                <p className="text-sm text-[#1A1614] leading-relaxed whitespace-pre-wrap">{selected.body}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <MailOpen className="w-10 h-10 text-[#7A6B5E]/20 mx-auto mb-3" />
+                <p className="text-sm font-semibold text-[#7A6B5E]">Select a message to read it</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

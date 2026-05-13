@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
 
 const ROLE_LABEL: Record<string, { label: string; color: string }> = {
   author:      { label: "Author",              color: "text-[#E8B84B]" },
@@ -16,11 +17,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const roleConf = ROLE_LABEL[user.role ?? "both"] ?? ROLE_LABEL.both;
   const isAuthor = user.role === "author" || user.role === "both";
 
+  const { data: inboxMessages = [] } = useQuery<{ isRead: boolean }[]>({
+    queryKey: ["/api/messages/inbox", user.id],
+    queryFn: () => fetch(`/api/messages/inbox?userId=${user.id}`).then((r) => r.json()),
+    refetchInterval: 60_000,
+  });
+  const unreadCount = inboxMessages.filter((m) => !m.isRead).length;
+
   const navLinks = [
     { href: "/",             label: "Dashboard"        },
     { href: "/contributors", label: "Find Contributors", hidden: !isAuthor },
     { href: "/pitches",      label: "Pitches"          },
     { href: "/discover",     label: "Browse & Rate"    },
+    { href: "/inbox",        label: "Inbox",            badge: unreadCount > 0 ? unreadCount : undefined },
     { href: "/profile",      label: "My Profile"       },
     { href: "/admin",        label: "Admin",            hidden: !user.isAdmin },
   ].filter((l) => !l.hidden);
@@ -58,13 +67,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`block px-3 py-2.5 text-[10px] uppercase tracking-[0.16em] font-bold border-l-2 transition-all ${
+                className={`flex items-center justify-between px-3 py-2.5 text-[10px] uppercase tracking-[0.16em] font-bold border-l-2 transition-all ${
                   active
                     ? "border-[#E8B84B] bg-[#E8B84B]/10 text-[#1A1614]"
                     : "border-transparent text-[#7A6B5E] hover:text-[#1A1614] hover:border-[#1A1614]/20 hover:bg-[#1A1614]/3"
                 }`}
               >
                 {link.label}
+                {"badge" in link && link.badge !== undefined && (
+                  <span className="ml-1.5 min-w-[16px] h-4 px-1 bg-[#E8B84B] text-[#1A1614] text-[8px] font-bold flex items-center justify-center rounded-sm">
+                    {link.badge}
+                  </span>
+                )}
               </Link>
             );
           })}

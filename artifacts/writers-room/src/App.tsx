@@ -20,6 +20,7 @@ import NotFound from "@/pages/not-found";
 import HowItWorks from "@/pages/how-it-works";
 import Pricing from "@/pages/pricing";
 import PlannerPage from "@/pages/planner";
+import Inbox from "@/pages/inbox";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +47,7 @@ function AuthenticatedRouter() {
         <Route path="/pitch/:id" component={PitchDetail} />
         <Route path="/admin" component={Admin} />
         <Route path="/planner/:id" component={PlannerPage} />
+        <Route path="/inbox" component={Inbox} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
