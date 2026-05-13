@@ -1115,7 +1115,7 @@ export default function ProjectDetail() {
                     className="flex items-center gap-2 px-4 py-3 bg-[#E8B84B]/10 border border-[#E8B84B]/40 hover:bg-[#E8B84B]/20 transition-colors text-sm font-semibold text-[#1A1614]"
                   >
                     <Users className="w-4 h-4 text-[#E8B84B]" />
-                    Find editors for this project
+                    Find collaborators for this project
                     <span className="ml-auto text-[10px] uppercase tracking-[0.12em] font-bold text-[#7A6B5E]">Browse →</span>
                   </Link>
                 );
