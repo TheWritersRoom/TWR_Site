@@ -178,7 +178,7 @@ export default function Contributors() {
         <div className="border-t-2 border-[#1A1614] mb-3" />
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-4xl font-serif font-bold text-[#1A1614]">Find Editors</h1>
+            <h1 className="text-4xl font-serif font-bold text-[#1A1614]">Find Collaborators</h1>
             <p className="text-[#7A6B5E] mt-1">
               Search contributors by genre, editing specialty, and experience level.
             </p>

@@ -27,7 +27,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const navLinks = [
     { href: "/",             label: "Dashboard"        },
-    { href: "/contributors", label: "Find Contributors", hidden: !isAuthor },
+    { href: "/contributors", label: "Find Collaborators", hidden: !isAuthor },
     { href: "/pitches",      label: "Pitches"          },
     { href: "/discover",     label: "Browse & Rate"    },
     { href: "/inbox",        label: "Inbox",            badge: unreadCount > 0 ? unreadCount : undefined },
