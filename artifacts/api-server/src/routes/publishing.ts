@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, and, desc, inArray, sql, count } from "drizzle-orm";
 import { db, projectsTable, usersTable, collaboratorsTable, feedbackTable } from "@workspace/db";
+import { awardInk } from "../lib/ink";
 import { createVersion } from "./versions";
 
 const router: IRouter = Router();
@@ -104,6 +105,15 @@ router.post("/projects/:id/publish", async (req, res): Promise<void> => {
     .returning();
 
   const [owner] = await db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, updated.ownerId));
+
+  // Award ink to all collaborators on the newly published project
+  const collabs = await db
+    .select({ userId: collaboratorsTable.userId })
+    .from(collaboratorsTable)
+    .where(eq(collaboratorsTable.projectId, projectId));
+  await Promise.all(
+    collabs.map(c => awardInk(c.userId, 25, "published_credit", projectId).catch(() => {}))
+  );
 
   res.json({
     ...updated,

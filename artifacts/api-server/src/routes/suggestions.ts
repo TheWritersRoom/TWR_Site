@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, and } from "drizzle-orm";
 import { db, suggestionsTable, usersTable, projectsTable, collaboratorsTable } from "@workspace/db";
 import { createVersion } from "./versions";
+import { awardInk } from "../lib/ink";
 import {
   ListSuggestionsParams,
   ListSuggestionsQueryParams,
@@ -102,6 +103,8 @@ router.post("/projects/:id/suggestions", async (req, res): Promise<void> => {
       comment: parsed.data.comment ?? null,
     })
     .returning();
+
+  await awardInk(suggestion.submitterId, 2, "suggestion_submitted", params.data.id).catch(() => {});
 
   const [submitter] = await db
     .select({ name: usersTable.name, role: usersTable.role })
@@ -221,6 +224,10 @@ router.patch("/projects/:id/suggestions/:suggestionId", async (req, res): Promis
     .set(updateData)
     .where(eq(suggestionsTable.id, params.data.suggestionId))
     .returning();
+
+  if (parsed.data.status === "accepted") {
+    await awardInk(updated.submitterId, 10, "suggestion_accepted", params.data.id).catch(() => {});
+  }
 
   const [submitter] = await db
     .select({ name: usersTable.name, role: usersTable.role })

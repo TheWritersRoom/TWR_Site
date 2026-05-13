@@ -16,6 +16,7 @@ import versionsRouter from "./versions";
 import ipProtectionRouter from "./ip-protection";
 import reputationRouter from "./reputation";
 import plannersRouter from "./planners";
+import inkRouter from "./ink";
 
 const router: IRouter = Router();
 
@@ -36,5 +37,6 @@ router.use(exportRouter);
 router.use(adminRouter);
 router.use(reputationRouter);
 router.use(plannersRouter);
+router.use(inkRouter);
 
 export default router;

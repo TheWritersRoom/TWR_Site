@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, and, count } from "drizzle-orm";
 import { db, collaboratorsTable, usersTable, projectsTable, joinRequestsTable } from "@workspace/db";
+import { awardInk } from "../lib/ink";
 import {
   ListCollaboratorsParams,
   InviteCollaboratorParams,
@@ -108,6 +109,8 @@ router.post("/projects/:id/invite", async (req, res): Promise<void> => {
     .insert(collaboratorsTable)
     .values({ projectId: params.data.id, userId: invitedUser.id })
     .returning();
+
+  await awardInk(invitedUser.id, 5, "collaborator_added", params.data.id).catch(() => {});
 
   res.status(201).json({
     id: collaborator.id,

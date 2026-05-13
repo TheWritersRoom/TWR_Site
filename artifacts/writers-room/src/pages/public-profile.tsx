@@ -10,6 +10,7 @@ import {
   X, Send, Briefcase, Award,
 } from "lucide-react";
 import { AchievementGrid, ReputationScore, type Achievement } from "@/components/reputation-badge";
+import { InkBadge } from "@/components/ink-badge";
 
 type PublicUser = {
   id: number;
@@ -103,6 +104,12 @@ export default function PublicProfile() {
   }>({
     queryKey: ["/api/users", profileId, "reputation"],
     queryFn: () => fetch(`/api/users/${profileId}/reputation`).then(r => r.json()),
+    enabled: !isNaN(profileId),
+  });
+
+  const { data: inkData } = useQuery<{ balance: number }>({
+    queryKey: ["/api/users", profileId, "ink"],
+    queryFn: () => fetch(`/api/users/${profileId}/ink`).then(r => r.json()),
     enabled: !isNaN(profileId),
   });
 
@@ -303,6 +310,11 @@ export default function PublicProfile() {
         >
           <div className="flex items-start gap-5 flex-wrap">
             <ReputationScore score={reputation.score} />
+            {inkData != null && (
+              <div className="flex flex-col items-center justify-center gap-1 px-4 border-l border-[#1A1614]/10">
+                <InkBadge balance={inkData.balance} size="lg" />
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-3">
                 <Award className="w-3.5 h-3.5 text-[#E8B84B]" />

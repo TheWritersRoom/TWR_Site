@@ -7,6 +7,7 @@ import {
   Upload, PenLine, X, FileUp, Loader2, ChevronRight, AlignLeft, Check,
   Shield, Users as UsersIcon, Zap, Trash2, LayoutGrid, Film, BookOpen, ArrowRight,
 } from "lucide-react";
+import { InkBadge } from "@/components/ink-badge";
 
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateProject } from "@workspace/api-client-react";
@@ -136,6 +137,12 @@ export default function Dashboard() {
     queryKey: ["/api/planners", user?.id],
     enabled: !!user,
     queryFn: () => fetch(`/api/planners?userId=${user!.id}`).then((r) => r.json()),
+  });
+
+  const { data: inkData } = useQuery<{ balance: number }>({
+    queryKey: ["/api/users", user?.id, "ink"],
+    enabled: !!user,
+    queryFn: () => fetch(`/api/users/${user!.id}/ink`).then((r) => r.json()),
   });
 
   const [showNewPlanner, setShowNewPlanner] = useState(false);
@@ -269,7 +276,12 @@ export default function Dashboard() {
         <div className="border-t-2 border-[#1A1614] mb-3" />
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-serif font-bold text-[#1A1614]">Your Projects</h1>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-4xl font-serif font-bold text-[#1A1614]">Your Projects</h1>
+              {inkData != null && (
+                <InkBadge balance={inkData.balance} size="sm" />
+              )}
+            </div>
             <p className="text-[#7A6B5E] mt-1 text-base">
               {user?.role === "contributor"
                 ? `Welcome back, ${user?.name.split(" ")[0]}. You're contributing to others' projects.`
