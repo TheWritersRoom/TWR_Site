@@ -55,6 +55,15 @@ function parseArr(json: string): string[] {
   try { return JSON.parse(json) || []; } catch { return []; }
 }
 
+type Char = { name: string; note?: string };
+
+function parseChars(json: string): Char[] {
+  try {
+    const arr = JSON.parse(json) || [];
+    return arr.map((c: any) => typeof c === "string" ? { name: c } : { name: c.name ?? "", note: c.note });
+  } catch { return []; }
+}
+
 // ── Card Grid ────────────────────────────────────────────────────────────────
 
 function CardGrid({
@@ -117,7 +126,7 @@ function CardGrid({
           {filtered.map((card) => {
             const s = STATUS[card.status];
             const StatusIcon = s.icon;
-            const chars = parseArr(card.characters);
+            const chars = parseChars(card.characters);
             const tags = parseArr(card.tags);
             return (
               <div
@@ -154,7 +163,7 @@ function CardGrid({
                   {chars.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-0.5">
                       {chars.slice(0, 3).map((c) => (
-                        <span key={c} className="px-1.5 py-0.5 bg-[#E8B84B]/15 text-[8px] font-semibold text-[#7A5A00] rounded">{c}</span>
+                        <span key={c.name} className="px-1.5 py-0.5 bg-[#E8B84B]/15 text-[8px] font-semibold text-[#7A5A00] rounded">{c.name}</span>
                       ))}
                       {chars.length > 3 && <span className="text-[8px] text-[#7A6B5E]">+{chars.length - 3}</span>}
                     </div>
@@ -288,7 +297,7 @@ function CardDetailPanel({
   onUpdate: (fields: Partial<PlannerCard>) => void;
   onDelete: () => void;
 }) {
-  const chars = parseArr(card.characters);
+  const chars = parseChars(card.characters);
   const tags = parseArr(card.tags);
   const progress = card.targetWordCount ? Math.round((card.wordCount / card.targetWordCount) * 100) : 0;
 
@@ -297,12 +306,12 @@ function CardDetailPanel({
 
   const addChar = () => {
     if (!newChar.trim()) return;
-    onUpdate({ characters: JSON.stringify([...chars, newChar.trim()]) });
+    onUpdate({ characters: JSON.stringify([...chars, { name: newChar.trim() }]) });
     setNewChar("");
   };
 
-  const removeChar = (c: string) =>
-    onUpdate({ characters: JSON.stringify(chars.filter((x) => x !== c)) });
+  const removeChar = (name: string) =>
+    onUpdate({ characters: JSON.stringify(chars.filter((x) => x.name !== name)) });
 
   const addTag = () => {
     if (!newTag.trim()) return;
@@ -453,9 +462,12 @@ function CardDetailPanel({
             <Field label="Characters" icon={Users}>
               <div className="flex flex-col gap-1.5">
                 {chars.map((c) => (
-                  <div key={c} className="flex items-center justify-between bg-white border border-[#1A1614]/10 px-2 py-1">
-                    <span className="text-[10px] font-semibold text-[#1A1614]">{c}</span>
-                    <button onClick={() => removeChar(c)} className="text-[#7A6B5E]/40 hover:text-red-500 ml-1">
+                  <div key={c.name} className="flex items-start justify-between bg-white border border-[#1A1614]/10 px-2 py-1.5">
+                    <div>
+                      <p className="text-[10px] font-semibold text-[#1A1614]">{c.name}</p>
+                      {c.note && <p className="text-[9px] text-[#7A6B5E] leading-snug mt-0.5">{c.note}</p>}
+                    </div>
+                    <button onClick={() => removeChar(c.name)} className="text-[#7A6B5E]/40 hover:text-red-500 ml-1 mt-0.5 shrink-0">
                       <X className="w-2.5 h-2.5" />
                     </button>
                   </div>
