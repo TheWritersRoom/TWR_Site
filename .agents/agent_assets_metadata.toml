@@ -60,3 +60,9 @@ id = "PT5cWNUd9uB0mvvUcHiWv"
 uri = "file://writers-room-features.pdf"
 type = "pdf"
 title = "Writers Room Platform Features"
+
+[[outputs]]
+id = "7cpekM48oYdelg9-nuoZw"
+uri = "file://writers-room-market.pdf"
+type = "pdf"
+title = "Writers Room — Market Opportunity"
