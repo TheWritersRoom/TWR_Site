@@ -36,6 +36,7 @@ type Planner = {
   id: number;
   ownerId: number;
   title: string;
+  synopsis: string | null;
   mediaType: "tv" | "book" | "serial" | "other";
   cards: PlannerCard[];
 };
@@ -84,12 +85,14 @@ function CardGrid({
   onCardClick,
   onAddCard,
   isAddingCard,
+  onSynopsisChange,
 }: {
   planner: Planner;
   search: string;
   onCardClick: (card: PlannerCard) => void;
   onAddCard: () => void;
   isAddingCard: boolean;
+  onSynopsisChange: (synopsis: string) => void;
 }) {
   const filtered = planner.cards.filter(
     (c) =>
@@ -101,6 +104,17 @@ function CardGrid({
   const complete = planner.cards.filter((c) => c.status === "complete").length;
   const totalWords = planner.cards.reduce((s, c) => s + c.wordCount, 0);
   const progress = planner.cards.length ? Math.round((complete / planner.cards.length) * 100) : 0;
+
+  const [synopsisExpanded, setSynopsisExpanded] = useState(!!planner.synopsis);
+  const [editingSynopsis, setEditingSynopsis] = useState(false);
+  const [synopsisDraft, setSynopsisDraft] = useState(planner.synopsis ?? "");
+
+  const commitSynopsis = () => {
+    setEditingSynopsis(false);
+    if (synopsisDraft !== (planner.synopsis ?? "")) {
+      onSynopsisChange(synopsisDraft);
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -130,7 +144,59 @@ function CardGrid({
             );
           })}
         </div>
+        {/* Synopsis toggle */}
+        <button
+          onClick={() => setSynopsisExpanded((v) => !v)}
+          className="ml-auto flex items-center gap-1.5 text-[10px] font-semibold text-[#7A6B5E] hover:text-[#1A1614] transition-colors shrink-0"
+        >
+          <FileText className="w-3.5 h-3.5" />
+          {synopsisExpanded ? "Hide overview" : "Project overview"}
+        </button>
       </div>
+
+      {/* Project synopsis panel */}
+      {synopsisExpanded && (
+        <div className="border-b border-[#1A1614]/10 bg-[#F9F6EE] px-6 py-4">
+          <div className="flex items-center gap-2 mb-2">
+            <FileText className="w-3.5 h-3.5 text-[#7A6B5E]" />
+            <p className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#7A6B5E]">Project overview</p>
+          </div>
+          {editingSynopsis ? (
+            <div className="flex flex-col gap-2">
+              <textarea
+                autoFocus
+                value={synopsisDraft}
+                onChange={(e) => setSynopsisDraft(e.target.value)}
+                onBlur={commitSynopsis}
+                onKeyDown={(e) => { if (e.key === "Escape") { setSynopsisDraft(planner.synopsis ?? ""); setEditingSynopsis(false); } }}
+                placeholder="Write a high-level synopsis for this project — tone, premise, arc, world…"
+                className="w-full max-w-3xl px-4 py-3 text-sm text-[#1A1614] leading-relaxed bg-white border-2 border-[#E8B84B] outline-none resize-none"
+                rows={5}
+              />
+              <p className="text-[9px] text-[#7A6B5E]/60">Click outside or press Escape to cancel</p>
+            </div>
+          ) : (
+            <div
+              onClick={() => { setSynopsisDraft(planner.synopsis ?? ""); setEditingSynopsis(true); }}
+              className="group relative cursor-text max-w-3xl"
+            >
+              {planner.synopsis ? (
+                <p className="text-sm text-[#1A1614] leading-relaxed whitespace-pre-wrap bg-white border border-[#1A1614]/10 px-4 py-3 hover:border-[#E8B84B] transition-colors">
+                  {planner.synopsis}
+                </p>
+              ) : (
+                <div className="px-4 py-3 border border-dashed border-[#1A1614]/20 hover:border-[#E8B84B] transition-colors flex items-center gap-2 text-[#7A6B5E]/50">
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span className="text-sm italic">Write a project overview — premise, tone, arc, world…</span>
+                </div>
+              )}
+              {planner.synopsis && (
+                <Pencil className="w-3 h-3 text-[#7A6B5E]/40 absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Grid */}
       <div className="flex-1 overflow-y-auto p-6">
@@ -794,6 +860,20 @@ export default function PlannerPage() {
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["/api/planners", plannerId] });
 
+  const updatePlanner = useMutation({
+    mutationFn: (fields: { synopsis?: string; title?: string }) =>
+      fetch(`/api/planners/${plannerId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+      }).then((r) => r.json()),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<Planner>(["/api/planners", plannerId], (prev) =>
+        prev ? { ...prev, ...updated } : prev
+      );
+    },
+  });
+
   const addCard = useMutation({
     mutationFn: () =>
       fetch(`/api/planners/${plannerId}/cards`, {
@@ -914,6 +994,7 @@ export default function PlannerPage() {
           onCardClick={(card) => { setSelectedCard(card); setShowTeam(false); }}
           onAddCard={() => addCard.mutate()}
           isAddingCard={addCard.isPending}
+          onSynopsisChange={(synopsis) => updatePlanner.mutate({ synopsis })}
         />
         {selectedCard && !showTeam && (
           <CardDetailPanel

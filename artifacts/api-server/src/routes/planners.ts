@@ -92,11 +92,12 @@ router.patch("/planners/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const { title, mediaType, projectId } = req.body ?? {};
+  const { title, mediaType, projectId, synopsis } = req.body ?? {};
   const updates: Record<string, any> = {};
   if (title && typeof title === "string") updates.title = title.trim();
   if (mediaType && VALID_MEDIA.includes(mediaType)) updates.mediaType = mediaType;
   if (projectId !== undefined) updates.projectId = projectId ? Number(projectId) : null;
+  if (synopsis !== undefined) updates.synopsis = synopsis ?? null;
 
   const [updated] = await db
     .update(plannersTable)

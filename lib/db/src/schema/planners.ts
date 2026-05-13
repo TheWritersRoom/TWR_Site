@@ -7,6 +7,7 @@ export const plannersTable = pgTable("structure_planners", {
   ownerId: integer("owner_id").notNull().references(() => usersTable.id),
   projectId: integer("project_id").references(() => projectsTable.id),
   title: text("title").notNull(),
+  synopsis: text("synopsis"),
   mediaType: text("media_type", { enum: ["tv", "book", "serial", "other"] }).notNull().default("tv"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
