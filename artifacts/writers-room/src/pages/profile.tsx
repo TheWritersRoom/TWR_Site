@@ -4,6 +4,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { UploadableAvatar } from "@/components/avatar";
 import {
   CheckCircle2, Clock, XCircle, BookText, FileText,
   MessageSquareQuote, CalendarDays, PenLine, Users, Layers,
@@ -672,11 +673,12 @@ export default function Profile() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white border-2 border-[#1A1614] p-8 mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-6"
       >
-        <div className="w-20 h-20 bg-[#1A1614] flex items-center justify-center shrink-0">
-          <span className="text-3xl font-serif font-bold text-[#F9F6EE]">
-            {user.name.charAt(0).toUpperCase()}
-          </span>
-        </div>
+        <UploadableAvatar
+          userId={user.id}
+          name={user.name}
+          avatarUrl={user.avatarUrl}
+          onUpload={(path) => updateUser({ ...user, avatarUrl: path })}
+        />
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>

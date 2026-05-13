@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { formatDistanceToNow } from "date-fns";
 import { Mail, MailOpen, User, Send } from "lucide-react";
+import { Avatar } from "@/components/avatar";
 
 type Message = {
   id: number;
@@ -124,11 +125,7 @@ export default function Inbox() {
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-[#1A1614] flex items-center justify-center shrink-0 mt-0.5">
-                      <span className="text-xs font-bold text-[#F9F6EE]">
-                        {msg.fromName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
+                    <Avatar name={msg.fromName} size="sm" className="w-8 h-8 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-0.5">
                         <span className={`text-xs font-bold truncate ${msg.isRead ? "text-[#7A6B5E]" : "text-[#1A1614]"}`}>
@@ -158,11 +155,7 @@ export default function Inbox() {
             <div className="flex flex-col h-full">
               {/* Sender bar */}
               <div className="border-b border-[#1A1614]/15 px-8 py-5 flex items-center gap-4 shrink-0">
-                <div className="w-10 h-10 bg-[#1A1614] flex items-center justify-center shrink-0">
-                  <span className="text-sm font-bold text-[#F9F6EE]">
-                    {selected.fromName.charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                <Avatar name={selected.fromName} size="lg" />
                 <div>
                   <p className="text-sm font-bold text-[#1A1614]">{selected.fromName}</p>
                   <p className="text-[10px] text-[#7A6B5E]">

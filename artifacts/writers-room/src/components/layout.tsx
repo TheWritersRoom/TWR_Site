@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
+import { Avatar } from "@/components/avatar";
 
 const ROLE_LABEL: Record<string, { label: string; color: string }> = {
   author:      { label: "Author",              color: "text-[#E8B84B]" },
@@ -107,11 +108,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* User footer */}
         <div className="p-4 border-t-2 border-[#1A1614]">
           <Link href="/profile" className="flex items-center gap-3 mb-3 group">
-            <div className="w-9 h-9 bg-[#1A1614] flex items-center justify-center shrink-0">
-              <span className="font-bold text-sm text-[#F9F6EE]">
-                {user.name.charAt(0).toUpperCase()}
-              </span>
-            </div>
+            <Avatar name={user.name} avatarUrl={user.avatarUrl} size="md" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-[#1A1614] truncate group-hover:text-[#E8B84B] transition-colors">
                 {user.name}
@@ -141,11 +138,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <span className="font-serif font-bold text-lg text-[#1A1614]">Writers Room</span>
         </Link>
         <Link href="/profile">
-          <div className="w-8 h-8 bg-[#1A1614] flex items-center justify-center">
-            <span className="font-bold text-xs text-[#F9F6EE]">
-              {user.name.charAt(0).toUpperCase()}
-            </span>
-          </div>
+          <Avatar name={user.name} avatarUrl={user.avatarUrl} size="sm" className="w-8 h-8" />
         </Link>
       </header>
 

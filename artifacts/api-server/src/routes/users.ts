@@ -266,12 +266,13 @@ router.patch("/users/:id", async (req, res): Promise<void> => {
   const userId = parseInt(req.params.id, 10);
   if (isNaN(userId)) { res.status(400).json({ error: "Invalid user id" }); return; }
 
-  const { name, bio, mediaInterests, genres, credentials } = req.body as {
+  const { name, bio, mediaInterests, genres, credentials, avatarUrl } = req.body as {
     name?: string;
     bio?: string;
     mediaInterests?: string;
     genres?: string;
     credentials?: string;
+    avatarUrl?: string;
   };
 
   const updates: Record<string, unknown> = {};
@@ -280,6 +281,7 @@ router.patch("/users/:id", async (req, res): Promise<void> => {
   if (mediaInterests !== undefined) updates.mediaInterests = mediaInterests;
   if (genres !== undefined) updates.genres = genres;
   if (credentials !== undefined) updates.credentials = credentials;
+  if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
 
   if (Object.keys(updates).length === 0) {
     res.status(400).json({ error: "No fields to update" }); return;
