@@ -6,16 +6,18 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, Check, X, Eye, EyeOff, ToggleLeft, ToggleRight } from "lucide-react";
 
-const EDITING_SPECIALTIES = [
-  "Developmental Editing", "Line Editing", "Copy Editing", "Proofreading",
-  "Structural Feedback", "Dialogue & Voice", "Pacing & Flow", "Research & Fact-checking", "World-building",
+const WRITING_SPECIALTIES = [
+  "Plotting & Structure", "Character Development", "Dialogue & Voice", "World-building",
+  "Pacing & Flow", "Research & Fact-checking", "Developmental Editing", "Line Editing",
+  "Copy Editing & Proofreading", "Poetry", "Screenwriting", "Non-fiction",
+  "Beta Reading", "Script Coverage",
 ];
 
 const EXPERIENCE_LEVELS = [
-  { value: "novice",       label: "Novice",       desc: "New to editing" },
+  { value: "novice",       label: "Novice",       desc: "Just starting out" },
   { value: "intermediate", label: "Intermediate",  desc: "Some experience" },
   { value: "experienced",  label: "Experienced",   desc: "Several years" },
-  { value: "professional", label: "Professional",  desc: "Full-time editor" },
+  { value: "professional", label: "Professional",  desc: "Working professionally" },
 ];
 
 
@@ -87,7 +89,7 @@ export function AuthModal() {
   const [suSubstack, setSuSubstack] = useState("");
   const [suSpecialties, setSuSpecialties] = useState<string[]>([]);
   const [suExperience, setSuExperience] = useState("");
-  const [suAvailableForWork, setSuAvailableForWork] = useState(false);
+  const [suAvailableForWork, setSuAvailableForWork] = useState(true);
 
   const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
 
@@ -508,9 +510,9 @@ export function AuthModal() {
                     >
                       <ChevronRight className="w-3.5 h-3.5 rotate-180" /> Back
                     </button>
-                    <h2 className="text-2xl font-serif font-bold text-foreground">Your Credentials</h2>
+                    <h2 className="text-2xl font-serif font-bold text-foreground">Your Profile</h2>
                     <p className="text-sm text-muted-foreground mt-1">
-                      All optional — but published authors stand out to collaborators.
+                      All optional — a complete profile helps others find and connect with you. You can always fill this in later.
                     </p>
                   </div>
 
@@ -659,14 +661,14 @@ export function AuthModal() {
                       </div>
                     </div>
 
-                    {/* Editing specialties */}
+                    {/* Skills & specialties */}
                     <div>
                       <label className="block text-sm font-semibold text-foreground mb-2">
-                        Editing specialties
+                        Skills & specialties
                         <span className="ml-1.5 text-xs font-normal text-muted-foreground">select all that apply</span>
                       </label>
                       <div className="flex flex-wrap gap-1.5">
-                        {EDITING_SPECIALTIES.map((s) => {
+                        {WRITING_SPECIALTIES.map((s) => {
                           const sel = suSpecialties.includes(s);
                           return (
                             <button

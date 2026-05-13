@@ -11,8 +11,10 @@ import { AchievementPill, computeTopBadgeFromStats } from "@/components/reputati
 import { format } from "date-fns";
 
 const EDITING_SPECIALTIES = [
-  "Developmental Editing", "Line Editing", "Copy Editing", "Proofreading",
-  "Structural Feedback", "Dialogue & Voice", "Pacing & Flow", "Research & Fact-checking", "World-building",
+  "Plotting & Structure", "Character Development", "Dialogue & Voice", "World-building",
+  "Pacing & Flow", "Research & Fact-checking", "Developmental Editing", "Line Editing",
+  "Copy Editing & Proofreading", "Poetry", "Screenwriting", "Non-fiction",
+  "Beta Reading", "Script Coverage",
 ];
 
 const EXPERIENCE_LABELS: Record<string, string> = {

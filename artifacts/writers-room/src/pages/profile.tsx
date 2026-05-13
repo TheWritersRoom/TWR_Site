@@ -37,15 +37,17 @@ const EXPERIENCE_LABELS: Record<string, string> = {
 };
 
 const EDITING_SPECIALTIES = [
-  "Developmental Editing", "Line Editing", "Copy Editing", "Proofreading",
-  "Structural Feedback", "Dialogue & Voice", "Pacing & Flow", "Research & Fact-checking", "World-building",
+  "Plotting & Structure", "Character Development", "Dialogue & Voice", "World-building",
+  "Pacing & Flow", "Research & Fact-checking", "Developmental Editing", "Line Editing",
+  "Copy Editing & Proofreading", "Poetry", "Screenwriting", "Non-fiction",
+  "Beta Reading", "Script Coverage",
 ];
 
 const EXPERIENCE_LEVELS = [
-  { value: "novice",       label: "Novice",       desc: "New to editing" },
+  { value: "novice",       label: "Novice",       desc: "Just starting out" },
   { value: "intermediate", label: "Intermediate",  desc: "Some experience" },
   { value: "experienced",  label: "Experienced",   desc: "Several years" },
-  { value: "professional", label: "Professional",  desc: "Full-time editor" },
+  { value: "professional", label: "Professional",  desc: "Working professionally" },
 ];
 
 const ALL_GENRES = [
