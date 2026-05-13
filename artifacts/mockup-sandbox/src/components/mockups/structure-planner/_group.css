@@ -1,0 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --wr-cream: #F9F6EE;
+  --wr-dark: #1A1614;
+  --wr-gold: #E8B84B;
+  --wr-muted: #7A6B5E;
+  --wr-border: rgba(26,22,20,0.12);
+}
+
+body {
+  background: var(--wr-cream);
+  font-family: 'DM Sans', sans-serif;
+  color: var(--wr-dark);
+}
