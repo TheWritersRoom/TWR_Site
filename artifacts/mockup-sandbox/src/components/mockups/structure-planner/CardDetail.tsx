@@ -16,7 +16,7 @@ const EPISODE = {
     { name: 'DI Sarah Cole', note: 'Protagonist. Pushing past official resistance.' },
     { name: 'Tom Reyes', note: 'County archivist. Nervous but helpful.' },
     { name: 'Mayor Holt', note: 'Antagonist (off-screen this episode — referenced only).' },
-    { name: 'DS Patel', note: 'Sarah's reluctant but loyal partner.' },
+    { name: 'DS Patel', note: "Sarah's reluctant but loyal partner." },
     { name: 'Brennan', note: 'New character. Key witness. Frightened.' },
   ],
   tags: ['Rising tension', 'New character', 'B-story setup'],
