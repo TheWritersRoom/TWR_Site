@@ -705,7 +705,7 @@ function TeamPanel({
       <div className="border-b border-[#1A1614]/15 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-[#7A6B5E]" />
-          <p className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#1A1614]">Team</p>
+          <p className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#1A1614]">Collaborate</p>
         </div>
         <button onClick={onClose} className="p-1 hover:bg-[#1A1614]/8 rounded text-[#7A6B5E]">
           <X className="w-4 h-4" />
@@ -1006,7 +1006,7 @@ export default function PlannerPage() {
                 : "border-[#1A1614]/20 text-[#7A6B5E] hover:border-[#1A1614] hover:text-[#1A1614]"
             }`}
           >
-            <Users className="w-3.5 h-3.5" /> Team
+            <Users className="w-3.5 h-3.5" /> Collaborate
           </button>
           <button
             onClick={() => addCard.mutate()}
