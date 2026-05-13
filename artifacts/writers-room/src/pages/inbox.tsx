@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -14,17 +14,32 @@ type Message = {
   createdAt: string;
 };
 
+type ThreadMessage = Message & { toUserId: number };
+
 export default function Inbox() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<Message | null>(null);
   const [replyBody, setReplyBody] = useState("");
+  const threadEndRef = useRef<HTMLDivElement>(null);
 
   const { data: messages = [], isLoading } = useQuery<Message[]>({
     queryKey: ["/api/messages/inbox", user?.id],
     enabled: !!user?.id,
     queryFn: () => fetch(`/api/messages/inbox?userId=${user!.id}`).then((r) => r.json()),
   });
+
+  const { data: thread = [] } = useQuery<ThreadMessage[]>({
+    queryKey: ["/api/messages/conversation", user?.id, selected?.fromUserId],
+    enabled: !!user?.id && !!selected,
+    queryFn: () =>
+      fetch(`/api/messages/conversation?userA=${user!.id}&userB=${selected!.fromUserId}`).then((r) => r.json()),
+    refetchInterval: 10000,
+  });
+
+  useEffect(() => {
+    threadEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [thread]);
 
   const markRead = useMutation({
     mutationFn: (id: number) =>
@@ -45,6 +60,9 @@ export default function Inbox() {
       }).then((r) => r.json()),
     onSuccess: () => {
       setReplyBody("");
+      queryClient.invalidateQueries({
+        queryKey: ["/api/messages/conversation", user?.id, selected?.fromUserId],
+      });
     },
   });
 
@@ -134,7 +152,7 @@ export default function Inbox() {
           )}
         </div>
 
-        {/* Message detail */}
+        {/* Message detail / thread */}
         <div className="flex-1 hidden md:flex flex-col">
           {selected ? (
             <div className="flex flex-col h-full">
@@ -148,7 +166,7 @@ export default function Inbox() {
                 <div>
                   <p className="text-sm font-bold text-[#1A1614]">{selected.fromName}</p>
                   <p className="text-[10px] text-[#7A6B5E]">
-                    {formatDistanceToNow(new Date(selected.createdAt), { addSuffix: true })}
+                    {thread.length} message{thread.length !== 1 ? "s" : ""}
                   </p>
                 </div>
                 <div className="ml-auto">
@@ -162,16 +180,37 @@ export default function Inbox() {
                 </div>
               </div>
 
-              {/* Message body */}
-              <div className="flex-1 overflow-y-auto px-8 py-6">
-                <p className="text-sm text-[#1A1614] leading-relaxed whitespace-pre-wrap">{selected.body}</p>
+              {/* Thread */}
+              <div className="flex-1 overflow-y-auto px-8 py-6 space-y-5">
+                {thread.map((msg) => {
+                  const isMine = msg.fromUserId === user?.id;
+                  return (
+                    <div key={msg.id} className={`flex gap-3 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
+                      <div className={`w-7 h-7 flex items-center justify-center shrink-0 mt-0.5 ${isMine ? "bg-[#E8B84B]" : "bg-[#1A1614]"}`}>
+                        <span className={`text-[10px] font-bold ${isMine ? "text-[#1A1614]" : "text-[#F9F6EE]"}`}>
+                          {msg.fromName.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className={`max-w-[75%] ${isMine ? "items-end" : "items-start"} flex flex-col gap-1`}>
+                        <div className={`px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                          isMine
+                            ? "bg-[#1A1614] text-[#F9F6EE]"
+                            : "bg-white border border-[#1A1614]/10 text-[#1A1614]"
+                        }`}>
+                          {msg.body}
+                        </div>
+                        <p className="text-[9px] text-[#7A6B5E]/50">
+                          {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div ref={threadEndRef} />
               </div>
 
               {/* Reply composer */}
               <div className="border-t-2 border-[#1A1614]/10 px-8 py-4 shrink-0">
-                {sendReply.isSuccess && (
-                  <p className="text-[11px] text-[#7A6B5E] mb-2 font-semibold">Reply sent.</p>
-                )}
                 <div className="flex gap-3 items-end">
                   <textarea
                     value={replyBody}

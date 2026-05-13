@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, or, and, asc } from "drizzle-orm";
 import { db, messagesTable, usersTable } from "@workspace/db";
 
 const router: IRouter = Router();
@@ -38,6 +38,34 @@ router.get("/messages/inbox", async (req, res): Promise<void> => {
     .innerJoin(usersTable, eq(messagesTable.fromUserId, usersTable.id))
     .where(eq(messagesTable.toUserId, userId))
     .orderBy(desc(messagesTable.createdAt));
+
+  res.json(messages);
+});
+
+router.get("/messages/conversation", async (req, res): Promise<void> => {
+  const userA = parseInt(req.query.userA as string, 10);
+  const userB = parseInt(req.query.userB as string, 10);
+  if (isNaN(userA) || isNaN(userB)) { res.status(400).json({ error: "Invalid userIds" }); return; }
+
+  const messages = await db
+    .select({
+      id: messagesTable.id,
+      fromUserId: messagesTable.fromUserId,
+      fromName: usersTable.name,
+      toUserId: messagesTable.toUserId,
+      body: messagesTable.body,
+      isRead: messagesTable.isRead,
+      createdAt: messagesTable.createdAt,
+    })
+    .from(messagesTable)
+    .innerJoin(usersTable, eq(messagesTable.fromUserId, usersTable.id))
+    .where(
+      or(
+        and(eq(messagesTable.fromUserId, userA), eq(messagesTable.toUserId, userB)),
+        and(eq(messagesTable.fromUserId, userB), eq(messagesTable.toUserId, userA))
+      )
+    )
+    .orderBy(asc(messagesTable.createdAt));
 
   res.json(messages);
 });
