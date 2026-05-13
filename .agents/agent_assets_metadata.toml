@@ -48,3 +48,9 @@ id = "DH_SRI_TTJSLHEbttngIM"
 uri = "file://assets/writers-room-logo-square-gold.png"
 type = "image"
 title = "Writers Room — Gold square logo (PNG)"
+
+[[outputs]]
+id = "Pz85cXLNvWbsrvf2aHTyJ"
+uri = "file://writers-room-style-guide.pdf"
+type = "pdf"
+title = "Writers Room Style Guide"
