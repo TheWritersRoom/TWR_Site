@@ -747,7 +747,7 @@ export default function Profile() {
           {/* Credentials */}
           {(() => {
             const hasAnything = (creds.publishedWorks?.length ?? 0) > 0 || creds.professionalTitle ||
-              creds.website ||
+              creds.website || creds.linkedin || creds.patreon || creds.substack ||
               (creds.editingSpecialties?.length ?? 0) > 0 || creds.experienceLevel;
             if (!hasAnything) return (
               <button
