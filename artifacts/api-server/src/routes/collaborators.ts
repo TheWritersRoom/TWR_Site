@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, count } from "drizzle-orm";
-import { db, collaboratorsTable, usersTable, projectsTable, joinRequestsTable } from "@workspace/db";
+import { db, collaboratorsTable, usersTable, projectsTable, joinRequestsTable, messagesTable } from "@workspace/db";
 import { awardInk } from "../lib/ink";
 import {
   ListCollaboratorsParams,
@@ -216,6 +216,12 @@ router.post("/projects/:id/join-requests", async (req, res): Promise<void> => {
   const [existingReq] = await db.select().from(joinRequestsTable).where(
     and(eq(joinRequestsTable.projectId, projectId), eq(joinRequestsTable.userId, userId))
   );
+  const [requester] = await db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, userId));
+  const requesterName = requester?.name ?? "Someone";
+  const notifyBody = message?.trim()
+    ? `${requesterName} has requested to join "${project.title}":\n\n"${message.trim()}"`
+    : `${requesterName} has requested to join "${project.title}".`;
+
   if (existingReq) {
     // Allow re-requesting if previously declined
     if (existingReq.status === "pending") {
@@ -226,6 +232,7 @@ router.post("/projects/:id/join-requests", async (req, res): Promise<void> => {
       .set({ status: "pending", message, createdAt: new Date() })
       .where(eq(joinRequestsTable.id, existingReq.id))
       .returning();
+    await db.insert(messagesTable).values({ fromUserId: userId, toUserId: project.ownerId, body: notifyBody }).catch(() => {});
     res.status(200).json(updated);
     return;
   }
@@ -234,6 +241,8 @@ router.post("/projects/:id/join-requests", async (req, res): Promise<void> => {
     .insert(joinRequestsTable)
     .values({ projectId, userId, message })
     .returning();
+
+  await db.insert(messagesTable).values({ fromUserId: userId, toUserId: project.ownerId, body: notifyBody }).catch(() => {});
 
   res.status(201).json(created);
 });
@@ -256,6 +265,9 @@ router.patch("/projects/:id/join-requests/:requestId", async (req, res): Promise
   );
   if (!joinReq) { res.status(404).json({ error: "Join request not found" }); return; }
 
+  const [owner] = await db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, ownerId));
+  const ownerName = owner?.name ?? "The author";
+
   if (action === "accept") {
     // Check room limit
     const limit = project.collaboratorLimit ?? 6;
@@ -273,6 +285,20 @@ router.patch("/projects/:id/join-requests/:requestId", async (req, res): Promise
     if (invitee?.subscriptionTier === "pro") {
       await awardInk(ownerId, 15, "invite_accepted_pro_bonus", projectId).catch(() => {});
     }
+
+    // Notify the requester
+    await db.insert(messagesTable).values({
+      fromUserId: ownerId,
+      toUserId: joinReq.userId,
+      body: `${ownerName} accepted your request to join "${project.title}". Welcome to the room!`,
+    }).catch(() => {});
+  } else {
+    // Notify the requester of the decline
+    await db.insert(messagesTable).values({
+      fromUserId: ownerId,
+      toUserId: joinReq.userId,
+      body: `${ownerName} has reviewed your request to join "${project.title}" and isn't able to take on a collaborator at this time.`,
+    }).catch(() => {});
   }
 
   const [updated] = await db
