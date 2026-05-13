@@ -142,6 +142,7 @@ export const UpdateProjectParams = zod.object({
 export const UpdateProjectBody = zod.object({
   title: zod.string().nullish(),
   content: zod.string().nullish(),
+  synopsis: zod.string().nullish(),
   userId: zod.number(),
 });
 

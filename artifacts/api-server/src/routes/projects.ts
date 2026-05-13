@@ -266,9 +266,10 @@ router.patch("/projects/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const updateData: { title?: string; content?: string; collaboratorLimit?: number } = {};
+  const updateData: { title?: string; content?: string; synopsis?: string; collaboratorLimit?: number } = {};
   if (parsed.data.title != null) updateData.title = parsed.data.title;
   if (parsed.data.content != null) updateData.content = parsed.data.content;
+  if (parsed.data.synopsis != null) updateData.synopsis = parsed.data.synopsis;
   const rawLimit = parseInt(req.body.collaboratorLimit, 10);
   if (!isNaN(rawLimit) && rawLimit >= 1 && rawLimit <= 50) updateData.collaboratorLimit = rawLimit;
 

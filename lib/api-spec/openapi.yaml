@@ -838,6 +838,8 @@ components:
           type: ["string", "null"]
         content:
           type: ["string", "null"]
+        synopsis:
+          type: ["string", "null"]
         userId:
           type: integer
       required:

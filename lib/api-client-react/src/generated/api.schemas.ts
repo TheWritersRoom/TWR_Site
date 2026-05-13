@@ -291,6 +291,8 @@ export interface UpdateProjectBody {
   title?: string | null;
   /** @nullable */
   content?: string | null;
+  /** @nullable */
+  synopsis?: string | null;
   userId: number;
 }
 

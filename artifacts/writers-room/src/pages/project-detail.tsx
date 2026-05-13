@@ -83,6 +83,26 @@ export default function ProjectDetail() {
   const [editContent, setEditContent] = useState("");
   const [isSavingContent, setIsSavingContent] = useState(false);
 
+  // ── Synopsis editing ───────────────────────────────────────────────────────
+  const [synopsisDraft, setSynopsisDraft] = useState<string | null>(null);
+  const [isSavingSynopsis, setIsSavingSynopsis] = useState(false);
+
+  const handleSaveSynopsis = async () => {
+    if (synopsisDraft === null || !user) return;
+    setIsSavingSynopsis(true);
+    try {
+      await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, synopsis: synopsisDraft }),
+      });
+      queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
+      setSynopsisDraft(null);
+    } finally {
+      setIsSavingSynopsis(false);
+    }
+  };
+
   type FeedbackItem = {
     id: number;
     projectId: number;
@@ -1185,6 +1205,41 @@ export default function ProjectDetail() {
 
           {activeTab === 'insights' && isOwner && (
             <div className="space-y-4">
+              {/* Synopsis editor */}
+              <div className="bg-card rounded-2xl border border-border shadow-sm p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-foreground">Project Synopsis</h4>
+                  {synopsisDraft !== null && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setSynopsisDraft(null)}
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveSynopsis}
+                        disabled={isSavingSynopsis}
+                        className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
+                      >
+                        {isSavingSynopsis ? "Saving…" : "Save"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <textarea
+                  value={synopsisDraft ?? (project.synopsis ?? "")}
+                  onChange={(e) => setSynopsisDraft(e.target.value)}
+                  placeholder="Write a synopsis for your project. When content mode is set to 'synopsis', collaborators will see this instead of the full manuscript."
+                  className="w-full min-h-[120px] text-sm bg-secondary/40 border border-input rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary resize-none text-foreground placeholder:text-muted-foreground/60 leading-relaxed"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  {project.contentMode === "synopsis"
+                    ? "Collaborators currently see this synopsis (content mode: synopsis)."
+                    : "Collaborators see the full manuscript. Switch to 'Synopsis' mode in Publish settings to show only this."}
+                </p>
+              </div>
+
               <div className="flex items-center gap-2 mb-2">
                 <Trophy className="w-4 h-4 text-amber-500" />
                 <h4 className="text-sm font-bold text-foreground">Contributor Leaderboard</h4>
