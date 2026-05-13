@@ -207,8 +207,8 @@ export default function Landing() {
 
         {/* Editorial standfirst strip */}
         <div className="bg-[#F9F6EE] border-b-2 border-[#1A1614] px-6 md:px-14 py-6 text-center">
-          <p className="text-sm md:text-base text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif italic">
-            "Writers Room is the platform where authors write or upload their manuscripts, collaborate with genre-matched editors, and publish — within Writers Room itself, or out to Amazon, Apple Books, Kobo, and beyond."
+          <p className="text-base md:text-lg text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif font-semibold">
+            Writers Room is the platform where authors write or upload their manuscripts, collaborate with genre-matched editors, and publish — within Writers Room itself, or out to Amazon, Apple Books, Kobo, and beyond.
           </p>
         </div>
       </section>
