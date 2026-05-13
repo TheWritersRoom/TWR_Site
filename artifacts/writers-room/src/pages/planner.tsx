@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -847,9 +847,11 @@ export default function PlannerPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  const [, navigate] = useLocation();
   const [selectedCard, setSelectedCard] = useState<PlannerCard | null>(null);
   const [search, setSearch] = useState("");
   const [showTeam, setShowTeam] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: planner, isLoading } = useQuery<Planner>({
     queryKey: ["/api/planners", plannerId],
@@ -859,6 +861,15 @@ export default function PlannerPage() {
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["/api/planners", plannerId] });
+
+  const deletePlanner = useMutation({
+    mutationFn: () =>
+      fetch(`/api/planners/${plannerId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/planners"] });
+      navigate("/");
+    },
+  });
 
   const updatePlanner = useMutation({
     mutationFn: (fields: { synopsis?: string; title?: string }) =>
@@ -966,6 +977,15 @@ export default function PlannerPage() {
               className="pl-8 pr-3 py-1.5 text-[11px] border border-[#1A1614]/15 rounded-full bg-white focus:outline-none focus:border-[#E8B84B] w-36"
             />
           </div>
+          {planner.ownerId === user?.id && (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="p-1.5 text-[#7A6B5E]/50 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+              title="Delete planner"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={() => { setShowTeam((t) => !t); setSelectedCard(null); }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors ${
@@ -1014,6 +1034,44 @@ export default function PlannerPage() {
           />
         )}
       </div>
+
+      {/* ── Delete confirmation ── */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setShowDeleteConfirm(false)} />
+          <div className="relative bg-[#F9F6EE] border-2 border-[#1A1614] p-8 w-full max-w-sm mx-4 shadow-2xl">
+            <div className="flex items-start gap-3 mb-5">
+              <div className="w-8 h-8 bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
+                <Trash2 className="w-4 h-4 text-red-600" />
+              </div>
+              <div>
+                <h2 className="font-serif font-bold text-lg text-[#1A1614] leading-snug">Delete planner?</h2>
+                <p className="text-sm text-[#7A6B5E] mt-1 leading-relaxed">
+                  <strong className="text-[#1A1614]">{planner.title}</strong> and all {planner.cards.length} cards will be permanently deleted. This cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-2 border-2 border-[#1A1614]/25 text-sm font-semibold text-[#7A6B5E] hover:border-[#1A1614] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deletePlanner.mutate()}
+                disabled={deletePlanner.isPending}
+                className="flex-1 py-2 bg-red-600 text-white text-sm font-bold hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              >
+                {deletePlanner.isPending
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <Trash2 className="w-4 h-4" />}
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
