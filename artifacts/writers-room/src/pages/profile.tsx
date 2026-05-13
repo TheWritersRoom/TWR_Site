@@ -11,6 +11,7 @@ import {
   Bell, ToggleLeft, ToggleRight, Lightbulb, Mail, CheckCheck,
   Pencil, Plus, Trash2, X, Check, Save, Star, MessageSquare, BookmarkX,
 } from "lucide-react";
+import { InkBadge } from "@/components/ink-badge";
 
 type PublishedWork = { title: string; year?: number; publisher?: string };
 type WorkEntry    = { title: string; year: string; publisher: string };
@@ -585,6 +586,13 @@ export default function Profile() {
     queryFn: () => fetch(`/api/messages/inbox?userId=${user!.id}`).then((r) => r.json()),
   });
 
+  type InkTransaction = { id: number; amount: number; label: string; projectTitle: string | null; createdAt: string };
+  const { data: inkData } = useQuery<{ balance: number; transactions: InkTransaction[] }>({
+    queryKey: ["/api/users", user?.id, "ink"],
+    enabled: !!user,
+    queryFn: () => fetch(`/api/users/${user!.id}/ink`).then((r) => r.json()),
+  });
+
   const markRead = useMutation({
     mutationFn: (id: number) =>
       fetch(`/api/messages/${id}/read`, { method: "PATCH" }).then((r) => r.json()),
@@ -872,6 +880,43 @@ export default function Profile() {
               </div>
             </div>
           )}
+        </div>
+      </motion.div>
+
+      {/* Ink Level */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="bg-white border-2 border-[#1A1614] p-6 mb-8"
+      >
+        <div className="flex items-start gap-6 flex-wrap">
+          <div className="shrink-0">
+            <InkBadge balance={inkData?.balance ?? 0} size="lg" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#7A6B5E] mb-2">Ink Level</p>
+            <p className="text-xs text-[#7A6B5E] leading-relaxed mb-4 max-w-md">
+              Ink is your reputational currency — earned through every contribution you make. It grows alongside your reputation and will be redeemable for subscription discounts, merchandise, and exclusive creative services.
+            </p>
+            {inkData && inkData.transactions.length > 0 ? (
+              <div>
+                <p className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-2">Recent activity</p>
+                <div className="space-y-0">
+                  {inkData.transactions.slice(0, 5).map((t) => (
+                    <div key={t.id} className="flex items-center justify-between gap-4 text-xs py-1.5 border-b border-[#1A1614]/6 last:border-0">
+                      <span className="text-[#1A1614]">
+                        {t.label}{t.projectTitle ? <span className="text-[#7A6B5E]"> — {t.projectTitle}</span> : ""}
+                      </span>
+                      <span className="font-bold text-[#E8B84B] shrink-0">+{t.amount}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-[#7A6B5E] italic">No Ink earned yet — submit suggestions and collaborate to start building your balance.</p>
+            )}
+          </div>
         </div>
       </motion.div>
 

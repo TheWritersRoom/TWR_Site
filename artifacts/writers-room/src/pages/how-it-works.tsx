@@ -5,7 +5,7 @@ import {
   ArrowRight, PenTool, Users, MessageSquare, Star, BookOpen,
   Check, Lightbulb, Award, Shield, Heart, Globe, ArrowLeft,
   TrendingUp, Search, Mail, Handshake, Quote,
-  Pencil, Eye, BadgeCheck, Crown, Repeat2, BookMarked,
+  Pencil, Eye, BadgeCheck, Crown, Repeat2, BookMarked, Droplets,
 } from "lucide-react";
 
 const inView = (delay = 0) => ({
@@ -86,8 +86,8 @@ const CONTRIBUTOR_STEPS = [
   },
   {
     n: "04",
-    title: "Build your track record",
-    body: "Every accepted suggestion adds to your public track record. Authors can see your acceptance rate, the genres you have worked in, and the projects you have contributed to. This is your reputation on the platform.",
+    title: "Build your track record — and earn Ink",
+    body: "Every accepted suggestion adds to your public track record. Authors can see your acceptance rate, the genres you have worked in, and the projects you have contributed to. And every contribution earns Ink — a reputational currency you accumulate over time and can redeem for subscription discounts, merchandise, and exclusive creative services.",
   },
   {
     n: "05",
@@ -391,6 +391,77 @@ export default function HowItWorks() {
               </p>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* ── INK ── */}
+      <section className="py-20 px-6 md:px-14 bg-[#E8B84B] border-t-2 border-[#1A1614]">
+        <div className="max-w-5xl mx-auto">
+          <motion.div {...inView()} className="mb-12">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-[#1A1614] flex items-center justify-center">
+                <Droplets className="w-5 h-5 text-[#E8B84B]" />
+              </div>
+              <div>
+                <p className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#1A1614]/50">Reputational currency</p>
+                <h2 className="font-serif font-bold text-3xl md:text-4xl text-[#1A1614] leading-none">Building Ink</h2>
+              </div>
+            </div>
+            <div className="border-t-2 border-[#1A1614]/30 mt-4 mb-2" />
+            <p className="font-serif italic text-[#1A1614]/70 text-base mt-4 max-w-2xl">
+              Ink is not a points system. It is a ledger of genuine creative contribution — a currency that grows with you and opens doors as the platform grows.
+            </p>
+            <div className="border-t border-[#1A1614]/20 mt-4" />
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-0 border-2 border-[#1A1614]">
+            {/* How you earn */}
+            <motion.div {...inView(0.05)} className="p-8 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1614]">
+              <h3 className="font-bold text-[#1A1614] uppercase tracking-[0.1em] text-sm mb-5">How you earn Ink</h3>
+              <div className="space-y-4">
+                {[
+                  { action: "Submit a suggestion", amount: "+2", note: "Every time you propose an edit" },
+                  { action: "Suggestion accepted", amount: "+10", note: "When an author accepts your edit" },
+                  { action: "Joined as collaborator", amount: "+5", note: "Each new project you join" },
+                  { action: "Published project credit", amount: "+25", note: "When a project you worked on is published" },
+                ].map((row) => (
+                  <div key={row.action} className="flex items-center justify-between gap-4 py-2.5 border-b border-[#1A1614]/15 last:border-0">
+                    <div>
+                      <p className="text-sm font-semibold text-[#1A1614]">{row.action}</p>
+                      <p className="text-[11px] text-[#1A1614]/55">{row.note}</p>
+                    </div>
+                    <span className="font-serif font-bold text-2xl text-[#1A1614] shrink-0">{row.amount}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* What you can do with it */}
+            <motion.div {...inView(0.1)} className="p-8 bg-[#1A1614]">
+              <h3 className="font-bold text-[#F9F6EE] uppercase tracking-[0.1em] text-sm mb-5">What Ink unlocks</h3>
+              <div className="space-y-5">
+                {[
+                  { label: "Subscription discounts", desc: "Redeem Ink against your monthly or annual subscription — the more you contribute, the less you pay.", soon: false },
+                  { label: "Merchandise", desc: "Writers Room branded items for contributors who have earned the right to wear the badge.", soon: true },
+                  { label: "Book printing", desc: "Discounts on professional print runs through our partner services.", soon: true },
+                  { label: "Cover design & editing", desc: "Redeemable against professional cover design and copy-editing services.", soon: true },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-start gap-3 border-b border-[#F9F6EE]/10 pb-4 last:border-0 last:pb-0">
+                    <div className="w-1.5 h-1.5 bg-[#E8B84B] shrink-0 mt-1.5" />
+                    <div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="text-sm font-semibold text-[#F9F6EE]">{item.label}</p>
+                        {item.soon && (
+                          <span className="text-[9px] font-bold uppercase tracking-[0.12em] px-1.5 py-0.5 bg-[#E8B84B]/15 text-[#E8B84B] border border-[#E8B84B]/30">Coming soon</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-[#F9F6EE]/50 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 

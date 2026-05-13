@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import {
   Upload, Users, MessageSquare, BarChart2, Globe, Telescope,
-  ArrowRight, Check, BookOpen, Star, Shield, Award, Mail, Menu, X
+  ArrowRight, Check, BookOpen, Star, Shield, Award, Mail, Menu, X, Droplets,
 } from "lucide-react";
 import typewriterRoom from "@/assets/writers-room-banner.jpg";
 
@@ -25,6 +25,7 @@ const FEATURES = [
   { icon: <Telescope className="w-5 h-5" />, title: "Discover published works", desc: "Browse a curated feed of works published within Writers Room. Read in your favourite genres, leave feedback, and build your editorial reputation." },
   { icon: <Award className="w-5 h-5" />, title: "Contribution certificates", desc: "Contributors download a signed PDF for every project — listing accepted suggestions, timestamps, and a cryptographic content fingerprint. Proof of creative work, forever." },
   { icon: <Mail className="w-5 h-5" />, title: "Direct messaging", desc: "Discuss a suggestion in depth, ask about a project, or simply introduce yourself. Every great collaboration starts with a conversation." },
+  { icon: <Droplets className="w-5 h-5" />, title: "Earn Ink", desc: "Every contribution earns Ink — a reputational currency that grows with your activity on the platform. Redeem it for subscription discounts, merchandise, and exclusive creative services as the platform grows." },
 ];
 
 const FOR_AUTHORS = [
@@ -41,6 +42,7 @@ const FOR_CONTRIBUTORS = [
   "Highlight and suggest edits inline",
   "Build a track record of accepted suggestions",
   "Read and respond to published work in the Discover feed",
+  "Earn Ink — reputational currency redeemable for discounts and services",
 ];
 
 const STEPS = [
