@@ -54,6 +54,25 @@ export async function applyMigrations(): Promise<void> {
       }
     }
 
+    // 3. Ensure platform_settings table exists and is seeded
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS platform_settings (
+        key   TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      );
+    `);
+    // Insert the initial free Pro slot count. If the row already exists
+    // with a real (non-zero) value — meaning real signups have claimed
+    // slots — leave it untouched. Only initialise if missing or still at
+    // the uninitialised default of 0.
+    await client.query(`
+      INSERT INTO platform_settings (key, value)
+        VALUES ('free_pro_slots', '300')
+      ON CONFLICT (key) DO UPDATE
+        SET value = '300'
+        WHERE platform_settings.value = '0';
+    `);
+
     console.log("[migrate] Schema up to date.");
   } catch (err) {
     console.error("[migrate] Migration failed:", err);
