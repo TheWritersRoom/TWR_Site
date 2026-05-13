@@ -191,7 +191,7 @@ export default function HowItWorks() {
             </h1>
             <ThickRule className="border-[#F9F6EE]/20 w-32 mx-auto mb-8" />
             <p className="font-serif italic text-[#F9F6EE]/70 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-              Not a marketplace. Not a gig platform. A community of writers and editors who make each other's work genuinely better.
+              A community of writers and editors who make each other's work genuinely better.
             </p>
           </motion.div>
         </div>
