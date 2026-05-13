@@ -196,7 +196,6 @@ function EditProfileDrawer({
   const [about, setAbout]             = useState(user.mediaInterests ?? "");
   const [genres, setGenres]           = useState<string[]>(parseGenres(user.genres));
   const [credTitle, setCredTitle]     = useState(creds.professionalTitle ?? "");
-  const [isPublished, setIsPublished] = useState(creds.isPublishedAuthor ?? false);
   const [works, setWorks]             = useState<WorkEntry[]>(
     (creds.publishedWorks ?? []).map((w) => ({
       title: w.title,
@@ -220,7 +219,6 @@ function EditProfileDrawer({
       setAbout(user.mediaInterests ?? "");
       setGenres(parseGenres(user.genres));
       setCredTitle(c.professionalTitle ?? "");
-      setIsPublished(c.isPublishedAuthor ?? false);
       setWorks((c.publishedWorks ?? []).map((w) => ({ title: w.title, year: w.year ? String(w.year) : "", publisher: w.publisher ?? "" })));
       setWebsite(c.website ?? "");
       setLinkedin(c.linkedin ?? "");
@@ -254,7 +252,7 @@ function EditProfileDrawer({
     const validWorks = works.filter((w) => w.title.trim());
     const credentials = JSON.stringify({
       ...(credTitle.trim() ? { professionalTitle: credTitle.trim() } : {}),
-      isPublishedAuthor: isPublished || validWorks.length > 0,
+      isPublishedAuthor: validWorks.length > 0,
       publishedWorks: validWorks.map((w) => ({
         title: w.title.trim(),
         ...(w.year.trim() ? { year: parseInt(w.year) } : {}),
@@ -374,19 +372,6 @@ function EditProfileDrawer({
                     <label className="block text-[10px] uppercase tracking-[0.16em] font-bold text-[#7A6B5E] mb-1.5">Professional title</label>
                     <input type="text" value={credTitle} onChange={(e) => setCredTitle(e.target.value)} className={input} placeholder="e.g. Freelance Editor, Literary Agent…" />
                   </div>
-
-                  {/* Published author toggle */}
-                  <label className="flex items-center justify-between gap-4 cursor-pointer bg-white border border-[#1A1614]/15 px-4 py-3">
-                    <div>
-                      <p className="text-sm font-semibold text-[#1A1614]">Published author</p>
-                      <p className="text-xs text-[#7A6B5E]">Shows a badge on your public profile</p>
-                    </div>
-                    <button type="button" onClick={() => setIsPublished((v) => !v)}>
-                      {isPublished
-                        ? <ToggleRight className="w-9 h-9 text-[#E8B84B]" />
-                        : <ToggleLeft className="w-9 h-9 text-[#7A6B5E]/40" />}
-                    </button>
-                  </label>
 
                   {/* Published works */}
                   <div>
@@ -759,8 +744,8 @@ export default function Profile() {
 
           {/* Credentials */}
           {(() => {
-            const hasAnything = creds.isPublishedAuthor || creds.professionalTitle ||
-              (creds.publishedWorks?.length ?? 0) > 0 || creds.website ||
+            const hasAnything = (creds.publishedWorks?.length ?? 0) > 0 || creds.professionalTitle ||
+              creds.website ||
               (creds.editingSpecialties?.length ?? 0) > 0 || creds.experienceLevel;
             if (!hasAnything) return (
               <button
@@ -774,7 +759,7 @@ export default function Profile() {
               <div className="mt-4 pt-4 border-t border-[#1A1614]/10">
                 <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#7A6B5E] mb-2.5 flex items-center gap-1.5">
                   <BadgeCheck className="w-3.5 h-3.5 text-[#E8B84B]" />
-                  {creds.isPublishedAuthor ? "Published Author" : "Credentials"}
+                  Credentials
                 </p>
                 {creds.professionalTitle && (
                   <p className="text-sm font-semibold text-[#1A1614] mb-2">{creds.professionalTitle}</p>

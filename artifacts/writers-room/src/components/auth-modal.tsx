@@ -81,7 +81,6 @@ export function AuthModal() {
 
   // Credentials fields
   const [suCredTitle, setSuCredTitle] = useState("");
-  const [suIsPublished, setSuIsPublished] = useState(false);
   const [suWorks, setSuWorks] = useState<WorkEntry[]>([]);
   const [suWebsite, setSuWebsite] = useState("");
   const [suLinkedin, setSuLinkedin] = useState("");
@@ -163,7 +162,7 @@ export function AuthModal() {
 
       const credentials = JSON.stringify({
         ...(suCredTitle.trim() ? { professionalTitle: suCredTitle.trim() } : {}),
-        isPublishedAuthor: suIsPublished || validWorks.length > 0,
+        isPublishedAuthor: validWorks.length > 0,
         publishedWorks: validWorks,
         ...(suWebsite.trim() ? { website: suWebsite.trim() } : {}),
         ...(suLinkedin.trim() ? { linkedin: suLinkedin.trim() } : {}),
@@ -532,25 +531,6 @@ export function AuthModal() {
                         maxLength={120}
                       />
                     </div>
-
-                    {/* Published author checkbox */}
-                    <label className="flex items-start gap-3 cursor-pointer group">
-                      <div className="relative mt-0.5">
-                        <input
-                          type="checkbox"
-                          checked={suIsPublished}
-                          onChange={(e) => setSuIsPublished(e.target.checked)}
-                          className="sr-only"
-                        />
-                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${suIsPublished ? "bg-primary border-primary" : "border-input group-hover:border-primary/60"}`}>
-                          {suIsPublished && <Check className="w-3 h-3 text-white" />}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">I am a published author</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">Adds a verified badge to your profile</p>
-                      </div>
-                    </label>
 
                     {/* Published works */}
                     <div>
