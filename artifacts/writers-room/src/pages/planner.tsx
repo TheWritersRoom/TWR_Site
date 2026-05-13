@@ -2,11 +2,12 @@ import { useState, useCallback } from "react";
 import { useRoute, Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import {
   ChevronLeft, Plus, LayoutGrid, List, Search, Filter,
   GripVertical, MoreHorizontal, Circle, Clock, AlertCircle, CheckCircle2,
   Film, BookOpen, X, Save, Pencil, Tag, Users, FileText, Lightbulb,
-  StickyNote, BarChart2, Loader2, Trash2,
+  StickyNote, BarChart2, Loader2, Trash2, UserPlus, Crown, Shield, Eye,
 } from "lucide-react";
 
 type CardStatus = "draft" | "outline" | "writing" | "complete";
@@ -37,6 +38,17 @@ type Planner = {
   title: string;
   mediaType: "tv" | "book" | "serial" | "other";
   cards: PlannerCard[];
+};
+
+type Contributor = {
+  id: number;
+  plannerId: number;
+  userId: number;
+  role: "viewer" | "editor";
+  addedAt: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
 };
 
 const STATUS: Record<CardStatus, { label: string; color: string; icon: any }> = {
@@ -549,6 +561,218 @@ function CardDetailPanel({
   );
 }
 
+// ── Team Panel ────────────────────────────────────────────────────────────────
+
+function TeamPanel({
+  plannerId,
+  ownerId,
+  currentUserId,
+  onClose,
+}: {
+  plannerId: number;
+  ownerId: number;
+  currentUserId: number;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"editor" | "viewer">("editor");
+
+  const { data: contributors = [], isLoading } = useQuery<Contributor[]>({
+    queryKey: ["/api/planners", plannerId, "contributors"],
+    queryFn: () =>
+      fetch(`/api/planners/${plannerId}/contributors`).then((r) => r.json()),
+  });
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ["/api/planners", plannerId, "contributors"] });
+
+  const addContrib = useMutation({
+    mutationFn: async () => {
+      const r = await fetch(`/api/planners/${plannerId}/contributors`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), role }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error ?? "Failed to add");
+      return data;
+    },
+    onSuccess: () => {
+      setEmail("");
+      invalidate();
+      toast({ title: "Contributor added" });
+    },
+    onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
+  });
+
+  const removeContrib = useMutation({
+    mutationFn: async (userId: number) => {
+      await fetch(`/api/planners/${plannerId}/contributors/${userId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => { invalidate(); toast({ title: "Removed" }); },
+    onError: () => toast({ title: "Failed to remove", variant: "destructive" }),
+  });
+
+  const updateRole = useMutation({
+    mutationFn: async ({ userId, role }: { userId: number; role: string }) => {
+      await fetch(`/api/planners/${plannerId}/contributors/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+    },
+    onSuccess: () => invalidate(),
+  });
+
+  const initials = (name: string) =>
+    name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+
+  const isOwner = currentUserId === ownerId;
+
+  return (
+    <div className="w-[340px] shrink-0 border-l-2 border-[#1A1614] flex flex-col bg-[#F9F6EE] overflow-hidden">
+      {/* Header */}
+      <div className="border-b border-[#1A1614]/15 px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Users className="w-4 h-4 text-[#7A6B5E]" />
+          <p className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#1A1614]">Team</p>
+        </div>
+        <button onClick={onClose} className="p-1 hover:bg-[#1A1614]/8 rounded text-[#7A6B5E]">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-5">
+
+        {/* Add contributor form */}
+        {isOwner && (
+          <div className="border border-[#1A1614]/12 bg-white p-4 flex flex-col gap-3">
+            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#7A6B5E]">Add contributor</p>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && email.trim() && addContrib.mutate()}
+              placeholder="Email address…"
+              className="w-full px-3 py-2 text-sm border border-[#1A1614]/20 focus:border-[#1A1614] outline-none bg-[#F9F6EE]"
+            />
+            <div className="flex items-center gap-2">
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value as "editor" | "viewer")}
+                className="flex-1 px-2 py-1.5 text-[11px] border border-[#1A1614]/20 bg-[#F9F6EE] focus:outline-none focus:border-[#1A1614]"
+              >
+                <option value="editor">Can edit</option>
+                <option value="viewer">View only</option>
+              </select>
+              <button
+                onClick={() => addContrib.mutate()}
+                disabled={!email.trim() || addContrib.isPending}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] disabled:opacity-40 transition-colors"
+              >
+                {addContrib.isPending
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <UserPlus className="w-3.5 h-3.5" />}
+                Add
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Owner */}
+        <div>
+          <p className="text-[9px] uppercase tracking-[0.2em] font-bold text-[#7A6B5E]/60 mb-2">Owner</p>
+          <div className="flex items-center gap-3 px-3 py-2.5 bg-white border border-[#1A1614]/10">
+            <div className="w-7 h-7 rounded-full bg-[#1A1614] text-[#F9F6EE] text-[10px] font-bold flex items-center justify-center shrink-0">
+              <Crown className="w-3.5 h-3.5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-bold text-[#1A1614] truncate">You</p>
+              <p className="text-[9px] text-[#7A6B5E]">Full control</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Contributors list */}
+        <div>
+          <p className="text-[9px] uppercase tracking-[0.2em] font-bold text-[#7A6B5E]/60 mb-2">
+            Contributors {contributors.length > 0 && `(${contributors.length})`}
+          </p>
+          {isLoading ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="w-4 h-4 animate-spin text-[#7A6B5E]" />
+            </div>
+          ) : contributors.length === 0 ? (
+            <div className="py-6 text-center border border-dashed border-[#1A1614]/15">
+              <p className="text-[11px] text-[#7A6B5E]">No contributors yet.</p>
+              {isOwner && (
+                <p className="text-[10px] text-[#7A6B5E]/60 mt-1">Add someone by email above.</p>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {contributors.map((c) => (
+                <div key={c.userId} className="flex items-center gap-3 px-3 py-2.5 bg-white border border-[#1A1614]/10">
+                  {/* Avatar */}
+                  {c.avatarUrl ? (
+                    <img src={c.avatarUrl} alt={c.name} className="w-7 h-7 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-[#E8B84B]/30 text-[#7A5A00] text-[10px] font-bold flex items-center justify-center shrink-0">
+                      {initials(c.name)}
+                    </div>
+                  )}
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-bold text-[#1A1614] truncate">{c.name}</p>
+                    <p className="text-[9px] text-[#7A6B5E] truncate">{c.email}</p>
+                  </div>
+                  {/* Role + remove */}
+                  {isOwner ? (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <select
+                        value={c.role}
+                        onChange={(e) => updateRole.mutate({ userId: c.userId, role: e.target.value })}
+                        className="text-[9px] border border-[#1A1614]/15 px-1.5 py-1 bg-[#F9F6EE] focus:outline-none focus:border-[#1A1614]"
+                      >
+                        <option value="editor">Editor</option>
+                        <option value="viewer">Viewer</option>
+                      </select>
+                      <button
+                        onClick={() => removeContrib.mutate(c.userId)}
+                        className="p-1 text-[#7A6B5E]/50 hover:text-red-600 transition-colors"
+                        title="Remove"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-[9px] font-medium text-[#7A6B5E] shrink-0 flex items-center gap-1">
+                      {c.role === "editor"
+                        ? <><Shield className="w-3 h-3" /> Editor</>
+                        : <><Eye className="w-3 h-3" /> Viewer</>}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Hint */}
+        <div className="border-t border-[#1A1614]/10 pt-4">
+          <p className="text-[9px] text-[#7A6B5E]/60 leading-relaxed">
+            Contributors must have a Writers Room account. Editors can view and edit all cards. Viewers can only read.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function PlannerPage() {
@@ -559,6 +783,7 @@ export default function PlannerPage() {
 
   const [selectedCard, setSelectedCard] = useState<PlannerCard | null>(null);
   const [search, setSearch] = useState("");
+  const [showTeam, setShowTeam] = useState(false);
 
   const { data: planner, isLoading } = useQuery<Planner>({
     queryKey: ["/api/planners", plannerId],
@@ -662,6 +887,16 @@ export default function PlannerPage() {
             />
           </div>
           <button
+            onClick={() => { setShowTeam((t) => !t); setSelectedCard(null); }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors ${
+              showTeam
+                ? "bg-[#1A1614] text-[#F9F6EE] border-[#1A1614]"
+                : "border-[#1A1614]/20 text-[#7A6B5E] hover:border-[#1A1614] hover:text-[#1A1614]"
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" /> Team
+          </button>
+          <button
             onClick={() => addCard.mutate()}
             disabled={addCard.isPending}
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-bold bg-[#1A1614] text-[#F9F6EE] hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors disabled:opacity-50"
@@ -671,22 +906,30 @@ export default function PlannerPage() {
         </div>
       </header>
 
-      {/* ── Body: grid + optional detail panel ── */}
+      {/* ── Body: grid + optional detail/team panel ── */}
       <div className="flex flex-1 overflow-hidden">
         <CardGrid
           planner={planner}
           search={search}
-          onCardClick={setSelectedCard}
+          onCardClick={(card) => { setSelectedCard(card); setShowTeam(false); }}
           onAddCard={() => addCard.mutate()}
           isAddingCard={addCard.isPending}
         />
-        {selectedCard && (
+        {selectedCard && !showTeam && (
           <CardDetailPanel
             key={selectedCard.id}
             card={selectedCard}
             onClose={() => setSelectedCard(null)}
             onUpdate={handleUpdate}
             onDelete={() => deleteCard.mutate(selectedCard.id)}
+          />
+        )}
+        {showTeam && user && (
+          <TeamPanel
+            plannerId={plannerId}
+            ownerId={planner.ownerId}
+            currentUserId={user.id}
+            onClose={() => setShowTeam(false)}
           />
         )}
       </div>

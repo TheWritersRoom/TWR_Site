@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, index } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, index, unique } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
 import { projectsTable } from "./projects";
 
@@ -39,5 +39,17 @@ export const plannerCardsTable = pgTable("planner_cards", {
   index("planner_cards_position_idx").on(t.plannerId, t.position),
 ]);
 
+export const plannerContributorsTable = pgTable("planner_contributors", {
+  id: serial("id").primaryKey(),
+  plannerId: integer("planner_id").notNull().references(() => plannersTable.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  role: text("role", { enum: ["viewer", "editor"] }).notNull().default("editor"),
+  addedAt: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  unique("unique_planner_contributor").on(t.plannerId, t.userId),
+  index("planner_contrib_planner_idx").on(t.plannerId),
+]);
+
 export type Planner = typeof plannersTable.$inferSelect;
 export type PlannerCard = typeof plannerCardsTable.$inferSelect;
+export type PlannerContributor = typeof plannerContributorsTable.$inferSelect;

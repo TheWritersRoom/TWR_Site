@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, asc } from "drizzle-orm";
-import { db, plannersTable, plannerCardsTable } from "@workspace/db";
+import { db, plannersTable, plannerCardsTable, plannerContributorsTable, usersTable } from "@workspace/db";
 
 const router: IRouter = Router();
 
@@ -117,6 +117,154 @@ router.delete("/planners/:id", async (req, res): Promise<void> => {
   await db.delete(plannersTable).where(eq(plannersTable.id, plannerId));
   res.status(204).send();
 });
+
+// ── Contributors ─────────────────────────────────────────────────────────────
+
+// List contributors for a planner
+router.get("/planners/:id/contributors", async (req, res): Promise<void> => {
+  const plannerId = parseInt(req.params.id, 10);
+  if (isNaN(plannerId)) {
+    res.status(400).json({ error: "Invalid planner id" });
+    return;
+  }
+
+  const rows = await db
+    .select({
+      id: plannerContributorsTable.id,
+      plannerId: plannerContributorsTable.plannerId,
+      userId: plannerContributorsTable.userId,
+      role: plannerContributorsTable.role,
+      addedAt: plannerContributorsTable.addedAt,
+      name: usersTable.name,
+      email: usersTable.email,
+      avatarUrl: usersTable.avatarUrl,
+    })
+    .from(plannerContributorsTable)
+    .innerJoin(usersTable, eq(plannerContributorsTable.userId, usersTable.id))
+    .where(eq(plannerContributorsTable.plannerId, plannerId))
+    .orderBy(asc(plannerContributorsTable.addedAt));
+
+  res.json(rows);
+});
+
+// Add a contributor by email
+router.post("/planners/:id/contributors", async (req, res): Promise<void> => {
+  const plannerId = parseInt(req.params.id, 10);
+  if (isNaN(plannerId)) {
+    res.status(400).json({ error: "Invalid planner id" });
+    return;
+  }
+
+  const { email, role = "editor" } = req.body ?? {};
+  if (!email || typeof email !== "string") {
+    res.status(400).json({ error: "email is required" });
+    return;
+  }
+
+  // Find user by email
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.email, email.trim().toLowerCase()));
+
+  if (!user) {
+    res.status(404).json({ error: "No user found with that email address" });
+    return;
+  }
+
+  // Check planner exists and user isn't owner
+  const [planner] = await db
+    .select()
+    .from(plannersTable)
+    .where(eq(plannersTable.id, plannerId));
+
+  if (!planner) {
+    res.status(404).json({ error: "Planner not found" });
+    return;
+  }
+
+  if (planner.ownerId === user.id) {
+    res.status(400).json({ error: "Cannot add the planner owner as a contributor" });
+    return;
+  }
+
+  try {
+    const [contrib] = await db
+      .insert(plannerContributorsTable)
+      .values({
+        plannerId,
+        userId: user.id,
+        role: role === "viewer" ? "viewer" : "editor",
+      })
+      .returning();
+
+    res.status(201).json({
+      ...contrib,
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+    });
+  } catch (err: any) {
+    if (err?.code === "23505") {
+      res.status(400).json({ error: "This user is already a contributor" });
+    } else {
+      throw err;
+    }
+  }
+});
+
+// Update contributor role
+router.patch("/planners/:id/contributors/:userId", async (req, res): Promise<void> => {
+  const plannerId = parseInt(req.params.id, 10);
+  const userId = parseInt(req.params.userId, 10);
+  if (isNaN(plannerId) || isNaN(userId)) {
+    res.status(400).json({ error: "Invalid ids" });
+    return;
+  }
+
+  const { role } = req.body ?? {};
+  if (!role || !["viewer", "editor"].includes(role)) {
+    res.status(400).json({ error: "role must be viewer or editor" });
+    return;
+  }
+
+  const [updated] = await db
+    .update(plannerContributorsTable)
+    .set({ role })
+    .where(and(
+      eq(plannerContributorsTable.plannerId, plannerId),
+      eq(plannerContributorsTable.userId, userId),
+    ))
+    .returning();
+
+  if (!updated) {
+    res.status(404).json({ error: "Contributor not found" });
+    return;
+  }
+
+  res.json(updated);
+});
+
+// Remove a contributor
+router.delete("/planners/:id/contributors/:userId", async (req, res): Promise<void> => {
+  const plannerId = parseInt(req.params.id, 10);
+  const userId = parseInt(req.params.userId, 10);
+  if (isNaN(plannerId) || isNaN(userId)) {
+    res.status(400).json({ error: "Invalid ids" });
+    return;
+  }
+
+  await db
+    .delete(plannerContributorsTable)
+    .where(and(
+      eq(plannerContributorsTable.plannerId, plannerId),
+      eq(plannerContributorsTable.userId, userId),
+    ));
+
+  res.status(204).send();
+});
+
+// ── Cards ─────────────────────────────────────────────────────────────────────
 
 // Reorder cards — must come BEFORE /planners/:id/cards/:cardId
 router.patch("/planners/:id/cards/reorder", async (req, res): Promise<void> => {
