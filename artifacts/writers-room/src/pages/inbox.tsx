@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { formatDistanceToNow } from "date-fns";
-import { Mail, MailOpen, User, ArrowLeft } from "lucide-react";
+import { Mail, MailOpen, User, Send } from "lucide-react";
 
 type Message = {
   id: number;
@@ -18,6 +18,7 @@ export default function Inbox() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<Message | null>(null);
+  const [replyBody, setReplyBody] = useState("");
 
   const { data: messages = [], isLoading } = useQuery<Message[]>({
     queryKey: ["/api/messages/inbox", user?.id],
@@ -35,9 +36,28 @@ export default function Inbox() {
     },
   });
 
+  const sendReply = useMutation({
+    mutationFn: (body: string) =>
+      fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fromUserId: user!.id, toUserId: selected!.fromUserId, body }),
+      }).then((r) => r.json()),
+    onSuccess: () => {
+      setReplyBody("");
+    },
+  });
+
   const handleSelect = (msg: Message) => {
     setSelected(msg);
+    setReplyBody("");
     if (!msg.isRead) markRead.mutate(msg.id);
+  };
+
+  const handleSendReply = () => {
+    const trimmed = replyBody.trim();
+    if (!trimmed || sendReply.isPending) return;
+    sendReply.mutate(trimmed);
   };
 
   const unread = messages.filter((m) => !m.isRead).length;
@@ -118,7 +138,8 @@ export default function Inbox() {
         <div className="flex-1 hidden md:flex flex-col">
           {selected ? (
             <div className="flex flex-col h-full">
-              <div className="border-b border-[#1A1614]/15 px-8 py-5 flex items-center gap-4">
+              {/* Sender bar */}
+              <div className="border-b border-[#1A1614]/15 px-8 py-5 flex items-center gap-4 shrink-0">
                 <div className="w-10 h-10 bg-[#1A1614] flex items-center justify-center shrink-0">
                   <span className="text-sm font-bold text-[#F9F6EE]">
                     {selected.fromName.charAt(0).toUpperCase()}
@@ -140,8 +161,40 @@ export default function Inbox() {
                   </Link>
                 </div>
               </div>
+
+              {/* Message body */}
               <div className="flex-1 overflow-y-auto px-8 py-6">
                 <p className="text-sm text-[#1A1614] leading-relaxed whitespace-pre-wrap">{selected.body}</p>
+              </div>
+
+              {/* Reply composer */}
+              <div className="border-t-2 border-[#1A1614]/10 px-8 py-4 shrink-0">
+                {sendReply.isSuccess && (
+                  <p className="text-[11px] text-[#7A6B5E] mb-2 font-semibold">Reply sent.</p>
+                )}
+                <div className="flex gap-3 items-end">
+                  <textarea
+                    value={replyBody}
+                    onChange={(e) => setReplyBody(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSendReply();
+                    }}
+                    placeholder={`Reply to ${selected.fromName}…`}
+                    rows={3}
+                    className="flex-1 text-sm border border-[#1A1614]/20 bg-white px-3 py-2.5 resize-none focus:outline-none focus:border-[#E8B84B] text-[#1A1614] placeholder:text-[#7A6B5E]/50 leading-relaxed"
+                  />
+                  <button
+                    onClick={handleSendReply}
+                    disabled={!replyBody.trim() || sendReply.isPending}
+                    className="flex items-center gap-1.5 px-4 py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] font-bold uppercase tracking-[0.12em] hover:bg-[#E8B84B] hover:text-[#1A1614] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                  >
+                    {sendReply.isPending
+                      ? <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      : <Send className="w-3.5 h-3.5" />}
+                    Send
+                  </button>
+                </div>
+                <p className="text-[9px] text-[#7A6B5E]/50 mt-1.5">⌘ Return to send</p>
               </div>
             </div>
           ) : (
