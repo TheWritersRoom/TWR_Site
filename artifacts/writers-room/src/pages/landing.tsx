@@ -169,12 +169,6 @@ export default function Landing() {
               >
                 Start for free <ArrowRight className="w-4 h-4" />
               </button>
-              <button
-                onClick={openAuthModal}
-                className="px-8 py-3.5 border-2 border-[#1A1614] text-[#1A1614] text-sm font-bold uppercase tracking-[0.12em] hover:bg-[#1A1614]/8 transition-colors"
-              >
-                Join as contributor
-              </button>
             </div>
 
             {freeSlots !== null && freeSlots > 0 && (
