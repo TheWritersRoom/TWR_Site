@@ -26,7 +26,7 @@ const COMMUNITY_VALUES = [
   {
     icon: Heart,
     title: "Built on genuine collaboration",
-    body: "Writers Room is not a marketplace. There are no fees, no bidding, no gigs. Authors invite contributors whose taste and background genuinely align with their work, and contributors choose projects that excite them. Every interaction is rooted in a shared love of storytelling.",
+    body: "The Writers Room is not a marketplace. There are no fees, no bidding, no gigs. Authors invite contributors whose taste and background genuinely align with their work, and contributors choose projects that excite them. Every interaction is rooted in a shared love of storytelling.",
   },
   {
     icon: Handshake,
@@ -44,7 +44,7 @@ const AUTHOR_STEPS = [
   {
     n: "01",
     title: "Start or upload your manuscript",
-    body: "Write from scratch inside Writers Room, or bring existing work in any format — PDF, DOCX, TXT, Markdown, RTF. Either way, it lands in a clean, distraction-free reading view your collaborators will love.",
+    body: "Write from scratch inside The Writers Room, or bring existing work in any format — PDF, DOCX, TXT, Markdown, RTF. Either way, it lands in a clean, distraction-free reading view your collaborators will love.",
   },
   {
     n: "02",
@@ -64,7 +64,7 @@ const AUTHOR_STEPS = [
   {
     n: "05",
     title: "Publish on your terms",
-    body: "When you're ready, publish within Writers Room — where your work joins a growing library of readable, discoverable projects — or export a formatted file ready for Amazon KDP, Apple Books, Kobo, and other platforms. Fine-grained visibility controls and public feedback settings apply either way.",
+    body: "When you're ready, publish within The Writers Room — where your work joins a growing library of readable, discoverable projects — or export a formatted file ready for Amazon KDP, Apple Books, Kobo, and other platforms. Fine-grained visibility controls and public feedback settings apply either way.",
   },
 ];
 
@@ -82,7 +82,7 @@ const CONTRIBUTOR_STEPS = [
   {
     n: "03",
     title: "Read and highlight",
-    body: "Once accepted, you read the manuscript in Writers Room's clean reading view. Highlight any passage that you think could be stronger, and propose your alternative — with an optional comment explaining your reasoning.",
+    body: "Once accepted, you read the manuscript in The Writers Room's clean reading view. Highlight any passage that you think could be stronger, and propose your alternative — with an optional comment explaining your reasoning.",
   },
   {
     n: "04",
@@ -137,7 +137,7 @@ const TESTIMONIAL_PAIRS = [
       role: "Novel in progress",
     },
     contributor: {
-      quote: "I've always wanted to get closer to the editing process, but there was never a real way in. Writers Room gave me a place to show what I can do, and now I have an acceptance rate I'm genuinely proud of.",
+      quote: "I've always wanted to get closer to the editing process, but there was never a real way in. The Writers Room gave me a place to show what I can do, and now I have an acceptance rate I'm genuinely proud of.",
       name: "Literary contributor",
       role: "47 accepted suggestions",
     },
@@ -158,7 +158,7 @@ export default function HowItWorks() {
           <span className="text-[10px] uppercase tracking-[0.22em] text-[#7A6B5E] font-semibold">Free to join</span>
         </div>
         <div className="px-6 md:px-14 py-3 text-center">
-          <button onClick={() => navigate("/")} className="font-serif font-bold text-2xl md:text-3xl tracking-[0.06em] text-[#1A1614] hover:text-[#E8B84B] transition-colors">Writers Room</button>
+          <button onClick={() => navigate("/")} className="font-serif font-bold text-2xl md:text-3xl tracking-[0.06em] text-[#1A1614] hover:text-[#E8B84B] transition-colors">The Writers Room</button>
         </div>
         <ThickRule />
         <div className="px-6 md:px-14 py-2 flex items-center justify-between">
@@ -187,7 +187,7 @@ export default function HowItWorks() {
             <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#E8B84B] mb-4">The Community</p>
             <ThickRule className="border-[#F9F6EE]/20 w-32 mx-auto mb-6" />
             <h1 className="font-serif font-bold text-[clamp(2.6rem,7vw,5.5rem)] leading-[1.0] text-[#F9F6EE] mb-6">
-              How Writers Room<br />actually works
+              How The Writers Room<br />actually works
             </h1>
             <ThickRule className="border-[#F9F6EE]/20 w-32 mx-auto mb-8" />
             <p className="font-serif italic text-[#F9F6EE]/70 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
@@ -200,7 +200,7 @@ export default function HowItWorks() {
       {/* Standfirst */}
       <div className="bg-[#F9F6EE] px-6 md:px-14 py-5 text-center">
         <p className="text-base md:text-lg text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif">
-          Writers Room connects authors who want sharper manuscripts with contributors who want to do meaningful editorial work — on projects they care about, with recognition they have earned.
+          The Writers Room connects authors who want sharper manuscripts with contributors who want to do meaningful editorial work — on projects they care about, with recognition they have earned.
         </p>
       </div>
 
@@ -247,7 +247,7 @@ export default function HowItWorks() {
             </div>
             <ThickRule className="border-[#1A1614]/30 mb-2 mt-4" />
             <p className="font-serif italic text-[#1A1614]/70 text-base mt-4 max-w-2xl">
-              Your manuscript stays yours. Writers Room gives you the tools to open it to exactly the right people — and nothing more.
+              Your manuscript stays yours. The Writers Room gives you the tools to open it to exactly the right people — and nothing more.
             </p>
             <Rule className="mt-4 border-[#1A1614]/20" />
           </motion.div>
@@ -335,7 +335,7 @@ export default function HowItWorks() {
             <h2 className="font-serif font-bold text-4xl md:text-5xl text-[#1A1614] mt-4">Reputation, not scores</h2>
             <Rule className="mt-4" />
             <p className="text-sm text-[#7A6B5E] mt-6 max-w-2xl leading-relaxed">
-              Writers Room does not have points, leaderboards, or engagement metrics. What we track instead is quality — the kind of editorial instinct that makes a manuscript genuinely better. Achievements are earned, not collected.
+              The Writers Room does not have points, leaderboards, or engagement metrics. What we track instead is quality — the kind of editorial instinct that makes a manuscript genuinely better. Achievements are earned, not collected.
             </p>
           </motion.div>
 
@@ -446,7 +446,7 @@ export default function HowItWorks() {
               <div className="space-y-5">
                 {[
                   { label: "Subscription discounts", desc: "Redeem Ink against your monthly or annual subscription — the more you contribute, the less you pay.", soon: false },
-                  { label: "Merchandise", desc: "Writers Room branded items for contributors who have earned the right to wear the badge.", soon: true },
+                  { label: "Merchandise", desc: "The Writers Room branded items for contributors who have earned the right to wear the badge.", soon: true },
                   { label: "Book printing", desc: "Discounts on professional print runs through our partner services.", soon: true },
                   { label: "Cover design & editing", desc: "Redeemable against professional cover design and copy-editing services.", soon: true },
                 ].map((item) => (
@@ -478,7 +478,7 @@ export default function HowItWorks() {
             <h2 className="font-serif font-bold text-4xl md:text-5xl text-[#1A1614] mt-4">The suggestion system</h2>
             <Rule className="mt-4" />
             <p className="text-sm text-[#7A6B5E] mt-6 max-w-2xl leading-relaxed">
-              At the heart of Writers Room is a tracked-change system designed for fiction and scripts, not spreadsheets or code. Here's how a suggestion travels from idea to accepted edit.
+              At the heart of The Writers Room is a tracked-change system designed for fiction and scripts, not spreadsheets or code. Here's how a suggestion travels from idea to accepted edit.
             </p>
           </motion.div>
 
@@ -538,7 +538,7 @@ export default function HowItWorks() {
             <h2 className="font-serif font-bold text-4xl md:text-5xl text-[#F9F6EE] mt-4">Beyond the manuscript</h2>
             <div className="border-t border-[#F9F6EE]/20 mt-4" />
             <p className="text-sm text-[#F9F6EE]/55 mt-6 max-w-2xl leading-relaxed">
-              Writers Room is more than an editing tool. It is a community with its own rhythms — pitches, discovery, reputation, and recognition.
+              The Writers Room is more than an editing tool. It is a community with its own rhythms — pitches, discovery, reputation, and recognition.
             </p>
           </motion.div>
           <div className="grid md:grid-cols-3 gap-0">
@@ -615,11 +615,11 @@ export default function HowItWorks() {
           {[
             {
               q: "Is it free to join?",
-              a: "Yes. Writers Room is free to join for both authors and contributors. Every author account includes one full project with no restrictions. Contributors are always completely free — there is no upgrade path needed. Authors who want to run more than one project simultaneously can upgrade to Pro for £5 a month or £50 a year."
+              a: "Yes. The Writers Room is free to join for both authors and contributors. Every author account includes one full project with no restrictions. Contributors are always completely free — there is no upgrade path needed. Authors who want to run more than one project simultaneously can upgrade to Pro for £5 a month or £50 a year."
             },
             {
               q: "Who owns my manuscript?",
-              a: "You do, completely. Adding your work to Writers Room — whether written here or uploaded — does not transfer any rights. We store it so your collaborators can read it. You can delete your project at any time and the content is permanently removed."
+              a: "You do, completely. Adding your work to The Writers Room — whether written here or uploaded — does not transfer any rights. We store it so your collaborators can read it. You can delete your project at any time and the content is permanently removed."
             },
             {
               q: "What happens if a contributor's suggestion is accepted — do they own part of it?",
@@ -682,7 +682,7 @@ export default function HowItWorks() {
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
             <div>
-              <p className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#E8B84B] mb-1">Writers Room</p>
+              <p className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#E8B84B] mb-1">The Writers Room</p>
               <p className="font-serif font-bold text-xl text-[#F9F6EE]">The platform for serious<br />collaborative writing.</p>
             </div>
             <button
@@ -693,7 +693,7 @@ export default function HowItWorks() {
             </button>
           </div>
           <div className="border-t border-[#F9F6EE]/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-2 text-xs">
-            <span className="uppercase tracking-[0.12em] text-[10px]">© {new Date().getFullYear()} Writers Room</span>
+            <span className="uppercase tracking-[0.12em] text-[10px]">© {new Date().getFullYear()} The Writers Room</span>
             <button onClick={() => navigate("/")} className="uppercase tracking-[0.12em] text-[10px] hover:text-[#E8B84B] transition-colors">← Back to home</button>
           </div>
         </div>

@@ -843,7 +843,7 @@ function TeamPanel({
         {/* Hint */}
         <div className="border-t border-[#1A1614]/10 pt-4">
           <p className="text-[9px] text-[#7A6B5E]/60 leading-relaxed">
-            Contributors must have a Writers Room account. Editors can view and edit all cards. Viewers can only read.
+            Contributors must be registered with The Writers Room. Editors can view and edit all cards. Viewers can only read.
           </p>
         </div>
       </div>

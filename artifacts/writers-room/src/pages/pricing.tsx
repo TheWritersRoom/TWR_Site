@@ -73,7 +73,7 @@ export default function Pricing() {
           <span className="text-[10px] uppercase tracking-[0.22em] text-[#7A6B5E] font-semibold">Free to join</span>
         </div>
         <div className="px-6 md:px-14 py-3 text-center">
-          <button onClick={() => navigate("/")} className="font-serif font-bold text-2xl md:text-3xl tracking-[0.06em] text-[#1A1614] hover:text-[#E8B84B] transition-colors">Writers Room</button>
+          <button onClick={() => navigate("/")} className="font-serif font-bold text-2xl md:text-3xl tracking-[0.06em] text-[#1A1614] hover:text-[#E8B84B] transition-colors">The Writers Room</button>
         </div>
         <ThickRule />
         <div className="px-6 md:px-14 py-2 flex items-center justify-between">

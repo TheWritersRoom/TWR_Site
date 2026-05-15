@@ -54,7 +54,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="border-t-2 border-[#1A1614] mb-2" />
           <Link href="/home">
             <span className="font-serif font-bold text-xl text-[#1A1614] leading-tight block hover:text-[#E8B84B] transition-colors">
-              Writers Room
+              The Writers Room
             </span>
           </Link>
           <div className="border-t border-[#1A1614]/20 mt-2" />
@@ -127,7 +127,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </button>
           </div>
           <p className="mt-2 text-[8px] text-[#7A6B5E]/60 tracking-[0.1em] text-center">
-            © {new Date().getFullYear()} Writers Room
+            © {new Date().getFullYear()} The Writers Room
           </p>
         </div>
       </aside>
@@ -135,7 +135,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* ── MOBILE HEADER ── */}
       <header className="md:hidden fixed top-0 w-full z-30 bg-[#F9F6EE] border-b-2 border-[#1A1614] px-5 py-3 flex items-center justify-between">
         <Link href="/home">
-          <span className="font-serif font-bold text-lg text-[#1A1614]">Writers Room</span>
+          <span className="font-serif font-bold text-lg text-[#1A1614]">The Writers Room</span>
         </Link>
         <Link href="/profile">
           <Avatar name={user.name} avatarUrl={user.avatarUrl} size="sm" className="w-8 h-8" />

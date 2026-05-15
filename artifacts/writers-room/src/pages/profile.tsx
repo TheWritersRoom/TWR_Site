@@ -850,7 +850,7 @@ export default function Profile() {
                 <p className="text-xs text-[#7A6B5E]">
                   {profilePublic
                     ? "Anyone with your profile link can view it — useful for sharing with employers or collaborators outside the platform."
-                    : "Your profile is private. Only Writers Room members can see it."}
+                    : "Your profile is private. Only The Writers Room members can see it."}
                 </p>
               </div>
               <button

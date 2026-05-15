@@ -151,7 +151,7 @@ export default function PublicProfile() {
             <span className="text-[10px] uppercase tracking-[0.22em] text-[#7A6B5E] font-semibold">Free to join</span>
           </div>
           <div className="px-6 md:px-14 py-3 flex items-center justify-between">
-            <Link href="/"><span className="font-serif font-bold text-2xl text-[#1A1614] hover:text-[#E8B84B] transition-colors">Writers Room</span></Link>
+            <Link href="/"><span className="font-serif font-bold text-2xl text-[#1A1614] hover:text-[#E8B84B] transition-colors">The Writers Room</span></Link>
             <Link href="/"><span className="px-4 py-1.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.16em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors">Join free</span></Link>
           </div>
         </header>
@@ -162,7 +162,7 @@ export default function PublicProfile() {
           <h2 className="font-serif font-bold text-2xl text-[#1A1614] mb-2">{profile.name}</h2>
           <p className="text-sm text-[#7A6B5E] mb-6 max-w-xs">This profile is set to private by the member.</p>
           <Link href="/">
-            <span className="px-6 py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors">Join Writers Room</span>
+            <span className="px-6 py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors">Join The Writers Room</span>
           </Link>
         </div>
       </div>
@@ -187,7 +187,7 @@ export default function PublicProfile() {
           </div>
           <div className="px-6 md:px-14 py-3 flex items-center justify-between">
             <Link href="/">
-              <span className="font-serif font-bold text-2xl text-[#1A1614] hover:text-[#E8B84B] transition-colors">Writers Room</span>
+              <span className="font-serif font-bold text-2xl text-[#1A1614] hover:text-[#E8B84B] transition-colors">The Writers Room</span>
             </Link>
             <div className="flex items-center gap-3">
               <Link href="/how-it-works">

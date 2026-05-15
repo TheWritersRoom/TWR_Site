@@ -267,7 +267,7 @@ export function AuthModal() {
                 >
                   <div className="text-center mb-7">
                     <h1 className="text-3xl font-serif font-semibold text-foreground">Welcome back</h1>
-                    <p className="text-muted-foreground mt-1 text-sm">Sign in to your Writers Room account.</p>
+                    <p className="text-muted-foreground mt-1 text-sm">Sign in to The Writers Room.</p>
                   </div>
 
                   <form onSubmit={handleSignIn} className="space-y-4">
@@ -340,7 +340,7 @@ export function AuthModal() {
                   transition={{ duration: 0.2 }}
                 >
                   <div className="text-center mb-6">
-                    <h1 className="text-3xl font-serif font-semibold text-foreground">Join Writers Room</h1>
+                    <h1 className="text-3xl font-serif font-semibold text-foreground">Join The Writers Room</h1>
                     <p className="text-muted-foreground mt-1 text-sm">Create your account to start collaborating.</p>
                     {freeSlots !== null && freeSlots > 0 && (
                       <div className="mt-3 inline-flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full">

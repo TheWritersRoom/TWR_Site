@@ -173,7 +173,7 @@ export default function Contributors() {
       {/* Header */}
       <header className="mb-8">
         <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2 flex items-center gap-2">
-          <Users className="w-3.5 h-3.5 text-[#E8B84B]" /> Writers Room
+          <Users className="w-3.5 h-3.5 text-[#E8B84B]" /> The Writers Room
         </p>
         <div className="border-t-2 border-[#1A1614] mb-3" />
         <div className="flex items-end justify-between gap-4 flex-wrap">

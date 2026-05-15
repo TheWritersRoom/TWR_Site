@@ -22,8 +22,8 @@ const FEATURES = [
   { icon: <MessageSquare className="w-5 h-5" />, title: "Inline diff suggestions", desc: "Collaborators highlight any passage and propose a replacement. Authors see the original and the alternative side by side — accept or discard in one click." },
   { icon: <Shield className="w-5 h-5" />, title: "IP protection built in", desc: "Require contributors to sign an IP agreement before joining. Content is SHA-256 fingerprinted on demand and every view is logged." },
   { icon: <BarChart2 className="w-5 h-5" />, title: "Track who helps most", desc: "Per-project leaderboards and public acceptance-rate profiles show which contributors consistently improve the work." },
-  { icon: <Globe className="w-5 h-5" />, title: "Publish here or export anywhere", desc: "Publish within Writers Room with fine-grained visibility controls, or export a KDP-ready file for Amazon, Apple Books, Kobo, and beyond. Your work, your destination." },
-  { icon: <Telescope className="w-5 h-5" />, title: "Discover published works", desc: "Browse a curated feed of works published within Writers Room. Read in your favourite genres, leave feedback, and build your editorial reputation." },
+  { icon: <Globe className="w-5 h-5" />, title: "Publish here or export anywhere", desc: "Publish within The Writers Room with fine-grained visibility controls, or export a KDP-ready file for Amazon, Apple Books, Kobo, and beyond. Your work, your destination." },
+  { icon: <Telescope className="w-5 h-5" />, title: "Discover published works", desc: "Browse a curated feed of works published within The Writers Room. Read in your favourite genres, leave feedback, and build your editorial reputation." },
   { icon: <Award className="w-5 h-5" />, title: "Contribution certificates", desc: "Contributors download a signed PDF for every project — listing accepted suggestions, timestamps, and a cryptographic content fingerprint. Proof of creative work, forever." },
   { icon: <Mail className="w-5 h-5" />, title: "Direct messaging", desc: "Discuss a suggestion in depth, ask about a project, or simply introduce yourself. Every great collaboration starts with a conversation." },
   { icon: <Droplets className="w-5 h-5" />, title: "Earn Ink", desc: "Every contribution earns Ink — a reputational currency that grows with your activity on the platform. Redeem it for subscription discounts, merchandise, and exclusive creative services as the platform grows." },
@@ -34,7 +34,7 @@ const FOR_AUTHORS = [
   "Invite handpicked collaborators by email",
   "Review inline diff suggestions side by side",
   "Track acceptance rates to find your best collaborators",
-  "Publish within Writers Room or export to KDP, Apple Books, Kobo",
+  "Publish within The Writers Room or export to KDP, Apple Books, Kobo",
 ];
 
 const FOR_CONTRIBUTORS = [
@@ -48,9 +48,9 @@ const FOR_CONTRIBUTORS = [
 
 const STEPS = [
   { n: "I", title: "Create or join", desc: "Sign up free in under a minute. Write your own projects, collaborate on others', or do both — your account covers everything." },
-  { n: "II", title: "Start or upload your manuscript", desc: "Write from scratch inside Writers Room, or upload a book or script in any format. Either way it lands in a clean, readable view." },
+  { n: "II", title: "Start or upload your manuscript", desc: "Write from scratch inside The Writers Room, or upload a book or script in any format. Either way it lands in a clean, readable view." },
   { n: "III", title: "Collaborate", desc: "Invited collaborators highlight passages and propose edits. Authors decide what to keep." },
-  { n: "IV", title: "Publish & collect feedback", desc: "Publish within Writers Room to reach readers directly, or export a KDP-ready file for Amazon, Apple Books, Kobo, and more. Collect feedback either way." },
+  { n: "IV", title: "Publish & collect feedback", desc: "Publish within The Writers Room to reach readers directly, or export a KDP-ready file for Amazon, Apple Books, Kobo, and more. Collect feedback either way." },
 ];
 
 const Rule = ({ className = "" }: { className?: string }) => (
@@ -82,7 +82,7 @@ export default function Landing() {
 
         {/* Masthead */}
         <div className="px-6 md:px-14 py-3 text-center">
-          <a href="/" className="font-serif font-bold text-2xl md:text-3xl tracking-[0.06em] text-[#1A1614] hover:text-[#E8B84B] transition-colors">Writers Room</a>
+          <a href="/" className="font-serif font-bold text-2xl md:text-3xl tracking-[0.06em] text-[#1A1614] hover:text-[#E8B84B] transition-colors">The Writers Room</a>
         </div>
 
         {/* Nav links strip */}
@@ -202,7 +202,7 @@ export default function Landing() {
         {/* Editorial standfirst strip */}
         <div className="bg-[#F9F6EE] border-b-2 border-[#1A1614] px-6 md:px-14 py-6 text-center">
           <p className="text-base md:text-lg text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif font-semibold">
-            Writers Room is the platform where authors write or upload their manuscripts, collaborate with genre-matched editors, and publish — within Writers Room itself, or out to Amazon, Apple Books, Kobo, and beyond.
+            The Writers Room is the platform where authors write or upload their manuscripts, collaborate with genre-matched editors, and publish — within The Writers Room itself, or out to Amazon, Apple Books, Kobo, and beyond.
           </p>
         </div>
       </section>
@@ -386,7 +386,7 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
             <div>
-              <p className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#E8B84B] mb-1">Writers Room</p>
+              <p className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#E8B84B] mb-1">The Writers Room</p>
               <p className="font-serif font-bold text-xl text-[#F9F6EE]">The platform for serious<br />collaborative writing.</p>
             </div>
             <button
@@ -397,7 +397,7 @@ export default function Landing() {
             </button>
           </div>
           <div className="border-t border-[#F9F6EE]/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-2 text-xs">
-            <span className="uppercase tracking-[0.12em] text-[10px]">© {new Date().getFullYear()} Writers Room</span>
+            <span className="uppercase tracking-[0.12em] text-[10px]">© {new Date().getFullYear()} The Writers Room</span>
             <span className="uppercase tracking-[0.12em] text-[10px]">Collaborative Writing Platform</span>
           </div>
         </div>

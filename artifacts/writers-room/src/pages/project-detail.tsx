@@ -1138,7 +1138,7 @@ export default function ProjectDetail() {
                       {inviteCollab.isPending ? "..." : <Send className="w-4 h-4" />}
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">User must have logged into Writers Room previously.</p>
+                  <p className="text-xs text-muted-foreground mt-2">User must be registered with The Writers Room.</p>
                 </form>
               )}
 

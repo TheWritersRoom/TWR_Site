@@ -17,7 +17,7 @@ const DEFAULT_AGREEMENT = `By joining this project as a contributor, you acknowl
 
 1. OWNERSHIP: The author retains full copyright and intellectual property rights over all original content in this project, including any content derived from or incorporating your suggestions.
 
-2. CONTRIBUTIONS: Any suggestions, edits, or ideas you submit through Writers Room may be accepted, modified, or rejected at the author's sole discretion. Accepted contributions become part of the work under the author's copyright.
+2. CONTRIBUTIONS: Any suggestions, edits, or ideas you submit through The Writers Room may be accepted, modified, or rejected at the author's sole discretion. Accepted contributions become part of the work under the author's copyright.
 
 3. CONFIDENTIALITY: You agree to keep the contents of this unpublished manuscript confidential and not share, reproduce, or distribute any part of it without written consent from the author.
 
@@ -169,7 +169,7 @@ export function IpProtectionPanel({
         {section === "overview" && (
           <div className="space-y-3">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Writers Room provides layered IP protection for your work. Each layer adds an additional record of authorship, access, and contribution.
+              The Writers Room provides layered IP protection for your work. Each layer adds an additional record of authorship, access, and contribution.
             </p>
 
             {/* Status cards */}

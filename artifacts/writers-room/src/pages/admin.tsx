@@ -747,7 +747,7 @@ export default function AdminDashboard() {
         <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">System Overview</p>
         <div className="border-t-2 border-[#1A1614] mb-3" />
         <h1 className="text-4xl font-serif font-bold text-[#1A1614]">Admin Dashboard</h1>
-        <p className="text-[#7A6B5E] mt-1 text-sm">Full visibility and control over the Writers Room platform.</p>
+        <p className="text-[#7A6B5E] mt-1 text-sm">Full visibility and control over The Writers Room platform.</p>
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-0 border-2 border-[#1A1614]/15 mt-6">
