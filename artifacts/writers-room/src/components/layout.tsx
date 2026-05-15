@@ -52,7 +52,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             Collaborative Writing
           </p>
           <div className="border-t-2 border-[#1A1614] mb-2" />
-          <Link href="/">
+          <Link href="/home">
             <span className="font-serif font-bold text-xl text-[#1A1614] leading-tight block hover:text-[#E8B84B] transition-colors">
               Writers Room
             </span>
@@ -134,7 +134,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ── MOBILE HEADER ── */}
       <header className="md:hidden fixed top-0 w-full z-30 bg-[#F9F6EE] border-b-2 border-[#1A1614] px-5 py-3 flex items-center justify-between">
-        <Link href="/">
+        <Link href="/home">
           <span className="font-serif font-bold text-lg text-[#1A1614]">Writers Room</span>
         </Link>
         <Link href="/profile">

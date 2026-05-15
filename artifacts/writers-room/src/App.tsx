@@ -36,6 +36,7 @@ function AuthenticatedRouter() {
     <Layout>
       <Switch>
         <Route path="/" component={Dashboard} />
+        <Route path="/home" component={Landing} />
         <Route path="/how-it-works" component={HowItWorks} />
         <Route path="/pricing" component={Pricing} />
         <Route path="/project/:id" component={ProjectDetail} />
