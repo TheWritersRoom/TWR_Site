@@ -538,7 +538,7 @@ function SectionHeader({ label }: { label: string }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function Profile() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
 
   const { data: activity = [], isLoading } = useQuery<ActivityItem[]>({
@@ -685,12 +685,20 @@ export default function Profile() {
               <h1 className="text-3xl font-serif font-bold text-[#1A1614]">{user.name}</h1>
               <p className="text-[#7A6B5E] mt-1">{user.email}</p>
             </div>
-            <button
-              onClick={() => setEditOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 border-2 border-[#1A1614] text-sm font-semibold text-[#1A1614] hover:bg-[#1A1614] hover:text-[#F9F6EE] transition-colors shrink-0"
-            >
-              <Pencil className="w-3.5 h-3.5" /> Edit Profile
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setEditOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 border-2 border-[#1A1614] text-sm font-semibold text-[#1A1614] hover:bg-[#1A1614] hover:text-[#F9F6EE] transition-colors"
+              >
+                <Pencil className="w-3.5 h-3.5" /> Edit Profile
+              </button>
+              <button
+                onClick={logout}
+                className="md:hidden inline-flex items-center gap-2 px-4 py-2 border-2 border-[#1A1614]/30 text-sm font-semibold text-[#7A6B5E] hover:border-[#1A1614] hover:text-[#1A1614] transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 mt-3">
