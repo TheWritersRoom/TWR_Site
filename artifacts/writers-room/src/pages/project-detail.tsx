@@ -705,7 +705,7 @@ export default function ProjectDetail() {
           ) : (
           <div 
             ref={contentRef}
-            className="manuscript outline-none"
+            className={`manuscript outline-none${!pageBreakMode && project.type !== "script" ? " border border-[#1A1614]/15 shadow-sm bg-white rounded-sm px-12 py-14" : ""}`}
           >
             {renderContent()}
           </div>
