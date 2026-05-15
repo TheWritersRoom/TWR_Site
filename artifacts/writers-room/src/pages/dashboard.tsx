@@ -703,7 +703,7 @@ export default function Dashboard() {
       {projects?.length === 0 && !mode ? (
         <div className="text-center py-20 px-4 bg-white border-2 border-[#1A1614]/20">
           <img
-            src={`${import.meta.env.BASE_URL}images/empty-desk.png`}
+            src={`${import.meta.env.BASE_URL}images/press-illustration.jpg`}
             alt="No projects yet"
             className="w-64 h-auto mx-auto mb-8 opacity-90"
           />
