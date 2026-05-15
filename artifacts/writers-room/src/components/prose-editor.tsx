@@ -67,10 +67,9 @@ export function ProseEditor({ initialContent, onChange }: ProseEditorProps) {
   const sep = <div className="w-px h-5 bg-[#1A1614]/15 mx-0.5 self-center shrink-0" />;
 
   return (
-    <div className="border border-[#1A1614]/15 shadow-sm bg-white rounded-sm overflow-hidden">
-
-      {/* ── Toolbar ─────────────────────────────────────────────── */}
-      <div className="sticky top-[73px] z-10 border-b border-[#1A1614]/10 px-4 py-2 bg-[#F9F6EE] flex flex-wrap items-center gap-1 select-none">
+    <>
+      {/* ── Toolbar — sits above the white card ─────────────────── */}
+      <div className="sticky top-[73px] z-10 border border-[#1A1614]/15 border-b-0 px-4 py-2 bg-[#F9F6EE] flex flex-wrap items-center gap-1 select-none -mb-px">
 
         {/* Heading / paragraph types */}
         <div className="flex items-center gap-0.5">
@@ -173,8 +172,10 @@ export function ProseEditor({ initialContent, onChange }: ProseEditorProps) {
         </div>
       </div>
 
-      {/* ── Editor area ─────────────────────────────────────────── */}
-      <EditorContent editor={editor} className="px-12 py-14 min-h-[65vh]" />
-    </div>
+      {/* ── Editor area — white card below toolbar ───────────────── */}
+      <div className="border border-[#1A1614]/15 shadow-sm bg-white rounded-b-sm">
+        <EditorContent editor={editor} className="px-12 py-14 min-h-[65vh]" />
+      </div>
+    </>
   );
 }
