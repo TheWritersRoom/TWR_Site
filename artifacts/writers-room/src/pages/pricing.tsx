@@ -20,9 +20,9 @@ const ThickRule = ({ className = "" }: { className?: string }) => (
 );
 
 const FREE_FEATURES = [
-  { text: "1 active project as an author" },
+  { text: "1 active Writing Room" },
   { text: "Full collaboration tools" },
-  { text: "Invite up to 6 contributors per project" },
+  { text: "Invite up to 6 contributors to your room" },
   { text: "IP protection & contributor agreements" },
   { text: "SHA-256 content fingerprinting" },
   { text: "Contribution certificates (PDF)" },
@@ -33,7 +33,7 @@ const FREE_FEATURES = [
 ];
 
 const PRO_FEATURES = [
-  { text: "Unlimited active projects", highlight: true },
+  { text: "Unlimited Writing Rooms", highlight: true },
   { text: "Everything in Free" },
   { text: "Pro badge on your public profile" },
   { text: "Priority listing on the Pitches board" },
@@ -43,15 +43,15 @@ const PRO_FEATURES = [
 const FAQS = [
   {
     q: "What does Free include?",
-    a: "Everything you need to get started — one active project with the full collaboration toolkit, IP protection, contributor agreements, SHA-256 fingerprinting, contribution certificates, EPUB & DOCX export, Pitches board access, and direct messaging. No credit card required.",
+    a: "Everything you need to open your first Writing Room — one active room with the full collaboration toolkit, IP protection, contributor agreements, SHA-256 fingerprinting, contribution certificates, EPUB & DOCX export, Pitches board access, and direct messaging. No credit card required.",
   },
   {
-    q: "What happens to my project if I don't upgrade?",
-    a: "Nothing. Your existing project stays fully active. You simply can't open a second one until you upgrade to Pro or archive the current project.",
+    q: "What happens to my Writing Room if I don't upgrade?",
+    a: "Nothing. Your existing Writing Room stays fully active. You simply can't open a second one until you upgrade to Pro or archive the current room.",
   },
   {
-    q: "Can I contribute to other people's projects on Free?",
-    a: "Yes, absolutely. Collaborating on others' projects — leaving suggestions, building your reputation, earning achievements, downloading certificates — is included in Free with no restrictions.",
+    q: "Can I contribute to other people's Writing Rooms on Free?",
+    a: "Yes, absolutely. Joining others' rooms — leaving suggestions, building your reputation, earning achievements, downloading certificates — is included in Free with no restrictions.",
   },
   {
     q: "When will payments be available?",
@@ -68,7 +68,7 @@ export default function Pricing() {
     <div className="min-h-screen bg-[#F9F6EE] text-[#1A1614] overflow-x-hidden">
       <SEO
         title="Pricing — Free to Start, Pro When You're Ready"
-        description="The Writers Room is free to join. One project, the full collaboration toolkit — IP protection, contribution certificates, EPUB export, and more. Upgrade to Pro for unlimited projects at £5/month."
+        description="The Writers Room is free to join. Open one Writing Room with the full collaboration toolkit — IP protection, contribution certificates, EPUB export, and more. Upgrade to Pro for unlimited Writing Rooms at £5/month."
         canonicalPath="/pricing"
       />
 
@@ -113,7 +113,7 @@ export default function Pricing() {
             </h1>
             <div className="border-t border-[#F9F6EE]/20 w-24 mx-auto mb-6" />
             <p className="font-serif italic text-[#F9F6EE]/65 text-lg max-w-2xl mx-auto leading-relaxed">
-              Every account gets a free project with the full feature set. Pay only when you need more.
+              Every account gets a free Writing Room with the full feature set. Open the door, invite your collaborators, and pay only when you need more.
             </p>
           </motion.div>
         </div>
@@ -132,7 +132,7 @@ export default function Pricing() {
                   <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#7A6B5E]">Free</p>
                 </div>
                 <p className="font-serif font-bold text-5xl text-[#1A1614]">£0</p>
-                <p className="text-sm text-[#7A6B5E] mt-2">Forever. No credit card. One project, the full platform.</p>
+                <p className="text-sm text-[#7A6B5E] mt-2">Forever. No credit card. One Writing Room, the full platform.</p>
               </div>
               <ThickRule className="mb-6" />
               <ul className="space-y-3 mb-8">
@@ -164,7 +164,7 @@ export default function Pricing() {
                   <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#7A5A00]">Pro</p>
                 </div>
                 <p className="font-serif font-bold text-5xl text-[#1A1614]">£5<span className="text-xl font-sans font-normal text-[#7A6B5E]">/mo</span></p>
-                <p className="text-sm text-[#7A6B5E] mt-2">or £50/year — save £10. Unlimited projects, priority listing.</p>
+                <p className="text-sm text-[#7A6B5E] mt-2">or £50/year — save £10. Unlimited Writing Rooms, priority listing.</p>
               </div>
               <ThickRule className="mb-6" />
               <ul className="space-y-3 mb-8">
@@ -211,8 +211,8 @@ export default function Pricing() {
           </motion.div>
           <div className="grid md:grid-cols-2 gap-0 border-2 border-[#1A1614]">
             {[
-              { icon: Shield, title: "Quality over volume", body: "A platform where anyone can open unlimited simultaneous projects is one where most projects are abandoned. One free project creates focus. The work gets done." },
-              { icon: Star, title: "Pro is for prolific writers", body: "If you are running three projects at once, you are getting significant value from the platform. £5 a month is the cost of one paperback. We think that is fair." },
+              { icon: Shield, title: "Quality over volume", body: "A platform where anyone can open unlimited Writing Rooms simultaneously is one where most rooms are abandoned. One free room creates focus. The door opens, the work gets done." },
+              { icon: Star, title: "Pro is for prolific writers", body: "If you are running three Writing Rooms at once, you are getting significant value from the platform. £5 a month is the cost of one paperback. We think that is fair." },
             ].map((item, i) => (
               <motion.div key={item.title} {...inView(i * 0.1)} className="p-7 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1614] last:border-0">
                 <div className="w-9 h-9 bg-[#E8B84B]/20 flex items-center justify-center mb-4">
@@ -249,14 +249,14 @@ export default function Pricing() {
           <motion.div {...inView()}>
             <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#1A1614]/60 mb-4">Ready?</p>
             <ThickRule className="border-[#1A1614]/30 mb-6" />
-            <h2 className="font-serif font-bold text-4xl md:text-5xl text-[#1A1614] mb-6 leading-tight">Start writing today.</h2>
+            <h2 className="font-serif font-bold text-4xl md:text-5xl text-[#1A1614] mb-6 leading-tight">Open your Writing Room today.</h2>
             <div className="border-t border-[#1A1614]/30 mb-8" />
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
                 onClick={openAuthModal}
                 className="flex items-center gap-2 px-8 py-3.5 bg-[#1A1614] text-[#F9F6EE] text-sm font-bold uppercase tracking-[0.12em] hover:bg-[#D94B1F] transition-colors"
               >
-                Get started free <ArrowRight className="w-4 h-4" />
+                Open the door free <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </motion.div>
