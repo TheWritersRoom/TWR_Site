@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, or, sql } from "drizzle-orm";
-import { db, usersTable, suggestionsTable, projectsTable, pitchInvitesTable, pitchesTable } from "@workspace/db";
+import { eq, or, sql, and, gt } from "drizzle-orm";
+import { db, usersTable, suggestionsTable, projectsTable, pitchInvitesTable, pitchesTable, userSessionsTable } from "@workspace/db";
 import { CreateUserBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -339,6 +339,20 @@ router.patch("/users/:id/email-notifications", async (req, res): Promise<void> =
   const { emailNotifications } = req.body as { emailNotifications: boolean };
   if (isNaN(userId) || typeof emailNotifications !== "boolean") {
     res.status(400).json({ error: "Invalid params" }); return;
+  }
+
+  // Verify the requesting session owns this user record
+  const sessionToken = req.cookies?.["wr_session"];
+  if (!sessionToken) {
+    res.status(401).json({ error: "Unauthorized" }); return;
+  }
+  const [session] = await db
+    .select({ userId: userSessionsTable.userId })
+    .from(userSessionsTable)
+    .where(and(eq(userSessionsTable.token, sessionToken), gt(userSessionsTable.expiresAt, new Date())))
+    .limit(1);
+  if (!session || session.userId !== userId) {
+    res.status(403).json({ error: "Forbidden" }); return;
   }
 
   const [updated] = await db

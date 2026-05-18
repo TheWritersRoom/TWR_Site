@@ -37,7 +37,7 @@ router.post("/messages", async (req, res): Promise<void> => {
         recipientName: recipient.name,
         senderName: sender.name,
         preview: body.trim(),
-        inboxUrl: `${frontendBase}/profile`,
+        inboxUrl: `${frontendBase}/inbox`,
       }),
     });
   }).catch((err) => console.warn("[email] Inbox notification failed:", err));
