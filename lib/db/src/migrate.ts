@@ -54,6 +54,14 @@ export async function applyMigrations(): Promise<void> {
       }
     }
 
+    // 2b. Ensure a migration-tracking table exists for one-time data migrations
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        name TEXT PRIMARY KEY,
+        applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
     // 3. Ensure platform_settings table exists and is seeded
     await client.query(`
       CREATE TABLE IF NOT EXISTS platform_settings (
@@ -81,10 +89,24 @@ export async function applyMigrations(): Promise<void> {
         ADD COLUMN IF NOT EXISTS email_verification_token_expires_at TIMESTAMPTZ,
         ADD COLUMN IF NOT EXISTS email_notifications BOOLEAN NOT NULL DEFAULT TRUE;
     `);
-    // Mark all pre-existing users as verified (they signed up before this feature existed)
-    await client.query(`
-      UPDATE users SET email_verified = TRUE WHERE email_verified = FALSE AND created_at < NOW() - INTERVAL '1 minute';
-    `);
+    // One-time backfill: mark users who existed before email verification was
+    // introduced as already verified. Gated by schema_migrations so it runs
+    // exactly once, not on every restart.
+    const { rows: backfillDone } = await client.query(
+      `SELECT 1 FROM schema_migrations WHERE name = 'backfill_email_verified_for_legacy_users'`
+    );
+    if (backfillDone.length === 0) {
+      await client.query(`
+        UPDATE users
+           SET email_verified = TRUE
+         WHERE email_verified = FALSE
+           AND email_verification_token IS NULL;
+      `);
+      await client.query(
+        `INSERT INTO schema_migrations (name) VALUES ('backfill_email_verified_for_legacy_users')`
+      );
+      console.log("[migrate] One-time backfill: legacy users marked as email_verified.");
+    }
 
     console.log("[migrate] Schema up to date.");
   } catch (err) {
