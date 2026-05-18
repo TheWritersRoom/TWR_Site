@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, and, count } from "drizzle-orm";
-import { db, collaboratorsTable, usersTable, projectsTable, joinRequestsTable } from "@workspace/db";
+import { eq, and, count, gt } from "drizzle-orm";
+import { db, collaboratorsTable, usersTable, projectsTable, joinRequestsTable, userSessionsTable } from "@workspace/db";
 import { createInboxMessageAndNotify } from "../lib/inbox";
 import { awardInk } from "../lib/ink";
 import { sendEmail } from "../lib/email";
@@ -206,6 +206,18 @@ router.post("/projects/:id/join-requests", async (req, res): Promise<void> => {
   const userId = parseInt(req.body.userId, 10);
   const message: string = req.body.message ?? "";
   if (isNaN(projectId) || isNaN(userId)) { res.status(400).json({ error: "Invalid params" }); return; }
+
+  // Verify the session belongs to the declared requester
+  const sessionToken = req.cookies?.["wr_session"];
+  if (!sessionToken) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const [session] = await db
+    .select({ userId: userSessionsTable.userId })
+    .from(userSessionsTable)
+    .where(and(eq(userSessionsTable.token, sessionToken), gt(userSessionsTable.expiresAt, new Date())))
+    .limit(1);
+  if (!session || session.userId !== userId) {
+    res.status(403).json({ error: "Forbidden" }); return;
+  }
 
   const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));
   if (!project) { res.status(404).json({ error: "Project not found" }); return; }

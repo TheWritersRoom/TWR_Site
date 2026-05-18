@@ -1,7 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, or, and, asc } from "drizzle-orm";
-import { db, messagesTable, usersTable } from "@workspace/db";
-// Note: usersTable retained for inbox/conversation queries below
+import { eq, desc, or, and, asc, gt } from "drizzle-orm";
+import { db, messagesTable, usersTable, userSessionsTable } from "@workspace/db";
 import { createInboxMessageAndNotify } from "../lib/inbox";
 
 const router: IRouter = Router();
@@ -14,6 +13,18 @@ router.post("/messages", async (req, res): Promise<void> => {
   };
   if (!fromUserId || !toUserId || !body?.trim()) {
     res.status(400).json({ error: "Missing required fields" }); return;
+  }
+
+  // Verify the session belongs to the declared sender
+  const sessionToken = req.cookies?.["wr_session"];
+  if (!sessionToken) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const [session] = await db
+    .select({ userId: userSessionsTable.userId })
+    .from(userSessionsTable)
+    .where(and(eq(userSessionsTable.token, sessionToken), gt(userSessionsTable.expiresAt, new Date())))
+    .limit(1);
+  if (!session || session.userId !== Number(fromUserId)) {
+    res.status(403).json({ error: "Forbidden" }); return;
   }
 
   const msg = await createInboxMessageAndNotify(Number(fromUserId), Number(toUserId), body.trim());

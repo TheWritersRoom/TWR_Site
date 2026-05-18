@@ -185,20 +185,24 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     }
   }
 
-  // Send verification email (fire-and-forget — don't block signup on email failure)
-  const verificationToken = randomUUID();
-  const verificationExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
-  await db.update(usersTable)
-    .set({ emailVerificationToken: verificationToken, emailVerificationTokenExpiresAt: verificationExpiry })
-    .where(eq(usersTable.id, user.id))
-    .catch(() => {});
+  // Store verification token, then send email. If token storage fails we skip
+  // the email so users never receive a link that cannot be redeemed.
+  try {
+    const verificationToken = randomUUID();
+    const verificationExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    await db.update(usersTable)
+      .set({ emailVerificationToken: verificationToken, emailVerificationTokenExpiresAt: verificationExpiry })
+      .where(eq(usersTable.id, user.id));
 
-  const verifyUrl = `${getBaseUrl()}/api/auth/verify-email?token=${verificationToken}`;
-  sendEmail({
-    to: user.email,
-    subject: "Verify your email — The Writers Room",
-    html: verificationEmailTemplate(user.name, verifyUrl),
-  }).catch((err) => console.warn("[email] Verification email failed:", err));
+    const verifyUrl = `${getBaseUrl()}/api/auth/verify-email?token=${verificationToken}`;
+    sendEmail({
+      to: user.email,
+      subject: "Verify your email — The Writers Room",
+      html: verificationEmailTemplate(user.name, verifyUrl),
+    }).catch((err) => console.warn("[email] Verification email failed:", err));
+  } catch (err) {
+    console.error("[signup] Failed to store verification token — email not sent:", err);
+  }
 
   await createSession(user.id, res);
   res.status(201).json(safeUser(user));
