@@ -20,6 +20,7 @@ import plannersRouter from "./planners";
 import inkRouter from "./ink";
 import referralsRouter from "./referrals";
 import settingsRouter from "./settings";
+import emailRouter from "./email";
 
 const router: IRouter = Router();
 
@@ -44,5 +45,6 @@ router.use(plannersRouter);
 router.use(inkRouter);
 router.use(referralsRouter);
 router.use(settingsRouter);
+router.use(emailRouter);
 
 export default router;

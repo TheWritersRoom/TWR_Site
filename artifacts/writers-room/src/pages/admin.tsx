@@ -7,7 +7,7 @@ import {
   Search, Users, BookText, Shield, ShieldOff, Activity,
   UserPlus, Globe, MessageSquare, TrendingUp, ChevronDown,
   ChevronUp, Trash2, X, Check, BarChart2, PenTool, Star,
-  AlertTriangle, RefreshCw, Zap,
+  AlertTriangle, RefreshCw, Zap, Mail, Send,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -707,10 +707,87 @@ function ActivityTab() {
 
 // ── Main dashboard ─────────────────────────────────────────────────────────
 
+// ── Email Test Tab ───────────────────────────────────────────────────────────
+
+function EmailTab() {
+  const { toast } = useToast();
+  const [to, setTo] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async () => {
+    if (!to.trim() || !to.includes("@")) {
+      toast({ title: "Enter a valid email address", variant: "destructive" });
+      return;
+    }
+    setSending(true);
+    try {
+      const r = await fetch("/api/admin/email/test", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: to.trim() }),
+      });
+      const data = await r.json() as { ok?: boolean; message?: string; error?: string };
+      if (!r.ok) throw new Error(data.error ?? "Failed to send");
+      toast({ title: "Test email sent", description: data.message });
+      setTo("");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      toast({ title: "Send failed", description: message, variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="max-w-xl">
+      <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-3">Email Integration</p>
+      <div className="border-t-2 border-[#1A1614] mb-6" />
+      <div className="border border-[#1A1614]/15 p-6 bg-white">
+        <div className="flex items-center gap-3 mb-4">
+          <Mail className="w-5 h-5 text-[#E8B84B]" />
+          <h2 className="font-serif font-bold text-xl text-[#1A1614]">Smoke test</h2>
+        </div>
+        <p className="text-sm text-[#7A6B5E] mb-5 leading-relaxed">
+          Send a test email to confirm Resend is correctly configured. Requires{" "}
+          <code className="bg-[#1A1614]/6 px-1 py-0.5 rounded text-[#1A1614] text-xs font-mono">RESEND_API_KEY</code>{" "}
+          to be set in project secrets.
+        </p>
+        <div className="flex gap-2">
+          <Input
+            type="email"
+            placeholder="recipient@example.com"
+            value={to}
+            onChange={e => setTo(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") handleSend(); }}
+            className="flex-1"
+          />
+          <Button onClick={handleSend} disabled={sending} className="gap-2 shrink-0">
+            <Send className="w-3.5 h-3.5" />
+            {sending ? "Sending…" : "Send test"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="border border-[#1A1614]/15 border-t-0 px-6 py-4 bg-[#FAF8F5]">
+        <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mb-2">Setup checklist</p>
+        <ol className="text-sm text-[#7A6B5E] space-y-1.5 list-decimal list-inside leading-relaxed">
+          <li>Create a <strong className="text-[#1A1614]">Resend</strong> account at resend.com</li>
+          <li>Verify your sending domain in the Resend dashboard</li>
+          <li>Generate an API key and add it as <code className="bg-[#1A1614]/6 px-1 py-0.5 rounded text-xs font-mono">RESEND_API_KEY</code> in project secrets</li>
+          <li>Update the <code className="bg-[#1A1614]/6 px-1 py-0.5 rounded text-xs font-mono">from</code> address in <code className="bg-[#1A1614]/6 px-1 py-0.5 rounded text-xs font-mono">lib/email.ts</code> to match your verified domain</li>
+          <li>Use the smoke test above to confirm delivery</li>
+        </ol>
+      </div>
+    </div>
+  );
+}
+
 const TABS = [
   { id: "users",    label: "Users",    icon: Users },
   { id: "activity", label: "Activity", icon: Activity },
   { id: "projects", label: "Projects", icon: BookText },
+  { id: "email",    label: "Email",    icon: Mail },
 ] as const;
 
 type TabId = typeof TABS[number]["id"];
@@ -800,6 +877,7 @@ export default function AdminDashboard() {
       {activeTab === "users"    && <UsersTab />}
       {activeTab === "activity" && <ActivityTab />}
       {activeTab === "projects" && <ProjectsTab />}
+      {activeTab === "email"    && <EmailTab />}
     </div>
   );
 }

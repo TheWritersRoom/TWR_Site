@@ -20,7 +20,8 @@
     "express": "^5",
     "google-auth-library": "^10.6.2",
     "jszip": "^3.10.1",
-    "pdfkit": "^0.18.0"
+    "pdfkit": "^0.18.0",
+    "resend": "^6.12.3"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",
