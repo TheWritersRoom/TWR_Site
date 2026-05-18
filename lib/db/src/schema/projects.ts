@@ -11,6 +11,7 @@ export const projectsTable = pgTable("projects", {
   synopsis: text("synopsis"),
   contentMode: text("content_mode", { enum: ["full", "synopsis"] }).notNull().default("full"),
   genres: text("genres").notNull().default("[]"),
+  notes: text("notes"),
   ownershipTerms: text("ownership_terms", { enum: ["sole", "shared"] }).notNull().default("sole"),
   ownershipNotes: text("ownership_notes"),
   ownerId: integer("owner_id").notNull().references(() => usersTable.id),

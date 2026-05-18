@@ -6,8 +6,9 @@ import {
   ChevronLeft, Users, MessageSquare, Check, X, 
   Send, AlertCircle, Edit3, BarChart2, Trophy, Mail,
   BookOpen, Globe, Lock, Eye, MessageCircle, Minus, Plus,
-  UserPlus, Clock, CheckCircle, XCircle, Film, Shield, AlignLeft, History, ShieldCheck, FileText
+  UserPlus, Clock, CheckCircle, XCircle, Film, Shield, AlignLeft, History, ShieldCheck, FileText, StickyNote
 } from "lucide-react";
+import { NotesPanel } from "@/components/notes-panel";
 import { VersionHistoryPanel } from "@/components/version-history-panel";
 import { IpProtectionPanel } from "@/components/ip-protection-panel";
 import { useQuery, useMutation, useQueryClient as useQC } from "@tanstack/react-query";
@@ -87,6 +88,19 @@ export default function ProjectDetail() {
   const [synopsisDraft, setSynopsisDraft] = useState<string | null>(null);
   const [isSavingSynopsis, setIsSavingSynopsis] = useState(false);
   const [synopsisOpen, setSynopsisOpen] = useState(false);
+
+  // ── Quick notes ────────────────────────────────────────────────────────────
+  const [notesOpen, setNotesOpen] = useState(false);
+
+  const handleSaveNotes = async (notes: string) => {
+    if (!user) return;
+    await fetch(`/api/projects/${projectId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.id, notes }),
+    });
+    queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
+  };
 
   const handleSaveSynopsis = async () => {
     if (synopsisDraft === null || !user) return;
@@ -554,6 +568,15 @@ export default function ProjectDetail() {
                    Synopsis
                  </button>
                )}
+               {isOwner && (
+                 <button
+                   onClick={() => setNotesOpen(o => !o)}
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${notesOpen ? "border-[#E8B84B] bg-[#E8B84B]/10 text-[#1A1614]" : "border-border text-muted-foreground hover:border-[#E8B84B]/60 hover:text-foreground"}`}
+                 >
+                   <StickyNote className="w-3.5 h-3.5" />
+                   Notes
+                 </button>
+               )}
                {isOwner && project.type === "script" && (
                  <button
                    onClick={() => setScriptEditorOpen(true)}
@@ -757,7 +780,7 @@ export default function ProjectDetail() {
       </div>
 
       {/* Right Sidebar - Tools */}
-      <div className="w-96 border-l border-border bg-card flex flex-col shadow-2xl z-20">
+      <div className="w-96 border-l border-border bg-card flex flex-col shadow-2xl z-20 overflow-hidden">
         <div className="flex border-b border-border">
           <button 
             className={`flex-1 py-3 text-xs font-semibold border-b-2 transition-colors ${activeTab === 'suggestions' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
@@ -816,6 +839,15 @@ export default function ProjectDetail() {
           </button>
         </div>
 
+        {isOwner && (
+          <NotesPanel
+            initialValue={project.notes ?? null}
+            onSave={handleSaveNotes}
+            open={notesOpen}
+            onToggle={() => setNotesOpen(o => !o)}
+            variant="sidebar"
+          />
+        )}
         <div className="flex-1 overflow-y-auto bg-secondary/30 p-4">
           {/* New Suggestion Form */}
           <AnimatePresence>

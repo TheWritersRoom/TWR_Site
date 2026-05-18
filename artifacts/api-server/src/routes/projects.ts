@@ -169,6 +169,7 @@ router.get("/projects/:id", async (req, res): Promise<void> => {
       synopsis: projectsTable.synopsis,
       contentMode: projectsTable.contentMode,
       genres: projectsTable.genres,
+      notes: projectsTable.notes,
       ownershipTerms: projectsTable.ownershipTerms,
       ownershipNotes: projectsTable.ownershipNotes,
       ownerId: projectsTable.ownerId,
@@ -266,10 +267,11 @@ router.patch("/projects/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const updateData: { title?: string; content?: string; synopsis?: string; collaboratorLimit?: number } = {};
+  const updateData: { title?: string; content?: string; synopsis?: string; notes?: string | null; collaboratorLimit?: number } = {};
   if (parsed.data.title != null) updateData.title = parsed.data.title;
   if (parsed.data.content != null) updateData.content = parsed.data.content;
   if (parsed.data.synopsis != null) updateData.synopsis = parsed.data.synopsis;
+  if (parsed.data.notes !== undefined) updateData.notes = parsed.data.notes ?? null;
   const rawLimit = parseInt(req.body.collaboratorLimit, 10);
   if (!isNaN(rawLimit) && rawLimit >= 1 && rawLimit <= 50) updateData.collaboratorLimit = rawLimit;
 

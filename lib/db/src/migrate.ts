@@ -108,6 +108,16 @@ export async function applyMigrations(): Promise<void> {
       console.log("[migrate] One-time backfill: legacy users marked as email_verified.");
     }
 
+    // 5. Quick notes columns on projects and planners
+    await client.query(`
+      ALTER TABLE projects
+        ADD COLUMN IF NOT EXISTS notes TEXT;
+    `);
+    await client.query(`
+      ALTER TABLE structure_planners
+        ADD COLUMN IF NOT EXISTS notes TEXT;
+    `);
+
     console.log("[migrate] Schema up to date.");
   } catch (err) {
     console.error("[migrate] Migration failed:", err);

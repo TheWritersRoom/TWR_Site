@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { NotesPanel } from "@/components/notes-panel";
 import { useRoute, Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -37,6 +38,7 @@ type Planner = {
   ownerId: number;
   title: string;
   synopsis: string | null;
+  notes: string | null;
   mediaType: "tv" | "book" | "serial" | "other";
   cards: PlannerCard[];
 };
@@ -864,6 +866,7 @@ export default function PlannerPage() {
   const [search, setSearch] = useState("");
   const [showTeam, setShowTeam] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
 
   const { data: planner, isLoading } = useQuery<Planner>({
     queryKey: ["/api/planners", plannerId],
@@ -884,7 +887,7 @@ export default function PlannerPage() {
   });
 
   const updatePlanner = useMutation({
-    mutationFn: (fields: { synopsis?: string; title?: string }) =>
+    mutationFn: (fields: { synopsis?: string; title?: string; notes?: string | null }) =>
       fetch(`/api/planners/${plannerId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -896,6 +899,10 @@ export default function PlannerPage() {
       );
     },
   });
+
+  const handleSaveNotes = async (notes: string) => {
+    updatePlanner.mutate({ notes });
+  };
 
   const addCard = useMutation({
     mutationFn: () =>
@@ -998,6 +1005,18 @@ export default function PlannerPage() {
               <Trash2 className="w-4 h-4" />
             </button>
           )}
+          {planner.ownerId === user?.id && (
+            <button
+              onClick={() => setNotesOpen((n) => !n)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors ${
+                notesOpen
+                  ? "bg-[#E8B84B]/15 text-[#1A1614] border-[#E8B84B]"
+                  : "border-[#1A1614]/20 text-[#7A6B5E] hover:border-[#E8B84B]/60 hover:text-[#1A1614]"
+              }`}
+            >
+              <StickyNote className="w-3.5 h-3.5" /> Notes
+            </button>
+          )}
           <button
             onClick={() => { setShowTeam((t) => !t); setSelectedCard(null); }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors ${
@@ -1019,30 +1038,41 @@ export default function PlannerPage() {
       </header>
 
       {/* ── Body: grid + optional detail/team panel ── */}
-      <div className="flex flex-1 overflow-hidden">
-        <CardGrid
-          planner={planner}
-          search={search}
-          onCardClick={(card) => { setSelectedCard(card); setShowTeam(false); }}
-          onAddCard={() => addCard.mutate()}
-          isAddingCard={addCard.isPending}
-          onSynopsisChange={(synopsis) => updatePlanner.mutate({ synopsis })}
-        />
-        {selectedCard && !showTeam && (
-          <CardDetailPanel
-            key={selectedCard.id}
-            card={selectedCard}
-            onClose={() => setSelectedCard(null)}
-            onUpdate={handleUpdate}
-            onDelete={() => deleteCard.mutate(selectedCard.id)}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex flex-1 overflow-hidden">
+          <CardGrid
+            planner={planner}
+            search={search}
+            onCardClick={(card) => { setSelectedCard(card); setShowTeam(false); }}
+            onAddCard={() => addCard.mutate()}
+            isAddingCard={addCard.isPending}
+            onSynopsisChange={(synopsis) => updatePlanner.mutate({ synopsis })}
           />
-        )}
-        {showTeam && user && (
-          <TeamPanel
-            plannerId={plannerId}
-            ownerId={planner.ownerId}
-            currentUserId={user.id}
-            onClose={() => setShowTeam(false)}
+          {selectedCard && !showTeam && (
+            <CardDetailPanel
+              key={selectedCard.id}
+              card={selectedCard}
+              onClose={() => setSelectedCard(null)}
+              onUpdate={handleUpdate}
+              onDelete={() => deleteCard.mutate(selectedCard.id)}
+            />
+          )}
+          {showTeam && user && (
+            <TeamPanel
+              plannerId={plannerId}
+              ownerId={planner.ownerId}
+              currentUserId={user.id}
+              onClose={() => setShowTeam(false)}
+            />
+          )}
+        </div>
+        {planner.ownerId === user?.id && (
+          <NotesPanel
+            initialValue={planner.notes ?? null}
+            onSave={handleSaveNotes}
+            open={notesOpen}
+            onToggle={() => setNotesOpen((n) => !n)}
+            variant="drawer"
           />
         )}
       </div>

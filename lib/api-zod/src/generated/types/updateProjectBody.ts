@@ -13,5 +13,7 @@ export interface UpdateProjectBody {
   content?: string | null;
   /** @nullable */
   synopsis?: string | null;
+  /** @nullable */
+  notes?: string | null;
   userId: number;
 }
