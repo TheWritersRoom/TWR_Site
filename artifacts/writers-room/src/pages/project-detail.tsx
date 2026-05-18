@@ -406,6 +406,11 @@ export default function ProjectDetail() {
                 }
               });
             }
+            if (isSuggesting && originalText) {
+              text = text.split(originalText).join(
+                `<mark class="bg-blue-100 border-b-2 border-blue-500 text-inherit rounded px-0.5">${originalText}</mark>`
+              );
+            }
             const inner = <span dangerouslySetInnerHTML={{ __html: text || "\u00A0" }} />;
 
             switch (block.type) {
@@ -443,6 +448,10 @@ export default function ProjectDetail() {
             html = html.split(sug.originalText).join(mark);
           }
         });
+      }
+      if (isSuggesting && originalText) {
+        const activeMark = `<mark class="bg-blue-100 border-b-2 border-blue-500 text-inherit rounded px-0.5">${originalText}</mark>`;
+        html = html.split(originalText).join(activeMark);
       }
       return html;
     };
