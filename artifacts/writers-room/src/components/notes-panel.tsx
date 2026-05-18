@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { StickyNote, X, ChevronDown, ChevronUp } from "lucide-react";
+import { StickyNote, X, ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
 
 interface NotesPanelProps {
   initialValue: string | null;
-  onSave: (value: string) => void;
+  onSave: (value: string) => Promise<void>;
   open: boolean;
   onToggle: () => void;
   variant?: "sidebar" | "drawer";
@@ -15,8 +15,10 @@ export function NotesPanel({ initialValue, onSave, open, onToggle, variant = "si
   const [draft, setDraft] = useState(initialValue ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSaved = useRef(initialValue ?? "");
+  const pendingRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (initialValue !== null && initialValue !== lastSaved.current) {
@@ -25,24 +27,35 @@ export function NotesPanel({ initialValue, onSave, open, onToggle, variant = "si
     }
   }, [initialValue]);
 
-  const scheduleFlush = useCallback(
-    (value: string) => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(async () => {
-        if (value === lastSaved.current) return;
-        setSaving(true);
-        setSaved(false);
-        try {
-          await onSave(value);
-          lastSaved.current = value;
-          setSaved(true);
-          setTimeout(() => setSaved(false), 1500);
-        } finally {
-          setSaving(false);
-        }
-      }, DEBOUNCE_MS);
+  const flush = useCallback(
+    async (value: string) => {
+      if (value === lastSaved.current) return;
+      setSaving(true);
+      setSaved(false);
+      setSaveError(false);
+      try {
+        await onSave(value);
+        lastSaved.current = value;
+        pendingRef.current = null;
+        setSaved(true);
+        setTimeout(() => setSaved(false), 1500);
+      } catch {
+        setSaveError(true);
+        setTimeout(() => setSaveError(false), 3000);
+      } finally {
+        setSaving(false);
+      }
     },
     [onSave]
+  );
+
+  const scheduleFlush = useCallback(
+    (value: string) => {
+      pendingRef.current = value;
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => flush(value), DEBOUNCE_MS);
+    },
+    [flush]
   );
 
   const handleChange = (v: string) => {
@@ -50,7 +63,27 @@ export function NotesPanel({ initialValue, onSave, open, onToggle, variant = "si
     scheduleFlush(v);
   };
 
-  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      const pending = pendingRef.current;
+      if (pending !== null && pending !== lastSaved.current) {
+        onSave(pending).catch(() => {});
+      }
+    };
+  }, [onSave]);
+
+  const statusIndicator = (
+    <>
+      {saving && <span className="text-[9px] text-[#7A6B5E]/60 font-medium">Saving…</span>}
+      {saved && !saving && <span className="text-[9px] text-emerald-600 font-medium">Saved</span>}
+      {saveError && !saving && (
+        <span className="flex items-center gap-0.5 text-[9px] text-red-500 font-medium">
+          <AlertCircle className="w-2.5 h-2.5" /> Failed to save
+        </span>
+      )}
+    </>
+  );
 
   if (variant === "drawer") {
     return (
@@ -63,12 +96,7 @@ export function NotesPanel({ initialValue, onSave, open, onToggle, variant = "si
                 <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#1A1614]">Quick Notes</span>
               </div>
               <div className="flex items-center gap-3">
-                {saving && (
-                  <span className="text-[9px] text-[#7A6B5E]/60 font-medium">Saving…</span>
-                )}
-                {saved && !saving && (
-                  <span className="text-[9px] text-emerald-600 font-medium">Saved</span>
-                )}
+                {statusIndicator}
                 <button onClick={onToggle} className="p-1 hover:bg-[#1A1614]/8 rounded text-[#7A6B5E]">
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -87,7 +115,7 @@ export function NotesPanel({ initialValue, onSave, open, onToggle, variant = "si
   }
 
   return (
-    <div className={`border-t border-border/50 ${open ? "" : ""}`}>
+    <div className="border-t border-border/50">
       <button
         onClick={onToggle}
         className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-black/3 transition-colors"
@@ -100,8 +128,7 @@ export function NotesPanel({ initialValue, onSave, open, onToggle, variant = "si
           )}
         </div>
         <div className="flex items-center gap-2">
-          {saving && <span className="text-[9px] text-[#7A6B5E]/60">Saving…</span>}
-          {saved && !saving && <span className="text-[9px] text-emerald-600">Saved</span>}
+          {statusIndicator}
           {open ? <ChevronDown className="w-3.5 h-3.5 text-[#7A6B5E]" /> : <ChevronUp className="w-3.5 h-3.5 text-[#7A6B5E]" />}
         </div>
       </button>

@@ -911,11 +911,12 @@ export default function PlannerPage() {
 
   const handleSaveNotes = async (notes: string) => {
     if (!linkedProjectId || !user) return;
-    await fetch(`/api/projects/${linkedProjectId}`, {
+    const res = await fetch(`/api/projects/${linkedProjectId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: user.id, notes }),
     });
+    if (!res.ok) throw new Error("Failed to save notes");
     queryClient.invalidateQueries({ queryKey: ["/api/projects", linkedProjectId, "notes", user.id] });
   };
 
