@@ -7,6 +7,7 @@ import {
   TrendingUp, Search, Mail, Handshake, Quote,
   Pencil, Eye, BadgeCheck, Crown, Repeat2, BookMarked, Droplets,
 } from "lucide-react";
+import { SEO, SOFTWARE_APP_SCHEMA } from "@/components/seo";
 
 const inView = (delay = 0) => ({
   initial: { opacity: 0, y: 18 },
@@ -150,6 +151,12 @@ export default function HowItWorks() {
 
   return (
     <div className="min-h-screen bg-[#F9F6EE] text-[#1A1614] overflow-x-hidden font-sans">
+      <SEO
+        title="How It Works — Collaborative Writing & Editing"
+        description="Learn how The Writers Room connects authors with genre-matched contributors for inline editing, IP-protected collaboration, reputation tracking, and multi-platform publishing."
+        canonicalPath="/how-it-works"
+        schema={SOFTWARE_APP_SCHEMA}
+      />
 
       {/* ── NAV ── */}
       <header className="fixed top-0 inset-x-0 z-40 bg-[#F9F6EE]/95 backdrop-blur-sm">
@@ -161,7 +168,7 @@ export default function HowItWorks() {
           <button onClick={() => navigate("/")} className="font-serif font-bold text-2xl md:text-3xl tracking-[0.06em] text-[#1A1614] hover:text-[#E8B84B] transition-colors">The Writers Room</button>
         </div>
         <ThickRule />
-        <div className="px-6 md:px-14 py-2 flex items-center justify-between">
+        <nav aria-label="Main navigation" className="px-6 md:px-14 py-2 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button onClick={() => navigate("/how-it-works")} className="text-[11px] uppercase tracking-[0.16em] text-[#E8B84B] font-bold border-b border-[#E8B84B]">How it works</button>
             <button onClick={() => navigate("/pricing")} className="text-[11px] uppercase tracking-[0.16em] text-[#1A1614] font-semibold hover:text-[#E8B84B] transition-colors">Pricing</button>
@@ -177,9 +184,10 @@ export default function HowItWorks() {
               <button onClick={() => navigate("/")} className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#1A1614] hover:text-[#E8B84B] transition-colors">Dashboard</button>
             )}
           </div>
-        </div>
+        </nav>
       </header>
 
+      <main id="main-content">
       {/* ── HERO ── */}
       <section className="pt-44 pb-24 bg-[#1A1614] min-h-[600px]">
         <div className="px-6 md:px-14 text-center">
@@ -676,6 +684,8 @@ export default function HowItWorks() {
           </motion.div>
         </div>
       </section>
+
+      </main>
 
       {/* ── FOOTER ── */}
       <footer className="bg-[#1A1614] text-[#F9F6EE]/60 px-6 md:px-14 py-8">

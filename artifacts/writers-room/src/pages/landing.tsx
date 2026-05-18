@@ -8,6 +8,7 @@ import {
   ArrowRight, Check, BookOpen, Star, Shield, Award, Mail, Menu, X, Droplets,
 } from "lucide-react";
 import typewriterRoom from "@/assets/writers-room-banner.jpg";
+import { SEO, SOFTWARE_APP_SCHEMA } from "@/components/seo";
 
 const inView = (delay = 0) => ({
   initial: { opacity: 0, y: 18 },
@@ -71,6 +72,12 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-[#F9F6EE] text-[#1A1614] overflow-x-hidden font-sans">
+      <SEO
+        title="Collaborative Writing Platform"
+        description="The Writers Room is where authors pitch, write, and edit with genre-matched contributors — then publish within the platform or export to Amazon KDP, Apple Books, and Kobo. Free to join."
+        canonicalPath="/"
+        schema={SOFTWARE_APP_SCHEMA}
+      />
 
       {/* ── MASTHEAD NAV ── */}
       <header className="fixed top-0 inset-x-0 z-40 bg-[#F9F6EE]/95 backdrop-blur-sm">
@@ -87,7 +94,7 @@ export default function Landing() {
 
         {/* Nav links strip */}
         <ThickRule />
-        <div className="px-6 md:px-14 py-2 flex items-center justify-between">
+        <nav aria-label="Main navigation" className="px-6 md:px-14 py-2 flex items-center justify-between">
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-6">
             <button onClick={() => navigate("/how-it-works")} className="text-[11px] uppercase tracking-[0.16em] text-[#1A1614] font-semibold hover:text-[#E8B84B] transition-colors">How it works</button>
@@ -98,7 +105,7 @@ export default function Landing() {
           <button
             onClick={() => setMenuOpen(o => !o)}
             className="flex md:hidden p-1 text-[#1A1614] hover:text-[#E8B84B] transition-colors"
-            aria-label="Menu"
+            aria-label="Toggle menu"
           >
             {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -107,7 +114,7 @@ export default function Landing() {
             <button onClick={openAuthModal} className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#1A1614] hover:text-[#FDDCB5] transition-colors">Sign in</button>
             <button onClick={openAuthModal} className="px-4 py-1.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.16em] font-bold hover:bg-[#FDDCB5] transition-colors">Subscribe</button>
           </div>
-        </div>
+        </nav>
         <Rule />
 
         {/* Mobile dropdown */}
@@ -129,6 +136,7 @@ export default function Landing() {
         </AnimatePresence>
       </header>
 
+      <main id="main-content">
       {/* ── HERO ── */}
       <section className="pt-[9.5rem] pb-0 min-h-screen flex flex-col">
 
@@ -380,6 +388,8 @@ export default function Landing() {
           </motion.div>
         </div>
       </section>
+
+      </main>
 
       {/* ── FOOTER ── */}
       <footer className="bg-[#1A1614] text-[#F9F6EE]/60 px-6 md:px-14 py-8">

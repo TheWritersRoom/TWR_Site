@@ -6,6 +6,7 @@ import {
   Check, Zap, ArrowLeft, ArrowRight, Shield, BookText,
   Star, Crown,
 } from "lucide-react";
+import { SEO } from "@/components/seo";
 
 const inView = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -65,6 +66,11 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-[#F9F6EE] text-[#1A1614] overflow-x-hidden">
+      <SEO
+        title="Pricing — Free to Start, Pro When You're Ready"
+        description="The Writers Room is free to join. One project, the full collaboration toolkit — IP protection, contribution certificates, EPUB export, and more. Upgrade to Pro for unlimited projects at £5/month."
+        canonicalPath="/pricing"
+      />
 
       {/* ── NAV ── */}
       <header className="fixed top-0 inset-x-0 z-40 bg-[#F9F6EE]/95 backdrop-blur-sm">
@@ -76,7 +82,7 @@ export default function Pricing() {
           <button onClick={() => navigate("/")} className="font-serif font-bold text-2xl md:text-3xl tracking-[0.06em] text-[#1A1614] hover:text-[#E8B84B] transition-colors">The Writers Room</button>
         </div>
         <ThickRule />
-        <div className="px-6 md:px-14 py-2 flex items-center justify-between">
+        <nav aria-label="Main navigation" className="px-6 md:px-14 py-2 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button onClick={() => navigate("/how-it-works")} className="text-[11px] uppercase tracking-[0.16em] text-[#1A1614] font-semibold hover:text-[#E8B84B] transition-colors">How it works</button>
             <button onClick={() => navigate("/pricing")} className="text-[11px] uppercase tracking-[0.16em] text-[#E8B84B] font-bold border-b border-[#E8B84B]">Pricing</button>
@@ -92,9 +98,10 @@ export default function Pricing() {
               <button onClick={() => navigate("/")} className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#1A1614] hover:text-[#E8B84B] transition-colors">Dashboard</button>
             )}
           </div>
-        </div>
+        </nav>
       </header>
 
+      <main id="main-content">
       {/* ── HERO ── */}
       <section className="pt-44 pb-36 px-6 md:px-14 bg-[#1A1614] min-h-[600px]">
         <div className="max-w-4xl mx-auto text-center">
@@ -255,6 +262,7 @@ export default function Pricing() {
           </motion.div>
         </div>
       </section>
+      </main>
     </div>
   );
 }

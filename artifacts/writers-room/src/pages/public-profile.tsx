@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
+import { SEO } from "@/components/seo";
 import {
   ArrowLeft, PenLine, Users, Layers, BadgeCheck, Globe, BookOpen,
   BarChart2, CheckCircle2, Sparkles, Tag, Bell, Star, MessageSquare,
@@ -125,6 +126,7 @@ export default function PublicProfile() {
   if (isNaN(profileId) || isError) {
     return (
       <div className="p-10 max-w-2xl mx-auto text-center">
+        <SEO title="Profile Not Found" noIndex />
         <h2 className="text-2xl font-serif font-bold text-[#1A1614] mb-2">Profile not found</h2>
         <Link href="/contributors" className="text-sm text-[#E8B84B] hover:underline">← Back to editors</Link>
       </div>
@@ -176,8 +178,40 @@ export default function PublicProfile() {
   const isContributor = profile.role === "contributor" || profile.role === "both";
   const canMessage = !!user && !isOwnProfile;
 
+  const personSchema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": profile.name,
+    "url": `https://thewritersroom.replit.app/profile/${profileId}`,
+    ...(profile.bio ? { "description": profile.bio } : {}),
+    ...(profile.avatarUrl ? { "image": profile.avatarUrl } : {}),
+    ...(creds.website ? { "url": creds.website } : {}),
+    ...(genres.length > 0 ? { "knowsAbout": genres } : {}),
+    ...(creds.publishedWorks && creds.publishedWorks.length > 0 ? {
+      "author": creds.publishedWorks.map((w) => ({
+        "@type": "Book",
+        "name": w.title,
+        ...(w.year ? { "datePublished": String(w.year) } : {}),
+        ...(w.publisher ? { "publisher": w.publisher } : {}),
+      })),
+    } : {}),
+  };
+
+  const profileDescription = [
+    `${profile.name} is a ${roleConf.label.toLowerCase()} on The Writers Room`,
+    genres.length > 0 ? `with interests in ${genres.slice(0, 3).join(", ")}` : null,
+    profile.bio ? `— ${profile.bio.slice(0, 100)}${profile.bio.length > 100 ? "…" : ""}` : null,
+  ].filter(Boolean).join(" ");
+
   return (
     <div className={user ? "" : "min-h-screen bg-[#F9F6EE]"}>
+      <SEO
+        title={`${profile.name} — ${roleConf.label}`}
+        description={profileDescription}
+        ogType="profile"
+        canonicalPath={`/profile/${profileId}`}
+        schema={personSchema}
+      />
       {/* Public nav — shown only to unauthenticated visitors */}
       {!user && (
         <header className="border-b-2 border-[#1A1614] bg-[#F9F6EE]">
