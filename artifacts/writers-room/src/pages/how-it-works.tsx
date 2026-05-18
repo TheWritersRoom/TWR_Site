@@ -153,7 +153,7 @@ export default function HowItWorks() {
     <div className="min-h-screen bg-[#F9F6EE] text-[#1A1614] overflow-x-hidden font-sans">
       <SEO
         title="How It Works — Collaborative Writing & Editing"
-        description="Learn how The Writers Room connects authors with genre-matched contributors for inline editing, IP-protected collaboration, reputation tracking, and multi-platform publishing."
+        description="See how the Writing Room works: upload your manuscript, build your team of contributors, and take your book from draft to published."
         canonicalPath="/how-it-works"
         schema={SOFTWARE_APP_SCHEMA}
       />

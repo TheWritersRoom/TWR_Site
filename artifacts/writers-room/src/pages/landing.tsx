@@ -74,7 +74,7 @@ export default function Landing() {
     <div className="min-h-screen bg-[#F9F6EE] text-[#1A1614] overflow-x-hidden font-sans">
       <SEO
         title="Collaborative Writing Platform"
-        description="The Writers Room is where authors pitch, write, and edit with genre-matched contributors — then publish within the platform or export to Amazon KDP, Apple Books, and Kobo. Free to join."
+        description="Build your Writing Room — invite genre-matched collaborators to help shape, edit, and publish your manuscript. Free to join."
         canonicalPath="/"
         schema={SOFTWARE_APP_SCHEMA}
       />

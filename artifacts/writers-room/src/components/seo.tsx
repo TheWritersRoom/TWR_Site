@@ -16,7 +16,7 @@ interface SEOProps {
 
 export function SEO({
   title,
-  description = "The collaborative writing platform where authors write or upload manuscripts, collaborate with genre-matched editors, and publish — within The Writers Room or out to Amazon, Apple Books, Kobo, and beyond.",
+  description = "The Writers Room — build a Writing Room around your manuscript with genre-matched collaborators, then publish to Amazon, Apple Books, Kobo, and beyond.",
   ogType = "website",
   ogImage = DEFAULT_OG_IMAGE,
   canonicalPath,
