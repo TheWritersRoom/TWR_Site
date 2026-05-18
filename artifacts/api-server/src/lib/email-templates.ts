@@ -102,6 +102,69 @@ export function joinRequestEmailTemplate(opts: {
   `);
 }
 
+export function newSignupAdminTemplate(opts: {
+  name: string;
+  email: string;
+  role: string;
+  genres: string;
+  adminUrl: string;
+}): string {
+  const { name, email, role, genres, adminUrl } = opts;
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeRole = escapeHtml(role);
+  const parsedGenres: string[] = (() => { try { return JSON.parse(genres); } catch { return []; } })();
+  const safeGenres = parsedGenres.length > 0 ? parsedGenres.map(escapeHtml).join(", ") : "—";
+  const safeAdminUrl = encodeURI(adminUrl);
+  const roleLabel: Record<string, string> = { author: "Author", contributor: "Contributor", both: "Author &amp; Contributor" };
+  const safeRoleLabel = roleLabel[safeRole] ?? safeRole;
+  return emailWrapper(`
+    <p style="margin:0 0 6px;font-size:10px;letter-spacing:0.2em;font-weight:700;text-transform:uppercase;color:#E8B84B;">New member</p>
+    <h1 style="margin:0 0 20px;font-size:22px;font-weight:700;color:#1A1614;font-family:Georgia,'Times New Roman',serif;">Someone just joined the room.</h1>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;border:1px solid rgba(26,22,20,0.15);">
+      <tr>
+        <td style="padding:6px 16px;background:#F9F6EE;border-bottom:1px solid rgba(26,22,20,0.1);">
+          <span style="font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7A6B5E;">Name</span>
+        </td>
+        <td style="padding:6px 16px;background:#ffffff;border-bottom:1px solid rgba(26,22,20,0.1);">
+          <span style="font-size:14px;color:#1A1614;font-weight:600;">${safeName}</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:6px 16px;background:#F9F6EE;border-bottom:1px solid rgba(26,22,20,0.1);">
+          <span style="font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7A6B5E;">Email</span>
+        </td>
+        <td style="padding:6px 16px;background:#ffffff;border-bottom:1px solid rgba(26,22,20,0.1);">
+          <span style="font-size:14px;color:#1A1614;">${safeEmail}</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:6px 16px;background:#F9F6EE;border-bottom:1px solid rgba(26,22,20,0.1);">
+          <span style="font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7A6B5E;">Role</span>
+        </td>
+        <td style="padding:6px 16px;background:#ffffff;border-bottom:1px solid rgba(26,22,20,0.1);">
+          <span style="font-size:14px;color:#1A1614;">${safeRoleLabel}</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:6px 16px;background:#F9F6EE;">
+          <span style="font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7A6B5E;">Genres</span>
+        </td>
+        <td style="padding:6px 16px;background:#ffffff;">
+          <span style="font-size:14px;color:#1A1614;">${safeGenres}</span>
+        </td>
+      </tr>
+    </table>
+    <table cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+      <tr>
+        <td style="background:#1A1614;border:2px solid #1A1614;">
+          <a href="${safeAdminUrl}" style="display:block;padding:14px 32px;font-size:13px;font-weight:700;color:#F9F6EE;text-decoration:none;letter-spacing:0.08em;text-transform:uppercase;">View in admin</a>
+        </td>
+      </tr>
+    </table>
+  `);
+}
+
 export function inboxMessageEmailTemplate(opts: {
   recipientName: string;
   senderName: string;

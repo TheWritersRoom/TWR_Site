@@ -7,7 +7,7 @@ import { db, usersTable, authTokensTable, userSessionsTable, referralCodesTable,
 import { sql } from "drizzle-orm";
 import { awardInk } from "../lib/ink";
 import { sendEmail } from "../lib/email";
-import { verificationEmailTemplate } from "../lib/email-templates";
+import { verificationEmailTemplate, newSignupAdminTemplate } from "../lib/email-templates";
 
 const scryptAsync = promisify(scrypt);
 const router: IRouter = Router();
@@ -83,6 +83,25 @@ function getFrontendBase(): string {
   // The writers-room frontend is served at /writers-room on the Replit proxy
   if (domain) return `https://${domain}/writers-room`;
   return process.env.APP_FRONTEND_URL ?? "http://localhost:5173";
+}
+
+function getAdminEmail(): string {
+  return process.env.ADMIN_EMAIL ?? "pete@bristolfixer.com";
+}
+
+function notifyAdminOfSignup(user: { name: string; email: string; role: string; genres: string }): void {
+  const adminUrl = `${getFrontendBase()}/admin`;
+  sendEmail({
+    to: getAdminEmail(),
+    subject: `New member: ${user.name} — The Writers Room`,
+    html: newSignupAdminTemplate({
+      name: user.name,
+      email: user.email,
+      role: user.role ?? "both",
+      genres: user.genres ?? "[]",
+      adminUrl,
+    }),
+  }).catch((err) => console.warn("[email] Admin signup notification failed:", err));
 }
 
 // Emails that are always granted admin status on first account creation
@@ -204,6 +223,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     console.error("[signup] Failed to store verification token — email not sent:", err);
   }
 
+  notifyAdminOfSignup(user);
   await createSession(user.id, res);
   res.status(201).json(safeUser(user));
 });
@@ -428,6 +448,7 @@ router.get("/auth/google/callback", async (req, res): Promise<void> => {
           })
           .returning();
         user = created;
+        notifyAdminOfSignup(user);
       }
     }
 
