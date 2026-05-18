@@ -147,6 +147,11 @@ export default function PublicProfile() {
   if (!user && !profile.profilePublic) {
     return (
       <div className="min-h-screen bg-[#F9F6EE]">
+        <SEO
+          title={`${profile.name} — Private Profile`}
+          description="This profile is set to private by the member."
+          noIndex
+        />
         <header className="border-b-2 border-[#1A1614] bg-[#F9F6EE]">
           <div className="border-b border-[#1A1614]/15 px-6 md:px-14 py-1.5 flex items-center justify-between">
             <span className="text-[10px] uppercase tracking-[0.22em] text-[#7A6B5E] font-semibold">Collaborative Writing Platform</span>
@@ -185,7 +190,7 @@ export default function PublicProfile() {
     "url": `https://thewritersroom.replit.app/profile/${profileId}`,
     ...(profile.bio ? { "description": profile.bio } : {}),
     ...(profile.avatarUrl ? { "image": profile.avatarUrl } : {}),
-    ...(creds.website ? { "url": creds.website } : {}),
+    ...(creds.website ? { "sameAs": [creds.website] } : {}),
     ...(genres.length > 0 ? { "knowsAbout": genres } : {}),
     ...(creds.publishedWorks && creds.publishedWorks.length > 0 ? {
       "author": creds.publishedWorks.map((w) => ({
