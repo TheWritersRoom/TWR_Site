@@ -234,6 +234,7 @@ export default function ProjectDetail() {
   // Selection state for creating new suggestion
   const [selection, setSelection] = useState<{ text: string; top: number; left: number } | null>(null);
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const [originalText, setOriginalText] = useState("");
   const [suggestedText, setSuggestedText] = useState("");
   const [suggestionComment, setSuggestionComment] = useState("");
   const contentRef = useRef<HTMLDivElement>(null);
@@ -259,11 +260,11 @@ export default function ProjectDetail() {
   }, [isSuggesting]);
 
   const handleCreateSuggestion = async () => {
-    if (!user || !selection) return;
+    if (!user || !originalText) return;
     await createSuggestion.mutateAsync({
       id: projectId,
       data: {
-        originalText: selection.text,
+        originalText,
         suggestedText,
         comment: suggestionComment,
         submitterId: user.id
@@ -271,6 +272,7 @@ export default function ProjectDetail() {
     });
     queryClient.invalidateQueries({ queryKey: getListSuggestionsQueryKey(projectId) });
     setIsSuggesting(false);
+    setOriginalText("");
     setSelection(null);
     setSuggestedText("");
     setSuggestionComment("");
@@ -768,6 +770,7 @@ export default function ProjectDetail() {
                 size="sm" 
                 className="rounded-full shadow-lg bg-foreground text-background hover:bg-foreground/90 border border-white/20"
                 onClick={() => {
+                  setOriginalText(selection.text);
                   setSuggestedText(selection.text);
                   setIsSuggesting(true);
                 }}
@@ -852,7 +855,7 @@ export default function ProjectDetail() {
         <div className="flex-1 overflow-y-auto bg-secondary/30 p-4">
           {/* New Suggestion Form */}
           <AnimatePresence>
-            {isSuggesting && selection && (
+            {isSuggesting && (
               <motion.div 
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -865,7 +868,7 @@ export default function ProjectDetail() {
                     <Edit3 className="w-4 h-4 mr-1.5 text-primary" />
                     New Suggestion
                   </h3>
-                  <button onClick={() => { setIsSuggesting(false); setSelection(null); }} className="text-muted-foreground hover:text-foreground">
+                  <button onClick={() => { setIsSuggesting(false); setOriginalText(""); setSelection(null); }} className="text-muted-foreground hover:text-foreground">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -873,7 +876,7 @@ export default function ProjectDetail() {
                 <div className="mb-3">
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Original</span>
                   <div className="bg-red-50 text-red-800 text-sm p-2 rounded-lg line-through decoration-red-300 border border-red-100">
-                    {selection.text}
+                    {originalText}
                   </div>
                 </div>
 
