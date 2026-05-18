@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, or, sql, and, gt } from "drizzle-orm";
 import { db, usersTable, suggestionsTable, projectsTable, pitchInvitesTable, pitchesTable, userSessionsTable } from "@workspace/db";
 import { CreateUserBody } from "@workspace/api-zod";
+import { safeUser } from "./auth";
 
 const router: IRouter = Router();
 
@@ -29,7 +30,7 @@ router.post("/users", async (req, res): Promise<void> => {
       })
       .where(eq(usersTable.id, user.id))
       .returning();
-    res.status(201).json(updated);
+    res.status(201).json(safeUser(updated));
     return;
   }
 
@@ -44,7 +45,7 @@ router.post("/users", async (req, res): Promise<void> => {
     })
     .returning();
 
-  res.status(201).json(user);
+  res.status(201).json(safeUser(user));
 });
 
 router.get("/users/browse", async (req, res): Promise<void> => {
@@ -294,7 +295,7 @@ router.patch("/users/:id", async (req, res): Promise<void> => {
     .returning();
 
   if (!updated) { res.status(404).json({ error: "User not found" }); return; }
-  res.json(updated);
+  res.json(safeUser(updated));
 });
 
 // PATCH /users/:id/profile-public — toggle public profile visibility
@@ -312,7 +313,7 @@ router.patch("/users/:id/profile-public", async (req, res): Promise<void> => {
     .returning();
 
   if (!updated) { res.status(404).json({ error: "User not found" }); return; }
-  res.json(updated);
+  res.json(safeUser(updated));
 });
 
 // PATCH /users/:id/open-to-approach — toggle open-to-approach flag
@@ -330,7 +331,7 @@ router.patch("/users/:id/open-to-approach", async (req, res): Promise<void> => {
     .returning();
 
   if (!updated) { res.status(404).json({ error: "User not found" }); return; }
-  res.json(updated);
+  res.json(safeUser(updated));
 });
 
 // PATCH /users/:id/email-notifications — toggle email notifications preference
@@ -362,7 +363,7 @@ router.patch("/users/:id/email-notifications", async (req, res): Promise<void> =
     .returning();
 
   if (!updated) { res.status(404).json({ error: "User not found" }); return; }
-  res.json(updated);
+  res.json(safeUser(updated));
 });
 
 // GET /users/:id/pitch-invites — invites received by a contributor
@@ -535,7 +536,7 @@ router.get("/users/me", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json(user);
+  res.json(safeUser(user));
 });
 
 export default router;

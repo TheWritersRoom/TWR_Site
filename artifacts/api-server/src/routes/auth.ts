@@ -34,7 +34,13 @@ async function verifyPassword(password: string, stored: string): Promise<boolean
 }
 
 export function safeUser(user: typeof usersTable.$inferSelect) {
-  const { passwordHash: _ph, googleId: _gi, ...rest } = user;
+  const {
+    passwordHash: _ph,
+    googleId: _gi,
+    emailVerificationToken: _evt,
+    emailVerificationTokenExpiresAt: _evtea,
+    ...rest
+  } = user;
   return rest;
 }
 
