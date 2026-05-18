@@ -613,6 +613,7 @@ export default function Profile() {
 
   const [openToApproach, setOpenToApproach] = useState<boolean>(user?.openToApproach ?? false);
   const [profilePublic, setProfilePublic] = useState<boolean>((user as any)?.profilePublic ?? true);
+  const [emailNotifications, setEmailNotifications] = useState<boolean>((user as any)?.emailNotifications ?? true);
 
   const profilePublicMutation = useMutation({
     mutationFn: (value: boolean) =>
@@ -636,6 +637,19 @@ export default function Profile() {
       }).then((r) => r.json()),
     onSuccess: (updatedUser) => {
       setOpenToApproach(updatedUser.openToApproach);
+      updateUser(updatedUser);
+    },
+  });
+
+  const emailNotificationsMutation = useMutation({
+    mutationFn: (value: boolean) =>
+      fetch(`/api/users/${user!.id}/email-notifications`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailNotifications: value }),
+      }).then((r) => r.json()),
+    onSuccess: (updatedUser) => {
+      setEmailNotifications(updatedUser.emailNotifications);
       updateUser(updatedUser);
     },
   });
@@ -891,6 +905,32 @@ export default function Profile() {
               </div>
             </div>
           )}
+
+          {/* Email notifications toggle */}
+          <div className="mt-4 pt-4 border-t border-[#1A1614]/10">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#7A6B5E] mb-0.5 flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5" /> Email notifications
+                </p>
+                <p className="text-xs text-[#7A6B5E]">
+                  {emailNotifications
+                    ? "Receive emails for new messages and collaboration requests."
+                    : "Email notifications are off. You won't be emailed about activity on the platform."}
+                </p>
+              </div>
+              <button
+                onClick={() => emailNotificationsMutation.mutate(!emailNotifications)}
+                disabled={emailNotificationsMutation.isPending}
+                className="flex items-center gap-1.5 shrink-0 transition-opacity disabled:opacity-50"
+                aria-label="Toggle email notifications"
+              >
+                {emailNotifications
+                  ? <ToggleRight className="w-9 h-9 text-emerald-500" />
+                  : <ToggleLeft className="w-9 h-9 text-[#7A6B5E]/40" />}
+              </button>
+            </div>
+          </div>
         </div>
       </motion.div>
 

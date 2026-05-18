@@ -6,6 +6,8 @@ import { randomUUID } from "crypto";
 import { db, usersTable, authTokensTable, userSessionsTable, referralCodesTable, referredUsersTable } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { awardInk } from "../lib/ink";
+import { sendEmail } from "../lib/email";
+import { verificationEmailTemplate } from "../lib/email-templates";
 
 const scryptAsync = promisify(scrypt);
 const router: IRouter = Router();
@@ -176,6 +178,20 @@ router.post("/auth/register", async (req, res): Promise<void> => {
       await awardInk(codeRecord.userId, 15, "referral_signup").catch(() => {});
     }
   }
+
+  // Send verification email (fire-and-forget — don't block signup on email failure)
+  const verificationToken = randomUUID();
+  await db.update(usersTable)
+    .set({ emailVerificationToken: verificationToken })
+    .where(eq(usersTable.id, user.id))
+    .catch(() => {});
+
+  const verifyUrl = `${getBaseUrl()}/api/auth/verify-email?token=${verificationToken}`;
+  sendEmail({
+    to: user.email,
+    subject: "Verify your email — The Writers Room",
+    html: verificationEmailTemplate(user.name, verifyUrl),
+  }).catch((err) => console.warn("[email] Verification email failed:", err));
 
   await createSession(user.id, res);
   res.status(201).json(safeUser(user));
@@ -408,6 +424,35 @@ router.get("/auth/google/callback", async (req, res): Promise<void> => {
     console.error("Google OAuth error:", err);
     res.redirect(`${frontendBase}/auth/callback?error=server_error`);
   }
+});
+
+// GET /auth/verify-email?token=xxx — confirm email address
+router.get("/auth/verify-email", async (req, res): Promise<void> => {
+  const { token } = req.query as Record<string, string>;
+  const frontendBase = getFrontendBase();
+
+  if (!token) {
+    res.redirect(`${frontendBase}/profile?verified=invalid`);
+    return;
+  }
+
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.emailVerificationToken, token))
+    .limit(1);
+
+  if (!user) {
+    res.redirect(`${frontendBase}/profile?verified=invalid`);
+    return;
+  }
+
+  await db
+    .update(usersTable)
+    .set({ emailVerified: true, emailVerificationToken: null })
+    .where(eq(usersTable.id, user.id));
+
+  res.redirect(`${frontendBase}/profile?verified=1`);
 });
 
 // POST /auth/logout — invalidate current session cookie

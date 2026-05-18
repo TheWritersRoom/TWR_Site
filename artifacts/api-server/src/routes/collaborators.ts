@@ -2,6 +2,8 @@ import { Router, type IRouter } from "express";
 import { eq, and, count } from "drizzle-orm";
 import { db, collaboratorsTable, usersTable, projectsTable, joinRequestsTable, messagesTable } from "@workspace/db";
 import { awardInk } from "../lib/ink";
+import { sendEmail } from "../lib/email";
+import { joinRequestEmailTemplate } from "../lib/email-templates";
 import {
   ListCollaboratorsParams,
   InviteCollaboratorParams,
@@ -222,6 +224,31 @@ router.post("/projects/:id/join-requests", async (req, res): Promise<void> => {
     ? `${requesterName} has requested to join "${project.title}":\n\n"${message.trim()}"`
     : `${requesterName} has requested to join "${project.title}".`;
 
+  // Helper: email the project owner about the join request (fire-and-forget)
+  async function notifyOwnerByEmail(): Promise<void> {
+    const [owner] = await db
+      .select({ name: usersTable.name, email: usersTable.email, emailNotifications: usersTable.emailNotifications })
+      .from(usersTable)
+      .where(eq(usersTable.id, project.ownerId));
+    if (!owner?.emailNotifications) return;
+
+    const domain = process.env.REPLIT_DEV_DOMAIN;
+    const frontendBase = domain ? `https://${domain}/writers-room` : (process.env.APP_FRONTEND_URL ?? "http://localhost:5173");
+    const projectUrl = `${frontendBase}/projects/${projectId}?tab=collaborators`;
+
+    sendEmail({
+      to: owner.email,
+      subject: `New join request for "${project.title}" — The Writers Room`,
+      html: joinRequestEmailTemplate({
+        ownerName: owner.name,
+        requesterName: requesterName,
+        projectTitle: project.title,
+        message: message?.trim() || null,
+        projectUrl,
+      }),
+    }).catch((err) => console.warn("[email] Join request notification failed:", err));
+  }
+
   if (existingReq) {
     // Allow re-requesting if previously declined
     if (existingReq.status === "pending") {
@@ -233,6 +260,7 @@ router.post("/projects/:id/join-requests", async (req, res): Promise<void> => {
       .where(eq(joinRequestsTable.id, existingReq.id))
       .returning();
     await db.insert(messagesTable).values({ fromUserId: userId, toUserId: project.ownerId, body: notifyBody }).catch(() => {});
+    await notifyOwnerByEmail();
     res.status(200).json(updated);
     return;
   }
@@ -243,6 +271,7 @@ router.post("/projects/:id/join-requests", async (req, res): Promise<void> => {
     .returning();
 
   await db.insert(messagesTable).values({ fromUserId: userId, toUserId: project.ownerId, body: notifyBody }).catch(() => {});
+  await notifyOwnerByEmail();
 
   res.status(201).json(created);
 });

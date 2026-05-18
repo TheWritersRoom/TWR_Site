@@ -333,6 +333,24 @@ router.patch("/users/:id/open-to-approach", async (req, res): Promise<void> => {
   res.json(updated);
 });
 
+// PATCH /users/:id/email-notifications — toggle email notifications preference
+router.patch("/users/:id/email-notifications", async (req, res): Promise<void> => {
+  const userId = parseInt(req.params.id, 10);
+  const { emailNotifications } = req.body as { emailNotifications: boolean };
+  if (isNaN(userId) || typeof emailNotifications !== "boolean") {
+    res.status(400).json({ error: "Invalid params" }); return;
+  }
+
+  const [updated] = await db
+    .update(usersTable)
+    .set({ emailNotifications })
+    .where(eq(usersTable.id, userId))
+    .returning();
+
+  if (!updated) { res.status(404).json({ error: "User not found" }); return; }
+  res.json(updated);
+});
+
 // GET /users/:id/pitch-invites — invites received by a contributor
 router.get("/users/:id/pitch-invites", async (req, res): Promise<void> => {
   const userId = parseInt(req.params.id, 10);

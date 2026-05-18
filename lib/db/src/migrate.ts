@@ -73,6 +73,18 @@ export async function applyMigrations(): Promise<void> {
         WHERE platform_settings.value = '0';
     `);
 
+    // 4. Email verification and notification columns
+    await client.query(`
+      ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+        ADD COLUMN IF NOT EXISTS email_verification_token TEXT,
+        ADD COLUMN IF NOT EXISTS email_notifications BOOLEAN NOT NULL DEFAULT TRUE;
+    `);
+    // Mark all existing users as verified (they signed up before this feature existed)
+    await client.query(`
+      UPDATE users SET email_verified = TRUE WHERE email_verified = FALSE AND created_at < NOW() - INTERVAL '1 minute';
+    `);
+
     console.log("[migrate] Schema up to date.");
   } catch (err) {
     console.error("[migrate] Migration failed:", err);
