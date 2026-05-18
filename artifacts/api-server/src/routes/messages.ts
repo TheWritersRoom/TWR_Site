@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, desc, or, and, asc } from "drizzle-orm";
 import { db, messagesTable, usersTable } from "@workspace/db";
+// Note: usersTable retained for inbox/conversation queries below
 import { createInboxMessageAndNotify } from "../lib/inbox";
 
 const router: IRouter = Router();
@@ -15,21 +16,7 @@ router.post("/messages", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Missing required fields" }); return;
   }
 
-  await createInboxMessageAndNotify(Number(fromUserId), Number(toUserId), body.trim());
-
-  // Return the inserted message for the client
-  const [msg] = await db
-    .select()
-    .from(messagesTable)
-    .where(
-      and(
-        eq(messagesTable.fromUserId, Number(fromUserId)),
-        eq(messagesTable.toUserId, Number(toUserId))
-      )
-    )
-    .orderBy(desc(messagesTable.createdAt))
-    .limit(1);
-
+  const msg = await createInboxMessageAndNotify(Number(fromUserId), Number(toUserId), body.trim());
   res.status(201).json(msg);
 });
 

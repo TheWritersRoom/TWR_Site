@@ -3,6 +3,8 @@ import { db, messagesTable, usersTable } from "@workspace/db";
 import { sendEmail } from "./email";
 import { inboxMessageEmailTemplate } from "./email-templates";
 
+type InsertedMessage = typeof messagesTable.$inferSelect;
+
 function getFrontendBase(): string {
   const domain = process.env.REPLIT_DEV_DOMAIN;
   return domain
@@ -10,23 +12,8 @@ function getFrontendBase(): string {
     : (process.env.APP_FRONTEND_URL ?? "http://localhost:5173");
 }
 
-/**
- * Insert an inbox message and, if the recipient has email notifications
- * enabled, send a branded email notification. Fire-and-forget safe — always
- * resolves; errors are logged but never thrown.
- */
-export async function createInboxMessageAndNotify(
-  fromUserId: number,
-  toUserId: number,
-  body: string
-): Promise<void> {
-  try {
-    await db.insert(messagesTable).values({ fromUserId, toUserId, body });
-  } catch (err) {
-    console.warn("[inbox] Failed to insert message:", err);
-    return;
-  }
-
+/** Fire-and-forget email notification — never throws. */
+function sendInboxEmailNotification(fromUserId: number, toUserId: number, body: string): void {
   Promise.all([
     db.select({ name: usersTable.name })
       .from(usersTable).where(eq(usersTable.id, fromUserId)).limit(1),
@@ -45,4 +32,28 @@ export async function createInboxMessageAndNotify(
       }),
     });
   }).catch((err) => console.warn("[inbox] Email notification failed:", err));
+}
+
+/**
+ * Insert an inbox message and enqueue a best-effort email notification.
+ *
+ * DB insert errors are propagated so callers can handle them correctly.
+ * Email send is always fire-and-forget and never blocks the response.
+ *
+ * Returns the inserted message row.
+ */
+export async function createInboxMessageAndNotify(
+  fromUserId: number,
+  toUserId: number,
+  body: string
+): Promise<InsertedMessage> {
+  const [inserted] = await db
+    .insert(messagesTable)
+    .values({ fromUserId, toUserId, body })
+    .returning();
+
+  // Kick off email notification without awaiting it
+  sendInboxEmailNotification(fromUserId, toUserId, body);
+
+  return inserted;
 }
