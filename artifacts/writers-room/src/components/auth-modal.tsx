@@ -104,7 +104,6 @@ export function AuthModal() {
     setStep(1);
     setError("");
     setSuCredTitle("");
-    setSuIsPublished(false);
     setSuWorks([]);
     setSuWebsite("");
   };
