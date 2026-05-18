@@ -408,7 +408,7 @@ export default function ProjectDetail() {
             }
             if (isSuggesting && originalText) {
               text = text.split(originalText).join(
-                `<mark class="bg-blue-100 border-b-2 border-blue-500 text-inherit rounded px-0.5">${originalText}</mark>`
+                `<mark style="background:rgba(59,130,246,0.15);border-bottom:2px solid #3b82f6;border-radius:2px;padding:0 2px;color:inherit;">${originalText}</mark>`
               );
             }
             const inner = <span dangerouslySetInnerHTML={{ __html: text || "\u00A0" }} />;
@@ -450,7 +450,7 @@ export default function ProjectDetail() {
         });
       }
       if (isSuggesting && originalText) {
-        const activeMark = `<mark class="bg-blue-100 border-b-2 border-blue-500 text-inherit rounded px-0.5">${originalText}</mark>`;
+        const activeMark = `<mark style="background:rgba(59,130,246,0.15);border-bottom:2px solid #3b82f6;border-radius:2px;padding:0 2px;color:inherit;">${originalText}</mark>`;
         html = html.split(originalText).join(activeMark);
       }
       return html;
