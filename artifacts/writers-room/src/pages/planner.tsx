@@ -36,9 +36,9 @@ type PlannerCard = {
 type Planner = {
   id: number;
   ownerId: number;
+  projectId: number | null;
   title: string;
   synopsis: string | null;
-  notes: string | null;
   mediaType: "tv" | "book" | "serial" | "other";
   cards: PlannerCard[];
 };
@@ -887,7 +887,7 @@ export default function PlannerPage() {
   });
 
   const updatePlanner = useMutation({
-    mutationFn: (fields: { synopsis?: string; title?: string; notes?: string | null }) =>
+    mutationFn: (fields: { synopsis?: string; title?: string }) =>
       fetch(`/api/planners/${plannerId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -900,8 +900,23 @@ export default function PlannerPage() {
     },
   });
 
+  const linkedProjectId = planner?.projectId ?? null;
+
+  const { data: projectNotesData } = useQuery<{ notes: string }>({
+    queryKey: ["/api/projects", linkedProjectId, "notes", user?.id],
+    enabled: !!linkedProjectId && !!user && planner?.ownerId === user?.id,
+    queryFn: () =>
+      fetch(`/api/projects/${linkedProjectId}/notes?userId=${user!.id}`).then((r) => r.json()),
+  });
+
   const handleSaveNotes = async (notes: string) => {
-    updatePlanner.mutate({ notes });
+    if (!linkedProjectId || !user) return;
+    await fetch(`/api/projects/${linkedProjectId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.id, notes }),
+    });
+    queryClient.invalidateQueries({ queryKey: ["/api/projects", linkedProjectId, "notes", user.id] });
   };
 
   const addCard = useMutation({
@@ -1005,7 +1020,7 @@ export default function PlannerPage() {
               <Trash2 className="w-4 h-4" />
             </button>
           )}
-          {planner.ownerId === user?.id && (
+          {planner.ownerId === user?.id && !!linkedProjectId && (
             <button
               onClick={() => setNotesOpen((n) => !n)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors ${
@@ -1066,9 +1081,9 @@ export default function PlannerPage() {
             />
           )}
         </div>
-        {planner.ownerId === user?.id && (
+        {planner.ownerId === user?.id && !!linkedProjectId && (
           <NotesPanel
-            initialValue={planner.notes ?? null}
+            initialValue={projectNotesData?.notes ?? null}
             onSave={handleSaveNotes}
             open={notesOpen}
             onToggle={() => setNotesOpen((n) => !n)}

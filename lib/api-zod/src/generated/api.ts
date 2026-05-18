@@ -118,6 +118,7 @@ export const GetProjectResponse = zod.object({
   title: zod.string(),
   type: zod.enum(["book", "script"]),
   content: zod.string(),
+  notes: zod.string().nullish(),
   ownerId: zod.number(),
   ownerName: zod.string(),
   role: zod.enum(["owner", "collaborator", "reader"]),

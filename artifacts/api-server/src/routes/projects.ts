@@ -236,7 +236,45 @@ router.get("/projects/:id", async (req, res): Promise<void> => {
     myJoinRequest = jr ?? null;
   }
 
-  res.json({ ...project, role, canGiveFeedback, myJoinRequest });
+  const { notes, ...projectWithoutNotes } = project;
+  res.json({
+    ...projectWithoutNotes,
+    ...(role === "owner" ? { notes: notes ?? "" } : {}),
+    role,
+    canGiveFeedback,
+    myJoinRequest,
+  });
+});
+
+router.get("/projects/:id/notes", async (req, res): Promise<void> => {
+  const params = GetProjectParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const userId = parseInt(req.query.userId as string, 10);
+  if (isNaN(userId)) {
+    res.status(401).json({ error: "userId required" });
+    return;
+  }
+
+  const [row] = await db
+    .select({ ownerId: projectsTable.ownerId, notes: projectsTable.notes })
+    .from(projectsTable)
+    .where(eq(projectsTable.id, params.data.id));
+
+  if (!row) {
+    res.status(404).json({ error: "Project not found" });
+    return;
+  }
+
+  if (row.ownerId !== userId) {
+    res.status(403).json({ error: "Only the project owner can read notes" });
+    return;
+  }
+
+  res.json({ notes: row.notes ?? "" });
 });
 
 router.patch("/projects/:id", async (req, res): Promise<void> => {

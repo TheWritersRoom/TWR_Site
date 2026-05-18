@@ -161,6 +161,7 @@ export interface ProjectDetail {
   type: ProjectDetailType;
   content: string;
   synopsis?: string | null;
+  notes?: string | null;
   contentMode?: "full" | "synopsis";
   genres?: string;
   ownershipTerms?: "sole" | "shared";
