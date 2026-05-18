@@ -19,6 +19,7 @@ export const usersTable = pgTable("users", {
   profilePublic: boolean("profile_public").notNull().default(true),
   emailVerified: boolean("email_verified").notNull().default(false),
   emailVerificationToken: text("email_verification_token"),
+  emailVerificationTokenExpiresAt: timestamp("email_verification_token_expires_at", { withTimezone: true }),
   emailNotifications: boolean("email_notifications").notNull().default(true),
   subscriptionTier: text("subscription_tier", { enum: ["free", "pro"] }).notNull().default("free"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

@@ -1,3 +1,12 @@
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 function emailWrapper(content: string): string {
   const year = new Date().getFullYear();
   return `<!DOCTYPE html>
@@ -38,18 +47,20 @@ function emailWrapper(content: string): string {
 }
 
 export function verificationEmailTemplate(name: string, verifyUrl: string): string {
+  const safeName = escapeHtml(name);
+  const safeUrl = encodeURI(verifyUrl);
   return emailWrapper(`
-    <h1 style="margin:0 0 12px;font-size:24px;font-weight:700;color:#1A1614;font-family:Georgia,'Times New Roman',serif;">Welcome, ${name}.</h1>
+    <h1 style="margin:0 0 12px;font-size:24px;font-weight:700;color:#1A1614;font-family:Georgia,'Times New Roman',serif;">Welcome, ${safeName}.</h1>
     <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#7A6B5E;">Thanks for joining The Writers Room. Please verify your email address to confirm your account.</p>
     <table cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
       <tr>
         <td style="background:#E8B84B;border:2px solid #1A1614;">
-          <a href="${verifyUrl}" style="display:block;padding:14px 32px;font-size:13px;font-weight:700;color:#1A1614;text-decoration:none;letter-spacing:0.08em;text-transform:uppercase;">Verify my email address</a>
+          <a href="${safeUrl}" style="display:block;padding:14px 32px;font-size:13px;font-weight:700;color:#1A1614;text-decoration:none;letter-spacing:0.08em;text-transform:uppercase;">Verify my email address</a>
         </td>
       </tr>
     </table>
     <p style="margin:0 0 8px;font-size:12px;color:#7A6B5E;">Or copy and paste this link into your browser:</p>
-    <p style="margin:0 0 24px;font-size:12px;color:#7A6B5E;word-break:break-all;"><a href="${verifyUrl}" style="color:#1A1614;">${verifyUrl}</a></p>
+    <p style="margin:0 0 24px;font-size:12px;color:#7A6B5E;word-break:break-all;"><a href="${safeUrl}" style="color:#1A1614;">${escapeHtml(verifyUrl)}</a></p>
     <p style="margin:0;font-size:12px;color:#7A6B5E;border-top:1px solid rgba(26,22,20,0.1);padding-top:16px;">This link expires in 48 hours. If you didn&apos;t create this account, you can safely ignore this email.</p>
   `);
 }
@@ -62,15 +73,20 @@ export function joinRequestEmailTemplate(opts: {
   projectUrl: string;
 }): string {
   const { ownerName, requesterName, projectTitle, message, projectUrl } = opts;
+  const safeOwner = escapeHtml(ownerName);
+  const safeRequester = escapeHtml(requesterName);
+  const safeTitle = escapeHtml(projectTitle);
+  const safeMessage = message ? escapeHtml(message) : null;
+  const safeProjectUrl = encodeURI(projectUrl);
   return emailWrapper(`
     <p style="margin:0 0 6px;font-size:10px;letter-spacing:0.2em;font-weight:700;text-transform:uppercase;color:#E8B84B;">New join request</p>
-    <h1 style="margin:0 0 20px;font-size:22px;font-weight:700;color:#1A1614;font-family:Georgia,'Times New Roman',serif;">${projectTitle}</h1>
-    <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#1A1614;">Hi ${ownerName}, <strong>${requesterName}</strong> has requested to join your project <strong>&ldquo;${projectTitle}&rdquo;</strong>.</p>
-    ${message ? `
+    <h1 style="margin:0 0 20px;font-size:22px;font-weight:700;color:#1A1614;font-family:Georgia,'Times New Roman',serif;">${safeTitle}</h1>
+    <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#1A1614;">Hi ${safeOwner}, <strong>${safeRequester}</strong> has requested to join your project <strong>&ldquo;${safeTitle}&rdquo;</strong>.</p>
+    ${safeMessage ? `
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
       <tr>
         <td style="background:#F9F6EE;border-left:3px solid #E8B84B;padding:14px 18px;">
-          <p style="margin:0;font-size:14px;line-height:1.7;color:#1A1614;font-style:italic;">&ldquo;${message}&rdquo;</p>
+          <p style="margin:0;font-size:14px;line-height:1.7;color:#1A1614;font-style:italic;">&ldquo;${safeMessage}&rdquo;</p>
         </td>
       </tr>
     </table>
@@ -78,7 +94,7 @@ export function joinRequestEmailTemplate(opts: {
     <table cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
       <tr>
         <td style="background:#1A1614;border:2px solid #1A1614;">
-          <a href="${projectUrl}" style="display:block;padding:14px 32px;font-size:13px;font-weight:700;color:#F9F6EE;text-decoration:none;letter-spacing:0.08em;text-transform:uppercase;">Review request</a>
+          <a href="${safeProjectUrl}" style="display:block;padding:14px 32px;font-size:13px;font-weight:700;color:#F9F6EE;text-decoration:none;letter-spacing:0.08em;text-transform:uppercase;">Review request</a>
         </td>
       </tr>
     </table>
@@ -93,15 +109,19 @@ export function inboxMessageEmailTemplate(opts: {
   inboxUrl: string;
 }): string {
   const { recipientName, senderName, preview, inboxUrl } = opts;
-  const safePreview = preview.length > 200 ? preview.slice(0, 200) + "…" : preview;
+  const rawPreview = preview.length > 200 ? preview.slice(0, 200) + "…" : preview;
+  const safeRecipient = escapeHtml(recipientName);
+  const safeSender = escapeHtml(senderName);
+  const safePreview = escapeHtml(rawPreview);
+  const safeInboxUrl = encodeURI(inboxUrl);
   return emailWrapper(`
     <p style="margin:0 0 6px;font-size:10px;letter-spacing:0.2em;font-weight:700;text-transform:uppercase;color:#E8B84B;">New message</p>
     <h1 style="margin:0 0 20px;font-size:22px;font-weight:700;color:#1A1614;font-family:Georgia,'Times New Roman',serif;">You have a new message</h1>
-    <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#1A1614;">Hi ${recipientName}, <strong>${senderName}</strong> sent you a message on The Writers Room.</p>
+    <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#1A1614;">Hi ${safeRecipient}, <strong>${safeSender}</strong> sent you a message on The Writers Room.</p>
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
       <tr>
         <td style="background:#F9F6EE;border:1px solid rgba(26,22,20,0.2);padding:18px;">
-          <p style="margin:0 0 8px;font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#7A6B5E;">${senderName}</p>
+          <p style="margin:0 0 8px;font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#7A6B5E;">${safeSender}</p>
           <p style="margin:0;font-size:14px;line-height:1.7;color:#1A1614;">${safePreview}</p>
         </td>
       </tr>
@@ -109,7 +129,7 @@ export function inboxMessageEmailTemplate(opts: {
     <table cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
       <tr>
         <td style="background:#E8B84B;border:2px solid #1A1614;">
-          <a href="${inboxUrl}" style="display:block;padding:14px 32px;font-size:13px;font-weight:700;color:#1A1614;text-decoration:none;letter-spacing:0.08em;text-transform:uppercase;">Open inbox</a>
+          <a href="${safeInboxUrl}" style="display:block;padding:14px 32px;font-size:13px;font-weight:700;color:#1A1614;text-decoration:none;letter-spacing:0.08em;text-transform:uppercase;">Open inbox</a>
         </td>
       </tr>
     </table>

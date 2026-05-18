@@ -2,8 +2,6 @@ import type { Request, Response, NextFunction } from "express";
 import { eq, and, gt } from "drizzle-orm";
 import { db, userSessionsTable, usersTable } from "@workspace/db";
 
-const WRITE_METHODS = new Set(["POST", "PATCH", "PUT", "DELETE"]);
-
 const VERIFICATION_EXEMPT_PREFIXES = [
   "/api/auth/",
   "/api/health",
@@ -14,11 +12,6 @@ export async function requireEmailVerified(
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  if (!WRITE_METHODS.has(req.method)) {
-    next();
-    return;
-  }
-
   const isExempt = VERIFICATION_EXEMPT_PREFIXES.some((prefix) =>
     req.path.startsWith(prefix)
   );

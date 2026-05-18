@@ -612,8 +612,8 @@ export default function Profile() {
   });
 
   const [openToApproach, setOpenToApproach] = useState<boolean>(user?.openToApproach ?? false);
-  const [profilePublic, setProfilePublic] = useState<boolean>((user as any)?.profilePublic ?? true);
-  const [emailNotifications, setEmailNotifications] = useState<boolean>((user as any)?.emailNotifications ?? true);
+  const [profilePublic, setProfilePublic] = useState<boolean>(user?.profilePublic ?? true);
+  const [emailNotifications, setEmailNotifications] = useState<boolean>(user?.emailNotifications ?? true);
 
   const profilePublicMutation = useMutation({
     mutationFn: (value: boolean) =>

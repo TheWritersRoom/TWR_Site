@@ -35,6 +35,12 @@ export interface User {
   credentials?: string | null;
   /** Whether the user is open to being approached directly by authors via pitch invites */
   openToApproach?: boolean;
+  /** Whether the user's profile is publicly visible */
+  profilePublic?: boolean;
+  /** Whether the user has verified their email address */
+  emailVerified?: boolean;
+  /** Whether the user wants to receive email notifications */
+  emailNotifications?: boolean;
   createdAt: string;
 }
 

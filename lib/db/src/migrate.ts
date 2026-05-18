@@ -78,9 +78,10 @@ export async function applyMigrations(): Promise<void> {
       ALTER TABLE users
         ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE,
         ADD COLUMN IF NOT EXISTS email_verification_token TEXT,
+        ADD COLUMN IF NOT EXISTS email_verification_token_expires_at TIMESTAMPTZ,
         ADD COLUMN IF NOT EXISTS email_notifications BOOLEAN NOT NULL DEFAULT TRUE;
     `);
-    // Mark all existing users as verified (they signed up before this feature existed)
+    // Mark all pre-existing users as verified (they signed up before this feature existed)
     await client.query(`
       UPDATE users SET email_verified = TRUE WHERE email_verified = FALSE AND created_at < NOW() - INTERVAL '1 minute';
     `);

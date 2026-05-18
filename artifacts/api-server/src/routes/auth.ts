@@ -181,8 +181,9 @@ router.post("/auth/register", async (req, res): Promise<void> => {
 
   // Send verification email (fire-and-forget — don't block signup on email failure)
   const verificationToken = randomUUID();
+  const verificationExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
   await db.update(usersTable)
-    .set({ emailVerificationToken: verificationToken })
+    .set({ emailVerificationToken: verificationToken, emailVerificationTokenExpiresAt: verificationExpiry })
     .where(eq(usersTable.id, user.id))
     .catch(() => {});
 
@@ -412,6 +413,8 @@ router.get("/auth/google/callback", async (req, res): Promise<void> => {
             mediaInterests: "",
             isAdmin: SEED_ADMIN_EMAILS.has(oauthEmail),
             subscriptionTier: SEED_PRO_EMAILS.has(oauthEmail) ? "pro" : "free",
+            // Google has already verified this email address
+            emailVerified: true,
           })
           .returning();
         user = created;
@@ -447,9 +450,19 @@ router.get("/auth/verify-email", async (req, res): Promise<void> => {
     return;
   }
 
+  // Enforce the 48-hour token expiry
+  if (!user.emailVerificationTokenExpiresAt || user.emailVerificationTokenExpiresAt < new Date()) {
+    await db
+      .update(usersTable)
+      .set({ emailVerificationToken: null, emailVerificationTokenExpiresAt: null })
+      .where(eq(usersTable.id, user.id));
+    res.redirect(`${frontendBase}/profile?verified=expired`);
+    return;
+  }
+
   await db
     .update(usersTable)
-    .set({ emailVerified: true, emailVerificationToken: null })
+    .set({ emailVerified: true, emailVerificationToken: null, emailVerificationTokenExpiresAt: null })
     .where(eq(usersTable.id, user.id));
 
   res.redirect(`${frontendBase}/profile?verified=1`);
