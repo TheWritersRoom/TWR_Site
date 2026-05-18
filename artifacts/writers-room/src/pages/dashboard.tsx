@@ -126,7 +126,10 @@ export default function Dashboard() {
   const { data: projects, isLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects", user?.id],
     enabled: !!user,
-    queryFn: () => fetch(`/api/projects?userId=${user!.id}`).then((r) => r.json()),
+    queryFn: () => fetch(`/api/projects?userId=${user!.id}`, { credentials: "include" }).then(async (r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }),
   });
 
   type PlannerSummary = {
@@ -136,13 +139,19 @@ export default function Dashboard() {
   const { data: planners = [] } = useQuery<PlannerSummary[]>({
     queryKey: ["/api/planners", user?.id],
     enabled: !!user,
-    queryFn: () => fetch(`/api/planners?userId=${user!.id}`).then((r) => r.json()),
+    queryFn: () => fetch(`/api/planners?userId=${user!.id}`, { credentials: "include" }).then(async (r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }),
   });
 
   const { data: inkData } = useQuery<{ balance: number }>({
     queryKey: ["/api/users", user?.id, "ink"],
     enabled: !!user,
-    queryFn: () => fetch(`/api/users/${user!.id}/ink`).then((r) => r.json()),
+    queryFn: () => fetch(`/api/users/${user!.id}/ink`, { credentials: "include" }).then(async (r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }),
   });
 
   const [showNewPlanner, setShowNewPlanner] = useState(false);

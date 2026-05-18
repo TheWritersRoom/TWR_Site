@@ -20,7 +20,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const { data: inboxMessages = [] } = useQuery<{ isRead: boolean }[]>({
     queryKey: ["/api/messages/inbox", user.id],
-    queryFn: () => fetch(`/api/messages/inbox?userId=${user.id}`).then((r) => r.json()),
+    queryFn: () => fetch(`/api/messages/inbox?userId=${user.id}`, { credentials: "include" }).then(async (r) => {
+      if (!r.ok) return [];
+      return r.json();
+    }),
     refetchInterval: 60_000,
   });
   const unreadCount = inboxMessages.filter((m) => !m.isRead).length;
