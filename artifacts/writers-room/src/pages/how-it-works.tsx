@@ -49,13 +49,13 @@ const AUTHOR_STEPS = [
   },
   {
     n: "02",
-    title: "Set your collaboration terms",
-    body: "Choose how many collaborators you want, what they can see (full manuscript or synopsis only), and whether you want them to sign an IP agreement before joining. You are always in control.",
+    title: "Set up your Writing Room",
+    body: "Choose how many collaborators you want, what they can see (full manuscript or synopsis only), and whether you want them to sign an IP agreement before entering. You decide the terms — this is your room.",
   },
   {
     n: "03",
-    title: "Invite the right people",
-    body: "Browse contributor profiles by genre interest, media taste, and track record. Send targeted invites to the people most likely to improve your specific work — or post a Pitch and let contributors come to you.",
+    title: "Open the door",
+    body: "Browse contributor profiles by genre interest, media taste, and track record. Send targeted invites to the people most likely to elevate your specific work — or post a Pitch and let contributors apply. Every person who enters your Writing Room is there because you chose them.",
   },
   {
     n: "04",
@@ -208,7 +208,7 @@ export default function HowItWorks() {
       {/* Standfirst */}
       <div className="bg-[#F9F6EE] px-6 md:px-14 py-5 text-center">
         <p className="text-base md:text-lg text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif">
-          The Writers Room connects authors who want sharper manuscripts with contributors who want to do meaningful editorial work — on projects they care about, with recognition they have earned.
+          Think of each project as a room you build around your manuscript — your Writing Room. You decide who enters, what they can see, and what they're there to do. Contributors earn their place through quality, not volume. The result is a creative space that exists entirely to serve your work.
         </p>
       </div>
 
@@ -255,7 +255,7 @@ export default function HowItWorks() {
             </div>
             <ThickRule className="border-[#1A1614]/30 mb-2 mt-4" />
             <p className="font-serif italic text-[#1A1614]/70 text-base mt-4 max-w-2xl">
-              Your manuscript stays yours. The Writers Room gives you the tools to open it to exactly the right people — and nothing more.
+              Your manuscript stays yours. Your Writing Room is yours to build — invite exactly the right people, set your terms, and stay in control at every step.
             </p>
             <Rule className="mt-4 border-[#1A1614]/20" />
           </motion.div>

@@ -19,7 +19,7 @@ const inView = (delay = 0) => ({
 
 const FEATURES = [
   { icon: <Upload className="w-5 h-5" />, title: "Write or upload", desc: "Start from a blank page or bring existing work in any format — PDF, DOCX, TXT, Markdown, RTF. Lands in a clean reading view instantly." },
-  { icon: <Users className="w-5 h-5" />, title: "Invite or post a pitch", desc: "Send targeted invites to contributors matched by genre and track record, or post a Pitch and let the right people come to you." },
+  { icon: <Users className="w-5 h-5" />, title: "Invite or post a pitch", desc: "Open the door to your Writing Room — send targeted invites to contributors matched by genre and track record, or post a Pitch and let the right people apply to join." },
   { icon: <MessageSquare className="w-5 h-5" />, title: "Inline diff suggestions", desc: "Collaborators highlight any passage and propose a replacement. Authors see the original and the alternative side by side — accept or discard in one click." },
   { icon: <Shield className="w-5 h-5" />, title: "IP protection built in", desc: "Require contributors to sign an IP agreement before joining. Content is SHA-256 fingerprinted on demand and every view is logged." },
   { icon: <BarChart2 className="w-5 h-5" />, title: "Track who helps most", desc: "Per-project leaderboards and public acceptance-rate profiles show which contributors consistently improve the work." },
@@ -49,8 +49,8 @@ const FOR_CONTRIBUTORS = [
 
 const STEPS = [
   { n: "I", title: "Create or join", desc: "Sign up free in under a minute. Write your own projects, collaborate on others', or do both — your account covers everything." },
-  { n: "II", title: "Start or upload your manuscript", desc: "Write from scratch inside The Writers Room, or upload a book or script in any format. Either way it lands in a clean, readable view." },
-  { n: "III", title: "Collaborate", desc: "Invited collaborators highlight passages and propose edits. Authors decide what to keep." },
+  { n: "II", title: "Build your Writing Room", desc: "Write from scratch or upload a book or script in any format. Set your collaboration terms — what contributors can see, how many join, whether they sign an IP agreement. Your room, your rules." },
+  { n: "III", title: "Open the door", desc: "Invite contributors who fit your project by genre, taste, and track record. Or post a Pitch and let the right people apply. Every person in your room is there because you chose them." },
   { n: "IV", title: "Publish & collect feedback", desc: "Publish within The Writers Room to reach readers directly, or export a KDP-ready file for Amazon, Apple Books, Kobo, and more. Collect feedback either way." },
 ];
 
@@ -164,10 +164,10 @@ export default function Landing() {
             <ThickRule className="w-48 md:w-72 mx-auto mb-5 border-[#1A1614]" />
 
             <p className="font-serif text-[clamp(0.85rem,1.8vw,1.15rem)] text-[#1A1614]/80 mb-2" style={{ fontVariant: "small-caps", letterSpacing: "0.04em" }}>
-              Pitch. Write. Edit. Publish.
+              Your manuscript. Your room. Your team.
             </p>
             <p className="font-serif font-bold text-[clamp(1rem,2vw,1.35rem)] text-[#1A1614] mb-10" style={{ fontVariant: "small-caps", letterSpacing: "0.04em" }}>
-              Together.
+              Built by you.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -210,7 +210,7 @@ export default function Landing() {
         {/* Editorial standfirst strip */}
         <div className="bg-[#F9F6EE] border-b-2 border-[#1A1614] px-6 md:px-14 py-6 text-center">
           <p className="text-base md:text-lg text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif font-semibold">
-            The Writers Room is the platform where authors write or upload their manuscripts, collaborate with genre-matched editors, and publish — within The Writers Room itself, or out to Amazon, Apple Books, Kobo, and beyond.
+            Every manuscript deserves the right room. The Writers Room is where authors build a dedicated creative space around their work — inviting the exact collaborators their project needs, on their own terms — then publish within the platform or out to Amazon, Apple Books, Kobo, and beyond.
           </p>
         </div>
       </section>
@@ -312,7 +312,7 @@ export default function Landing() {
                 </div>
               </div>
               <p className="text-sm text-[#7A6B5E] mb-6 leading-relaxed font-serif italic">
-                Keep full ownership of your work while opening it to the exact people who can make it better.
+                Build the Writing Room your manuscript deserves — invite exactly the right people, on your terms, and keep full ownership throughout.
               </p>
               <ul className="space-y-3 mb-8">
                 {FOR_AUTHORS.map((item) => (
