@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, and, count } from "drizzle-orm";
-import { db, collaboratorsTable, usersTable, projectsTable, joinRequestsTable, messagesTable } from "@workspace/db";
+import { db, collaboratorsTable, usersTable, projectsTable, joinRequestsTable } from "@workspace/db";
+import { createInboxMessageAndNotify } from "../lib/inbox";
 import { awardInk } from "../lib/ink";
 import { sendEmail } from "../lib/email";
 import { joinRequestEmailTemplate } from "../lib/email-templates";
@@ -259,7 +260,7 @@ router.post("/projects/:id/join-requests", async (req, res): Promise<void> => {
       .set({ status: "pending", message, createdAt: new Date() })
       .where(eq(joinRequestsTable.id, existingReq.id))
       .returning();
-    await db.insert(messagesTable).values({ fromUserId: userId, toUserId: project.ownerId, body: notifyBody }).catch(() => {});
+    await createInboxMessageAndNotify(userId, project.ownerId, notifyBody);
     await notifyOwnerByEmail();
     res.status(200).json(updated);
     return;
@@ -270,7 +271,7 @@ router.post("/projects/:id/join-requests", async (req, res): Promise<void> => {
     .values({ projectId, userId, message })
     .returning();
 
-  await db.insert(messagesTable).values({ fromUserId: userId, toUserId: project.ownerId, body: notifyBody }).catch(() => {});
+  await createInboxMessageAndNotify(userId, project.ownerId, notifyBody);
   await notifyOwnerByEmail();
 
   res.status(201).json(created);
@@ -316,18 +317,18 @@ router.patch("/projects/:id/join-requests/:requestId", async (req, res): Promise
     }
 
     // Notify the requester
-    await db.insert(messagesTable).values({
-      fromUserId: ownerId,
-      toUserId: joinReq.userId,
-      body: `${ownerName} accepted your request to join "${project.title}". Welcome to the room!`,
-    }).catch(() => {});
+    await createInboxMessageAndNotify(
+      ownerId,
+      joinReq.userId,
+      `${ownerName} accepted your request to join "${project.title}". Welcome to the room!`
+    );
   } else {
     // Notify the requester of the decline
-    await db.insert(messagesTable).values({
-      fromUserId: ownerId,
-      toUserId: joinReq.userId,
-      body: `${ownerName} has reviewed your request to join "${project.title}" and isn't able to take on a collaborator at this time.`,
-    }).catch(() => {});
+    await createInboxMessageAndNotify(
+      ownerId,
+      joinReq.userId,
+      `${ownerName} has reviewed your request to join "${project.title}" and isn't able to take on a collaborator at this time.`
+    );
   }
 
   const [updated] = await db

@@ -1,8 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, desc, or, and, asc } from "drizzle-orm";
 import { db, messagesTable, usersTable } from "@workspace/db";
-import { sendEmail } from "../lib/email";
-import { inboxMessageEmailTemplate } from "../lib/email-templates";
+import { createInboxMessageAndNotify } from "../lib/inbox";
 
 const router: IRouter = Router();
 
@@ -15,32 +14,21 @@ router.post("/messages", async (req, res): Promise<void> => {
   if (!fromUserId || !toUserId || !body?.trim()) {
     res.status(400).json({ error: "Missing required fields" }); return;
   }
-  const [msg] = await db.insert(messagesTable).values({
-    fromUserId: Number(fromUserId),
-    toUserId: Number(toUserId),
-    body: body.trim(),
-  }).returning();
 
-  // Email notification for recipient (fire-and-forget)
-  Promise.all([
-    db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, Number(fromUserId))).limit(1),
-    db.select({ name: usersTable.name, email: usersTable.email, emailNotifications: usersTable.emailNotifications })
-      .from(usersTable).where(eq(usersTable.id, Number(toUserId))).limit(1),
-  ]).then(([[sender], [recipient]]) => {
-    if (!recipient?.emailNotifications || !sender) return;
-    const domain = process.env.REPLIT_DEV_DOMAIN;
-    const frontendBase = domain ? `https://${domain}/writers-room` : (process.env.APP_FRONTEND_URL ?? "http://localhost:5173");
-    return sendEmail({
-      to: recipient.email,
-      subject: `New message from ${sender.name} — The Writers Room`,
-      html: inboxMessageEmailTemplate({
-        recipientName: recipient.name,
-        senderName: sender.name,
-        preview: body.trim(),
-        inboxUrl: `${frontendBase}/inbox`,
-      }),
-    });
-  }).catch((err) => console.warn("[email] Inbox notification failed:", err));
+  await createInboxMessageAndNotify(Number(fromUserId), Number(toUserId), body.trim());
+
+  // Return the inserted message for the client
+  const [msg] = await db
+    .select()
+    .from(messagesTable)
+    .where(
+      and(
+        eq(messagesTable.fromUserId, Number(fromUserId)),
+        eq(messagesTable.toUserId, Number(toUserId))
+      )
+    )
+    .orderBy(desc(messagesTable.createdAt))
+    .limit(1);
 
   res.status(201).json(msg);
 });
