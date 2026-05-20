@@ -371,6 +371,10 @@ function UsersTab() {
       queryClient.setQueryData<AdminUser[]>(["/api/admin/users"], prev => prev?.filter(u => u.id !== id));
       setDeleteTarget(null);
     },
+    onError: (err: Error) => {
+      toast({ title: "Delete failed", description: err.message, variant: "destructive" });
+      setDeleteTarget(null);
+    },
   });
 
   const setTier = useMutation({

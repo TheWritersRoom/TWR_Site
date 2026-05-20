@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { desc, eq, isNotNull, sql, count } from "drizzle-orm";
-import { db, usersTable, projectsTable, feedbackTable, collaboratorsTable, suggestionsTable, referredUsersTable } from "@workspace/db";
+import { desc, eq, isNotNull, sql, count, or } from "drizzle-orm";
+import { db, usersTable, projectsTable, feedbackTable, collaboratorsTable, suggestionsTable, referredUsersTable, messagesTable, bookmarksTable, plannersTable, ratingsTable, joinRequestsTable, pitchResponsesTable } from "@workspace/db";
 import { requireAdmin } from "../middleware/require-admin";
 import { awardInk } from "../lib/ink";
 
@@ -177,9 +177,24 @@ router.delete("/admin/users/:id", requireAdmin, async (req, res): Promise<void> 
   if (isNaN(targetId)) { res.status(400).json({ error: "Invalid user id" }); return; }
   if (req.adminUserId === targetId) { res.status(403).json({ error: "You cannot delete your own account from the admin panel" }); return; }
 
-  const [deleted] = await db.delete(usersTable).where(eq(usersTable.id, targetId)).returning({ id: usersTable.id });
-  if (!deleted) { res.status(404).json({ error: "User not found" }); return; }
-  res.json({ ok: true });
+  try {
+    // Delete child records without ON DELETE CASCADE, in dependency order
+    await db.delete(messagesTable).where(or(eq(messagesTable.fromUserId, targetId), eq(messagesTable.toUserId, targetId)));
+    await db.delete(bookmarksTable).where(or(eq(bookmarksTable.authorId, targetId), eq(bookmarksTable.contributorId, targetId)));
+    await db.delete(pitchResponsesTable).where(eq(pitchResponsesTable.userId, targetId));
+    await db.delete(ratingsTable).where(eq(ratingsTable.userId, targetId));
+    await db.delete(joinRequestsTable).where(eq(joinRequestsTable.userId, targetId));
+    await db.delete(suggestionsTable).where(eq(suggestionsTable.submitterId, targetId));
+    await db.delete(plannersTable).where(eq(plannersTable.ownerId, targetId));
+    await db.delete(projectsTable).where(eq(projectsTable.ownerId, targetId));
+    // Delete the user — cascades auth-tokens, sessions, ink, referrals, pitch-invites, collaborators
+    const [deleted] = await db.delete(usersTable).where(eq(usersTable.id, targetId)).returning({ id: usersTable.id });
+    if (!deleted) { res.status(404).json({ error: "User not found" }); return; }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[admin] Failed to delete user:", targetId, err);
+    res.status(500).json({ error: "Failed to delete user. Please try again." });
+  }
 });
 
 export default router;
