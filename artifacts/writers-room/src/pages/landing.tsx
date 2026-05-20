@@ -48,7 +48,7 @@ const FOR_CONTRIBUTORS = [
 ];
 
 const STEPS = [
-  { n: "I", title: "Create or join", desc: "Sign up free in under a minute. Write your own projects, collaborate on others', or do both — your account covers everything." },
+  { n: "I", title: "Create or join", desc: "Sign up free in under a minute. Open your own Writing Room, contribute to others', or do both — one account covers everything." },
   { n: "II", title: "Build your Writing Room", desc: "Write from scratch or upload a book or script in any format. Set your collaboration terms — what contributors can see, how many join, whether they sign an IP agreement. Your room, your rules." },
   { n: "III", title: "Open the door", desc: "Invite contributors who fit your project by genre, taste, and track record. Or post a Pitch and let the right people apply. Every person in your room is there because you chose them." },
   { n: "IV", title: "Publish & collect feedback", desc: "Publish within The Writers Room to reach readers directly, or export a KDP-ready file for Amazon, Apple Books, Kobo, and more. Collect feedback either way." },
@@ -210,7 +210,7 @@ export default function Landing() {
         {/* Editorial standfirst strip */}
         <div className="bg-[#F9F6EE] border-b-2 border-[#1A1614] px-6 md:px-14 py-6 text-center">
           <p className="text-base md:text-lg text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif font-semibold">
-            Every manuscript deserves the right room. The Writers Room is where authors build a dedicated creative space around their work — inviting the exact collaborators their project needs, on their own terms — then publish within the platform or out to Amazon, Apple Books, Kobo, and beyond.
+            Every manuscript deserves its own room. Each project you create becomes your Writing Room — a private creative space built around that specific work, filled with exactly the contributors it needs, on your terms. Collaborate here, then publish within the platform or export to Amazon, Apple Books, Kobo, and beyond.
           </p>
         </div>
       </section>
@@ -345,7 +345,7 @@ export default function Landing() {
                 </div>
               </div>
               <p className="text-sm text-[#1A1614]/70 mb-6 leading-relaxed font-serif italic">
-                Build a reputation as a skilled editor by working on projects that genuinely interest you.
+                Find Writing Rooms that match your editorial instincts — and build a reputation as the collaborator authors come back to.
               </p>
               <ul className="space-y-3 mb-8">
                 {FOR_CONTRIBUTORS.map((item) => (

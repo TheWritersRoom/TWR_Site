@@ -45,7 +45,7 @@ const AUTHOR_STEPS = [
   {
     n: "01",
     title: "Start or upload your manuscript",
-    body: "Write from scratch inside The Writers Room, or bring existing work in any format — PDF, DOCX, TXT, Markdown, RTF. Either way, it lands in a clean, distraction-free reading view your collaborators will love.",
+    body: "Write from scratch or bring existing work in any format — PDF, DOCX, TXT, Markdown, RTF. Either way, it becomes the foundation of your Writing Room: a clean, distraction-free reading view that every collaborator enters on your terms.",
   },
   {
     n: "02",
@@ -60,7 +60,7 @@ const AUTHOR_STEPS = [
   {
     n: "04",
     title: "Review suggestions inline",
-    body: "Every collaborator suggestion arrives as a tracked change — the original passage crossed out, the proposed replacement shown alongside it. Accept, discard, or discuss with a single click.",
+    body: "Everyone in your Writing Room can propose a change to any passage. Each suggestion arrives as a tracked diff — the original crossed out, the amendment shown alongside. Accept, discard, or discuss with a single click.",
   },
   {
     n: "05",
@@ -78,12 +78,12 @@ const CONTRIBUTOR_STEPS = [
   {
     n: "02",
     title: "Discover projects or respond to pitches",
-    body: "Browse the Pitches board for authors actively seeking collaborators, or explore published work in the Discover feed. When something catches your eye, send a join request with a short note about why you are the right fit.",
+    body: "Browse the Pitches board for authors actively building their Writing Room, or explore published work in the Discover feed. When something catches your eye, apply with a short note about why you belong in that room.",
   },
   {
     n: "03",
     title: "Read and highlight",
-    body: "Once accepted, you read the manuscript in The Writers Room's clean reading view. Highlight any passage that you think could be stronger, and propose your alternative — with an optional comment explaining your reasoning.",
+    body: "Once accepted, you enter the author's Writing Room — a clean, distraction-free reading view built around their manuscript. Highlight any passage you think could be stronger and propose your alternative, with an optional note explaining your reasoning.",
   },
   {
     n: "04",
@@ -208,7 +208,7 @@ export default function HowItWorks() {
       {/* Standfirst */}
       <div className="bg-[#F9F6EE] px-6 md:px-14 py-5 text-center">
         <p className="text-base md:text-lg text-[#1A1614] max-w-3xl mx-auto leading-relaxed font-serif">
-          Think of each project as a room you build around your manuscript — your Writing Room. You decide who enters, what they can see, and what they're there to do. Contributors earn their place through quality, not volume. The result is a creative space that exists entirely to serve your work.
+          Each project you create is its own Writing Room — a dedicated creative space built around that manuscript alone. You decide who enters, what they can see, and what they are there to do. Contributors earn their place through quality, not volume. Everything inside the room exists to serve one thing: your work.
         </p>
       </div>
 

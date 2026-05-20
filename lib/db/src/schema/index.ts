@@ -2,6 +2,7 @@ export * from "./users";
 export * from "./projects";
 export * from "./collaborators";
 export * from "./suggestions";
+export * from "./suggestion-votes";
 export * from "./auth-tokens";
 export * from "./user-sessions";
 export * from "./pitch-invites";

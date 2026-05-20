@@ -166,12 +166,46 @@ export default function ProjectDetail() {
       queryFn: () => fetch(`/api/projects/${projectId}?userId=${user?.id ?? ""}`).then(r => r.json()),
     }
   });
-  const { data: suggestions } = useListSuggestions(projectId, { status: suggestionFilter });
+  const SUGG_KEY = ["/api/projects", projectId, "suggestions"];
+  const { data: suggestions } = useQuery<any[]>({
+    queryKey: [...SUGG_KEY, suggestionFilter, user?.id],
+    queryFn: () => fetch(`/api/projects/${projectId}/suggestions?status=${suggestionFilter}&userId=${user?.id ?? ""}`).then(r => r.json()),
+    enabled: !!projectId,
+  });
   const { data: collaborators } = useListCollaborators(projectId);
 
   const createSuggestion = useCreateSuggestion();
   const updateSuggestion = useUpdateSuggestionStatus();
   const inviteCollab = useInviteCollaborator();
+
+  const SUGG_INVALIDATE = () => queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId, "suggestions"] });
+
+  const openVote = useMutation({
+    mutationFn: (suggestionId: number) =>
+      fetch(`/api/projects/${projectId}/suggestions/${suggestionId}/vote/open`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user!.id }),
+      }).then(async r => { if (!r.ok) throw new Error((await r.json()).error); return r.json(); }),
+    onSuccess: SUGG_INVALIDATE,
+  });
+
+  const closeVote = useMutation({
+    mutationFn: (suggestionId: number) =>
+      fetch(`/api/projects/${projectId}/suggestions/${suggestionId}/vote/close`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user!.id }),
+      }).then(async r => { if (!r.ok) throw new Error((await r.json()).error); return r.json(); }),
+    onSuccess: SUGG_INVALIDATE,
+  });
+
+  const castVote = useMutation({
+    mutationFn: ({ suggestionId, vote }: { suggestionId: number; vote: "original" | "amendment" }) =>
+      fetch(`/api/projects/${projectId}/suggestions/${suggestionId}/vote`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user!.id, vote }),
+      }).then(async r => { if (!r.ok) throw new Error((await r.json()).error); return r.json(); }),
+    onSuccess: SUGG_INVALIDATE,
+  });
 
   const handleSaveLimit = async () => {
     if (limitDraft === null || !user) return;
@@ -270,7 +304,7 @@ export default function ProjectDetail() {
         submitterId: user.id
       }
     });
-    queryClient.invalidateQueries({ queryKey: getListSuggestionsQueryKey(projectId) });
+    SUGG_INVALIDATE();
     setIsSuggesting(false);
     setOriginalText("");
     setSelection(null);
@@ -290,7 +324,7 @@ export default function ProjectDetail() {
         userId: user.id
       }
     });
-    queryClient.invalidateQueries({ queryKey: getListSuggestionsQueryKey(projectId) });
+    SUGG_INVALIDATE();
     queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
   };
 
@@ -976,25 +1010,76 @@ export default function ProjectDetail() {
                     </div>
                   )}
 
-                  {isOwner && sug.status === 'pending' && (
-                    <div className="flex gap-2 pt-2 border-t border-border mt-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-                        onClick={() => handleUpdateStatus(sug.id, 'discarded')}
-                        disabled={updateSuggestion.isPending}
-                      >
-                        <X className="w-4 h-4 mr-1" /> Discard
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                        onClick={() => handleUpdateStatus(sug.id, 'accepted')}
-                        disabled={updateSuggestion.isPending}
-                      >
-                        <Check className="w-4 h-4 mr-1" /> Accept
-                      </Button>
+                  {/* Voting is open */}
+                  {sug.votingOpen && sug.status === 'pending' && (
+                    <div className="pt-3 border-t border-amber-200 mt-2 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em] text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                          Vote open
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {(sug.votes?.original ?? 0) + (sug.votes?.amendment ?? 0)} vote{((sug.votes?.original ?? 0) + (sug.votes?.amendment ?? 0)) !== 1 ? 's' : ''} cast
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => castVote.mutate({ suggestionId: sug.id, vote: "original" })}
+                          disabled={castVote.isPending}
+                          className={`py-2 px-3 rounded-lg text-xs font-semibold border transition-all text-left ${sug.votes?.userVote === "original" ? "bg-red-100 border-red-400 text-red-700 ring-1 ring-red-400" : "bg-red-50/40 border-red-200 text-red-600 hover:border-red-400 hover:bg-red-50"}`}
+                        >
+                          <div className="text-[9px] uppercase tracking-wide opacity-60 mb-0.5">Keep</div>
+                          Original · {sug.votes?.original ?? 0}
+                        </button>
+                        <button
+                          onClick={() => castVote.mutate({ suggestionId: sug.id, vote: "amendment" })}
+                          disabled={castVote.isPending}
+                          className={`py-2 px-3 rounded-lg text-xs font-semibold border transition-all text-left ${sug.votes?.userVote === "amendment" ? "bg-green-100 border-green-400 text-green-700 ring-1 ring-green-400" : "bg-green-50/40 border-green-200 text-green-600 hover:border-green-400 hover:bg-green-50"}`}
+                        >
+                          <div className="text-[9px] uppercase tracking-wide opacity-60 mb-0.5">Use</div>
+                          Amendment · {sug.votes?.amendment ?? 0}
+                        </button>
+                      </div>
+                      {isOwner && (
+                        <div className="flex gap-2 pt-1">
+                          <Button size="sm" variant="outline" className="flex-1 text-xs text-muted-foreground"
+                            onClick={() => closeVote.mutate(sug.id)} disabled={closeVote.isPending}>
+                            Close vote
+                          </Button>
+                          <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50 border-red-200"
+                            onClick={() => handleUpdateStatus(sug.id, 'discarded')} disabled={updateSuggestion.isPending}>
+                            <X className="w-3 h-3" />
+                          </Button>
+                          <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => handleUpdateStatus(sug.id, 'accepted')} disabled={updateSuggestion.isPending}>
+                            <Check className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Voting is not open */}
+                  {!sug.votingOpen && sug.status === 'pending' && (
+                    <div className="pt-2 border-t border-border mt-2 space-y-2">
+                      {(project.role === 'owner' || project.role === 'collaborator') && (
+                        <Button size="sm" variant="outline"
+                          className="w-full text-xs font-semibold text-amber-700 border-amber-300 hover:bg-amber-50 hover:border-amber-400"
+                          onClick={() => openVote.mutate(sug.id)} disabled={openVote.isPending}>
+                          Put to a vote
+                        </Button>
+                      )}
+                      {isOwner && (
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                            onClick={() => handleUpdateStatus(sug.id, 'discarded')} disabled={updateSuggestion.isPending}>
+                            <X className="w-4 h-4 mr-1" /> Discard
+                          </Button>
+                          <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => handleUpdateStatus(sug.id, 'accepted')} disabled={updateSuggestion.isPending}>
+                            <Check className="w-4 h-4 mr-1" /> Accept
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </motion.div>

@@ -114,6 +114,22 @@ export async function applyMigrations(): Promise<void> {
         ADD COLUMN IF NOT EXISTS notes TEXT;
     `);
 
+    // 6. Suggestion voting
+    await client.query(`
+      ALTER TABLE suggestions
+        ADD COLUMN IF NOT EXISTS voting_open BOOLEAN NOT NULL DEFAULT FALSE;
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS suggestion_votes (
+        id          SERIAL PRIMARY KEY,
+        suggestion_id INTEGER NOT NULL REFERENCES suggestions(id) ON DELETE CASCADE,
+        user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        vote          TEXT NOT NULL CHECK (vote IN ('original', 'amendment')),
+        created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE (suggestion_id, user_id)
+      );
+    `);
+
     console.log("[migrate] Schema up to date.");
   } catch (err) {
     console.error("[migrate] Migration failed:", err);
