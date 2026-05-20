@@ -91,6 +91,7 @@ export function AuthModal() {
   const [suAvailableForWork, setSuAvailableForWork] = useState(true);
 
   const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
+  const [registrationEmail, setRegistrationEmail] = useState("");
 
   if (isLoading || !authModalOpen) return null;
 
@@ -181,6 +182,7 @@ export function AuthModal() {
         mediaInterests: suMedia,
         credentials,
       });
+      setRegistrationEmail(suEmail);
     } catch (err: any) {
       setError(err.message || "Registration failed");
       setStep(1);
@@ -219,7 +221,7 @@ export function AuthModal() {
           </button>
 
           {/* Tabs */}
-          <div className="flex border-b border-border">
+          <div className={`flex border-b border-border ${registrationEmail ? "hidden" : ""}`}>
             {(["signin", "signup"] as const).map((m) => (
               <button
                 key={m}
@@ -255,6 +257,37 @@ export function AuthModal() {
             )}
 
             <AnimatePresence mode="wait">
+              {/* ── VERIFY EMAIL PENDING ── */}
+              {registrationEmail && (
+                <motion.div
+                  key="verify-pending"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.25 }}
+                  className="text-center py-4"
+                >
+                  <div className="w-16 h-16 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-serif font-bold text-foreground mb-3">Check your inbox</h2>
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-2">
+                    We've sent a verification link to
+                  </p>
+                  <p className="font-semibold text-foreground mb-5">{registrationEmail}</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-8">
+                    Click the link in that email to verify your account and sign in. The link expires in 48 hours.
+                  </p>
+                  <button
+                    onClick={closeAuthModal}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+                  >
+                    Close
+                  </button>
+                </motion.div>
+              )}
+
               {/* ── SIGN IN ── */}
               {mode === "signin" && (
                 <motion.div

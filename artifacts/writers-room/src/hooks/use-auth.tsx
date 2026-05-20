@@ -116,9 +116,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? "Registration failed");
-    setUser(data);
-    localStorage.setItem(AUTH_KEY, JSON.stringify(data));
-    setAuthModalOpen(false);
+    // Do not log the user in yet — they must verify their email first.
+    // The modal will show the "check your email" screen.
   };
 
   const signIn = async (payload: SignInPayload) => {

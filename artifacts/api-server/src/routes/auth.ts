@@ -496,7 +496,9 @@ router.get("/auth/verify-email", async (req, res): Promise<void> => {
     .set({ emailVerified: true, emailVerificationToken: null, emailVerificationTokenExpiresAt: null })
     .where(eq(usersTable.id, user.id));
 
-  res.redirect(`${frontendBase}/profile?verified=1`);
+  // Issue a one-time login token so the user is signed in automatically
+  const loginToken = await createLoginToken(user.id);
+  res.redirect(`${frontendBase}/auth/callback?token=${loginToken}&verified=1`);
 });
 
 // POST /auth/logout — invalidate current session cookie

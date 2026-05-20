@@ -32,9 +32,10 @@ export default function AuthCallback() {
       return;
     }
 
+    const verified = params.get("verified") === "1";
     loginWithToken(token)
       .then(() => {
-        setLocation("/");
+        setLocation(verified ? "/dashboard" : "/");
       })
       .catch((err: Error) => {
         setErrorMsg(err.message || "Could not complete sign-in.");
