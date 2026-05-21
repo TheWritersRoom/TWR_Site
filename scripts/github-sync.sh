@@ -11,6 +11,6 @@ AUTHENTICATED_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/TheWritersR
 CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "master")
 
 echo "[github-sync] Pushing ${CURRENT_BRANCH} to GitHub (master)..."
-git push "$AUTHENTICATED_URL" "${CURRENT_BRANCH}:master"
+git push --force "$AUTHENTICATED_URL" "${CURRENT_BRANCH}:master"
 
 echo "[github-sync] Done."
