@@ -115,6 +115,38 @@ export default function Pricing() {
             <p className="font-serif italic text-[#F9F6EE]/65 text-lg max-w-2xl mx-auto leading-relaxed">
               Every account gets a free Writing Room with the full feature set. Open the door, invite your collaborators, and pay only when you need more.
             </p>
+
+            {freeSlots !== null && freeSlots > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="mt-10 inline-flex flex-col sm:flex-row items-center gap-4 border border-[#E8B84B]/30 bg-[#E8B84B]/8 px-7 py-5"
+              >
+                <span className="text-[9px] uppercase tracking-[0.24em] font-bold text-[#1A1614] bg-[#E8B84B] px-3 py-1 shrink-0">Beta</span>
+                <div className="sm:border-l sm:border-[#F9F6EE]/15 sm:pl-4 text-center sm:text-left">
+                  <p className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#E8B84B] mb-1">
+                    We're in beta — testing the platform with early members
+                  </p>
+                  <p className="text-[11px] text-[#F9F6EE]/55 leading-relaxed">
+                    To thank you for joining early, new signups receive a free Pro account while
+                    {" "}<span className="text-[#E8B84B] font-semibold">{freeSlots} of 300 spots remain</span>.
+                    No catch, no credit card.
+                  </p>
+                </div>
+              </motion.div>
+            )}
+            {freeSlots === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="mt-10 inline-flex items-center gap-3 border border-[#F9F6EE]/15 px-6 py-3"
+              >
+                <span className="text-[9px] uppercase tracking-[0.24em] font-bold text-[#1A1614] bg-[#E8B84B] px-3 py-1">Beta</span>
+                <p className="text-[11px] uppercase tracking-[0.14em] font-semibold text-[#F9F6EE]/50">Free Pro accounts fully claimed — paid plans coming soon</p>
+              </motion.div>
+            )}
           </motion.div>
         </div>
       </section>
