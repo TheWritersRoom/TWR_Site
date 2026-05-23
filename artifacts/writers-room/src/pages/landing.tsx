@@ -164,10 +164,10 @@ export default function Landing() {
             <ThickRule className="w-48 md:w-72 mx-auto mb-5 border-[#1A1614]" />
 
             <p className="font-serif text-[clamp(0.85rem,1.8vw,1.15rem)] text-[#1A1614]/80 mb-2" style={{ fontVariant: "small-caps", letterSpacing: "0.04em" }}>
-              Your manuscript. Your room. Your team.
+              Pitch. Write. Edit. Publish.
             </p>
             <p className="font-serif font-bold text-[clamp(1rem,2vw,1.35rem)] text-[#1A1614] mb-10" style={{ fontVariant: "small-caps", letterSpacing: "0.04em" }}>
-              Built by you.
+              Together.
             </p>
 
             {freeSlots !== null && (
