@@ -56,3 +56,83 @@ if [ $PUSH_EXIT_CODE -ne 0 ]; then
 fi
 
 echo "[github-sync] Done."
+
+# ---------------------------------------------------------------------------
+# Token expiry check
+# GitHub returns an "x-oauth-token-expires-at" header on API responses when
+# the token has an expiry date set (fine-grained PATs always do; classic PATs
+# with an expiry also include it). We check after a successful push so expiry
+# warnings don't block the sync itself.
+# ---------------------------------------------------------------------------
+
+TOKEN_WARN_DAYS="${GITHUB_TOKEN_WARN_DAYS:-14}"
+
+API_HEADERS=$(curl --silent --show-error --head \
+  -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+  -H "Accept: application/vnd.github+json" \
+  "https://api.github.com/user" 2>&1)
+
+EXPIRES_AT=$(echo "$API_HEADERS" | grep -i "x-oauth-token-expires-at" | awk '{print $2}' | tr -d '\r')
+
+if [ -z "$EXPIRES_AT" ]; then
+  echo "[github-sync] Token has no expiry date (classic PAT with no expiration or GitHub App token). No rotation reminder needed."
+  exit 0
+fi
+
+echo "[github-sync] Token expires at: ${EXPIRES_AT}"
+
+# Convert expiry to epoch seconds (requires date command that supports -d / -j)
+if date --version >/dev/null 2>&1; then
+  # GNU date (Linux)
+  EXPIRY_EPOCH=$(date -d "$EXPIRES_AT" +%s 2>/dev/null)
+else
+  # BSD date (macOS)
+  EXPIRY_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$EXPIRES_AT" +%s 2>/dev/null)
+fi
+
+NOW_EPOCH=$(date +%s)
+
+if [ -z "$EXPIRY_EPOCH" ]; then
+  echo "[github-sync] Warning: could not parse token expiry date '${EXPIRES_AT}' — skipping expiry check." >&2
+  exit 0
+fi
+
+SECONDS_UNTIL_EXPIRY=$(( EXPIRY_EPOCH - NOW_EPOCH ))
+DAYS_UNTIL_EXPIRY=$(( SECONDS_UNTIL_EXPIRY / 86400 ))
+
+if [ $DAYS_UNTIL_EXPIRY -le 0 ]; then
+  EXPIRY_MESSAGE="*GitHub token has expired!* :rotating_light:
+The \`GITHUB_TOKEN\` secret used for automatic GitHub sync expired on \`${EXPIRES_AT}\`.
+GitHub pushes will fail until the token is renewed.
+See \`docs/github-token-rotation.md\` for renewal steps."
+  echo "[github-sync] CRITICAL: Token has already expired!" >&2
+elif [ $DAYS_UNTIL_EXPIRY -le $TOKEN_WARN_DAYS ]; then
+  EXPIRY_MESSAGE="*GitHub token expiring soon* :warning:
+The \`GITHUB_TOKEN\` secret used for automatic GitHub sync expires in *${DAYS_UNTIL_EXPIRY} day(s)* (on \`${EXPIRES_AT}\`).
+Renew it before it lapses to avoid broken sync.
+See \`docs/github-token-rotation.md\` for renewal steps."
+  echo "[github-sync] Warning: Token expires in ${DAYS_UNTIL_EXPIRY} day(s) (threshold: ${TOKEN_WARN_DAYS} days)."
+else
+  echo "[github-sync] Token is valid for ${DAYS_UNTIL_EXPIRY} more day(s). No action needed."
+  exit 0
+fi
+
+# Send Slack alert for expiry warning / expiry
+if [ -n "$SLACK_WEBHOOK_URL" ]; then
+  PAYLOAD=$(jq -n --arg text "$EXPIRY_MESSAGE" '{"text": $text}')
+
+  CURL_RESPONSE=$(curl --fail --silent --show-error \
+    -X POST \
+    -H "Content-Type: application/json" \
+    --data "$PAYLOAD" \
+    "$SLACK_WEBHOOK_URL" 2>&1)
+  CURL_EXIT=$?
+
+  if [ $CURL_EXIT -eq 0 ]; then
+    echo "[github-sync] Token expiry alert sent to Slack."
+  else
+    echo "[github-sync] Warning: could not send token expiry alert to Slack (curl exit ${CURL_EXIT}): ${CURL_RESPONSE}" >&2
+  fi
+else
+  echo "[github-sync] SLACK_WEBHOOK_URL is not set — cannot send token expiry alert." >&2
+fi
