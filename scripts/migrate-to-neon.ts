@@ -2,8 +2,12 @@ import pg from "pg";
 
 const { Pool } = pg;
 
-const NEON_URL =
-  "postgresql://neondb_owner:npg_KM28AknzIWZV@ep-falling-cloud-abppqmjb.eu-west-2.aws.neon.tech/neondb?sslmode=require";
+const NEON_URL = process.env.NEON_DATABASE_URL;
+if (!NEON_URL) {
+  console.error("Error: NEON_DATABASE_URL environment variable is not set.");
+  console.error("Usage: NEON_DATABASE_URL='postgresql://...' npx tsx scripts/migrate-to-neon.ts");
+  process.exit(1);
+}
 
 const src = new Pool({ connectionString: process.env.DATABASE_URL });
 const dst = new Pool({ connectionString: NEON_URL });
