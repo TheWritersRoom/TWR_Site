@@ -4,9 +4,6 @@ packages:
   - lib/integrations/*
   - scripts
 
-allowBuilds:
-  esbuild: set this to true or false
-
 autoInstallPeers: false
 
 catalog:
@@ -34,11 +31,8 @@ catalog:
 
 minimumReleaseAge: 1440
 
-onlyBuiltDependencies:
-  - '@swc/core'
-  - esbuild
-  - msw
-  - unrs-resolver
+allowBuilds:
+  esbuild: true
 
 overrides:
   react: 19.1.0
