@@ -31,6 +31,12 @@ catalog:
 
 minimumReleaseAge: 1440
 
+onlyBuiltDependencies:
+  - '@swc/core'
+  - esbuild
+  - msw
+  - unrs-resolver
+
 overrides:
   react: 19.1.0
   react-dom: 19.1.0
