@@ -646,7 +646,7 @@ export default function ProjectDetail() {
                      className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors"
                    >
                      <BookOpen className="w-4 h-4" />
-                     Export for Kindle
+                     Export
                    </button>
                  </>
                )}

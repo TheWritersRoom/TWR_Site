@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Download, BookOpen, CheckCircle2, AlertCircle,
-  ExternalLink, FileText, FileCode2, ChevronRight,
+  ExternalLink, FileText, FileCode2, ChevronRight, ChevronLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -16,16 +16,102 @@ type Project = {
   genres?: string | null;
 };
 
+type Platform = "kdp" | "kobo" | "apple";
+
 type CheckItem = {
   label: string;
   passed: boolean;
   hint?: string;
 };
 
+const PLATFORMS: { id: Platform; name: string; subtitle: string; logo: string }[] = [
+  { id: "kdp",   name: "Amazon KDP",          subtitle: "Kindle Direct Publishing", logo: "🟠" },
+  { id: "kobo",  name: "Kobo Writing Life",   subtitle: "Rakuten Kobo",             logo: "🔵" },
+  { id: "apple", name: "Apple Books",          subtitle: "Books for Authors",        logo: "⬛" },
+];
+
 function countWords(text: string): number {
   const stripped = text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   return stripped ? stripped.split(" ").filter(Boolean).length : 0;
 }
+
+function buildChecks(platform: Platform, project: Project, wordCount: number, parsedGenres: string[]): CheckItem[] {
+  const minWords = platform === "kdp" ? 2500 : 1000;
+  const minWordsLabel = platform === "kdp" ? "2,500" : "1,000";
+
+  const base: CheckItem[] = [
+    {
+      label: "Title set",
+      passed: !!project.title?.trim(),
+      hint: "Your project title becomes the published book title.",
+    },
+    {
+      label: "Author name set",
+      passed: !!project.ownerName?.trim(),
+      hint: "Your display name is used as the author.",
+    },
+    {
+      label: "Synopsis / description",
+      passed: !!project.synopsis?.trim(),
+      hint: `${PLATFORMS.find(p => p.id === platform)!.name} requires a book description. Add it in your project settings.`,
+    },
+    {
+      label: "Genre tags added",
+      passed: parsedGenres.length > 0,
+      hint: "Genre tags help the platform categorise your book.",
+    },
+    {
+      label: `Word count (${wordCount.toLocaleString()} words)`,
+      passed: wordCount >= minWords,
+      hint: wordCount < minWords
+        ? `${PLATFORMS.find(p => p.id === platform)!.name} recommends at least ${minWordsLabel} words (yours: ${wordCount.toLocaleString()}).`
+        : `Your manuscript meets the recommended minimum length.`,
+    },
+    {
+      label: "Prose project (not a script)",
+      passed: project.type !== "script",
+      hint: "Scripts require different publishing paths (e.g. Final Draft, screenplay platforms).",
+    },
+  ];
+
+  return base;
+}
+
+const NEXT_STEPS: Record<Platform, { steps: string[]; url: string; urlLabel: string }> = {
+  kdp: {
+    steps: [
+      "Sign in or create your account on Amazon KDP",
+      "Click + Create → Kindle eBook",
+      "Enter your title, author, description and keywords",
+      "Upload your EPUB or DOCX file in the Kindle eBook Content step",
+      "Set your pricing and territories, then publish",
+    ],
+    url: "https://kdp.amazon.com/en_US/title-setup/kindle/new/details",
+    urlLabel: "Open Amazon KDP",
+  },
+  kobo: {
+    steps: [
+      "Sign in or create your account on Kobo Writing Life",
+      "Click Add a Book and enter your title, author and description",
+      "Upload your EPUB file — Kobo accepts EPUB only",
+      "Set categories, language and pricing",
+      "Submit for review — books typically go live within 24–72 hours",
+    ],
+    url: "https://www.kobowritinglife.com/",
+    urlLabel: "Open Kobo Writing Life",
+  },
+  apple: {
+    steps: [
+      "Sign in to Apple Books for Authors with your Apple ID",
+      "Click My Books → + Add New Book",
+      "Fill in metadata: title, author, description, language and categories",
+      "Upload your EPUB file — Apple Books requires EPUB format",
+      "Submit for review — books typically go live within 1–2 business days",
+    ],
+    url: "https://authors.apple.com/",
+    urlLabel: "Open Apple Books for Authors",
+  },
+};
 
 export function KdpExportModal({
   project,
@@ -36,51 +122,22 @@ export function KdpExportModal({
   userId: number;
   onClose: () => void;
 }) {
+  const [platform, setPlatform] = useState<Platform | null>(null);
   const [downloading, setDownloading] = useState<"epub" | "docx" | null>(null);
-  const [step, setStep] = useState<"checklist" | "export">("checklist");
+  const [step, setStep] = useState<"platform" | "checklist" | "export">("platform");
 
   const wordCount = useMemo(() => countWords(project.content ?? ""), [project.content]);
 
   let parsedGenres: string[] = [];
   try { parsedGenres = JSON.parse(project.genres ?? "[]"); } catch {}
 
-  const checks: CheckItem[] = [
-    {
-      label: "Title set",
-      passed: !!project.title?.trim(),
-      hint: "Your project title becomes the Kindle book title.",
-    },
-    {
-      label: "Author name set",
-      passed: !!project.ownerName?.trim(),
-      hint: "Your display name is used as the author.",
-    },
-    {
-      label: "Synopsis / description",
-      passed: !!project.synopsis?.trim(),
-      hint: "KDP requires a book description. Edit it in your project settings.",
-    },
-    {
-      label: "Genre tags added",
-      passed: parsedGenres.length > 0,
-      hint: "Genre tags help KDP categorise your book.",
-    },
-    {
-      label: `Word count (${wordCount.toLocaleString()} words)`,
-      passed: wordCount >= 2500,
-      hint: wordCount < 2500
-        ? `KDP requires at least 2,500 words for most formats (yours: ${wordCount.toLocaleString()}).`
-        : "Your manuscript meets KDP's minimum length.",
-    },
-    {
-      label: "Prose project (not a script)",
-      passed: project.type !== "script",
-      hint: "KDP is for novels, non-fiction, and other prose. Scripts use different publishing paths.",
-    },
-  ];
+  const checks = useMemo(
+    () => platform ? buildChecks(platform, project, wordCount, parsedGenres) : [],
+    [platform, project, wordCount, parsedGenres]
+  );
 
   const passedCount = checks.filter((c) => c.passed).length;
-  const allPassed = passedCount === checks.length;
+  const allPassed = checks.length > 0 && passedCount === checks.length;
 
   const handleDownload = async (format: "epub" | "docx") => {
     setDownloading(format);
@@ -102,6 +159,13 @@ export function KdpExportModal({
       setDownloading(null);
     }
   };
+
+  const selectedPlatform = PLATFORMS.find(p => p.id === platform);
+  const nextSteps = platform ? NEXT_STEPS[platform] : null;
+
+  const STEPS: Array<"platform" | "checklist" | "export"> = ["platform", "checklist", "export"];
+  const stepIndex = STEPS.indexOf(step);
+  const STEP_LABELS = ["Platform", "Pre-flight", "Export"];
 
   return (
     <AnimatePresence>
@@ -126,8 +190,12 @@ export function KdpExportModal({
                 <BookOpen className="w-4.5 h-4.5 text-[#F9F6EE]" style={{ width: 18, height: 18 }} />
               </div>
               <div>
-                <h2 className="font-serif font-bold text-lg text-[#1A1614] leading-tight">Prepare for Amazon KDP</h2>
-                <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mt-0.5">Kindle Direct Publishing</p>
+                <h2 className="font-serif font-bold text-lg text-[#1A1614] leading-tight">
+                  {selectedPlatform ? `Export for ${selectedPlatform.name}` : "Export Manuscript"}
+                </h2>
+                <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E] mt-0.5">
+                  {selectedPlatform ? selectedPlatform.subtitle : "Choose a publishing platform"}
+                </p>
               </div>
             </div>
             <button
@@ -140,17 +208,22 @@ export function KdpExportModal({
 
           {/* Step tabs */}
           <div className="flex border-b border-[#1A1614]/10 shrink-0">
-            {(["checklist", "export"] as const).map((s, i) => (
+            {STEPS.map((s, i) => (
               <button
                 key={s}
-                onClick={() => setStep(s)}
+                onClick={() => {
+                  if (i < stepIndex && (s !== "checklist" || platform)) setStep(s);
+                }}
+                disabled={i > stepIndex}
                 className={`flex-1 py-3 text-xs font-bold uppercase tracking-[0.12em] transition-colors border-b-2 -mb-px ${
                   step === s
                     ? "border-[#E8B84B] text-[#1A1614]"
-                    : "border-transparent text-[#7A6B5E] hover:text-[#1A1614]"
+                    : i < stepIndex
+                    ? "border-transparent text-[#7A6B5E] hover:text-[#1A1614] cursor-pointer"
+                    : "border-transparent text-[#1A1614]/25 cursor-default"
                 }`}
               >
-                {i + 1}. {s === "checklist" ? "Pre-flight check" : "Export & submit"}
+                {i + 1}. {STEP_LABELS[i]}
               </button>
             ))}
           </div>
@@ -158,7 +231,47 @@ export function KdpExportModal({
           {/* Body */}
           <div className="flex-1 overflow-y-auto">
             <AnimatePresence mode="wait">
-              {step === "checklist" && (
+
+              {/* ── PLATFORM SELECTION ── */}
+              {step === "platform" && (
+                <motion.div
+                  key="platform"
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -12 }}
+                  className="p-6 space-y-3"
+                >
+                  <p className="text-sm text-[#7A6B5E] mb-4">
+                    Choose where you're publishing. Each platform has different submission requirements — we'll walk you through them.
+                  </p>
+
+                  {PLATFORMS.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => { setPlatform(p.id); setStep("checklist"); }}
+                      className={`w-full flex items-center gap-4 p-4 border-2 text-left transition-all hover:border-[#E8B84B] hover:shadow-sm group ${
+                        platform === p.id ? "border-[#E8B84B] bg-[#E8B84B]/5" : "border-[#1A1614]/15 bg-white"
+                      }`}
+                    >
+                      <span className="text-2xl">{p.logo}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-[#1A1614]">{p.name}</p>
+                        <p className="text-xs text-[#7A6B5E]">{p.subtitle}</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-[#7A6B5E]/40 group-hover:text-[#1A1614] shrink-0 transition-colors" />
+                    </button>
+                  ))}
+
+                  <div className="pt-2 border-t border-[#1A1614]/10">
+                    <p className="text-[11px] text-[#7A6B5E]">
+                      All three platforms accept <strong className="text-[#1A1614]">EPUB</strong> format. Amazon KDP also accepts DOCX. The same exported file works everywhere.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ── CHECKLIST ── */}
+              {step === "checklist" && platform && (
                 <motion.div
                   key="checklist"
                   initial={{ opacity: 0, x: 12 }}
@@ -167,7 +280,7 @@ export function KdpExportModal({
                   className="p-6 space-y-3"
                 >
                   <p className="text-sm text-[#7A6B5E] mb-4">
-                    Review these requirements before exporting. KDP needs all of these to list your book.
+                    Review these requirements before exporting. {selectedPlatform?.name} needs all of these to list your book.
                   </p>
                   {checks.map((c) => (
                     <div
@@ -206,15 +319,22 @@ export function KdpExportModal({
                     </p>
                   </div>
 
-                  <Button
-                    onClick={() => setStep("export")}
-                    className="w-full mt-4 h-11 text-sm"
-                    disabled={!allPassed}
-                  >
-                    <span className="flex items-center gap-2">
-                      Continue to Export <ChevronRight className="w-4 h-4" />
-                    </span>
-                  </Button>
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={() => setStep("platform")}
+                      className="flex items-center gap-1.5 px-4 py-2.5 border border-[#1A1614]/20 text-[11px] uppercase tracking-[0.12em] font-bold text-[#7A6B5E] hover:text-[#1A1614] hover:border-[#1A1614] transition-colors"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" /> Back
+                    </button>
+                    <Button
+                      onClick={() => setStep("export")}
+                      className="flex-1 h-10 text-sm"
+                    >
+                      <span className="flex items-center gap-2">
+                        Continue to Export <ChevronRight className="w-4 h-4" />
+                      </span>
+                    </Button>
+                  </div>
                   {!allPassed && (
                     <button
                       onClick={() => setStep("export")}
@@ -226,7 +346,8 @@ export function KdpExportModal({
                 </motion.div>
               )}
 
-              {step === "export" && (
+              {/* ── EXPORT ── */}
+              {step === "export" && platform && nextSteps && (
                 <motion.div
                   key="export"
                   initial={{ opacity: 0, x: 12 }}
@@ -235,10 +356,10 @@ export function KdpExportModal({
                   className="p-6 space-y-5"
                 >
                   <p className="text-sm text-[#7A6B5E]">
-                    Download your manuscript in a KDP-compatible format, then upload it on Amazon's publishing dashboard.
+                    Download your manuscript, then follow the steps below to submit it to {selectedPlatform?.name}.
                   </p>
 
-                  {/* EPUB */}
+                  {/* EPUB — available for all platforms */}
                   <div className="border border-[#1A1614]/15 bg-white p-4">
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 bg-[#E8B84B]/15 flex items-center justify-center shrink-0">
@@ -249,7 +370,11 @@ export function KdpExportModal({
                           <span className="ml-2 text-[9px] font-bold uppercase tracking-[0.15em] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 border border-emerald-200">Recommended</span>
                         </p>
                         <p className="text-xs text-[#7A6B5E] mt-0.5">
-                          KDP's preferred format. Produces the best Kindle reading experience with reflowable text.
+                          {platform === "kdp"
+                            ? "KDP's preferred format. Produces the best Kindle reading experience with reflowable text."
+                            : platform === "kobo"
+                            ? "Kobo Writing Life accepts EPUB only. This is the format you'll upload directly."
+                            : "Apple Books requires EPUB format. Upload this file directly to Books for Authors."}
                         </p>
                       </div>
                     </div>
@@ -263,49 +388,58 @@ export function KdpExportModal({
                     </Button>
                   </div>
 
-                  {/* DOCX */}
-                  <div className="border border-[#1A1614]/15 bg-white p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-[#7A6B5E]/10 flex items-center justify-center shrink-0">
-                        <FileText className="w-4 h-4 text-[#7A6B5E]" />
+                  {/* DOCX — KDP only */}
+                  {platform === "kdp" && (
+                    <div className="border border-[#1A1614]/15 bg-white p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-[#7A6B5E]/10 flex items-center justify-center shrink-0">
+                          <FileText className="w-4 h-4 text-[#7A6B5E]" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-sm text-[#1A1614]">Microsoft Word (DOCX)</p>
+                          <p className="text-xs text-[#7A6B5E] mt-0.5">
+                            Good for further editing before upload. KDP will convert it to Kindle format automatically.
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm text-[#1A1614]">Microsoft Word (DOCX)</p>
-                        <p className="text-xs text-[#7A6B5E] mt-0.5">
-                          Good for further editing before upload. KDP will convert it to Kindle format automatically.
-                        </p>
-                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleDownload("docx")}
+                        disabled={downloading !== null}
+                        className="w-full mt-3 h-9 text-xs gap-2 border-[#1A1614]/20 text-[#1A1614] hover:bg-[#1A1614]/5"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        {downloading === "docx" ? "Generating…" : `Download ${project.title.slice(0, 24)}.docx`}
+                      </Button>
                     </div>
-                    <Button
-                      variant="outline"
-                      onClick={() => handleDownload("docx")}
-                      disabled={downloading !== null}
-                      className="w-full mt-3 h-9 text-xs gap-2 border-[#1A1614]/20 text-[#1A1614] hover:bg-[#1A1614]/5"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      {downloading === "docx" ? "Generating…" : `Download ${project.title.slice(0, 24)}.docx`}
-                    </Button>
-                  </div>
+                  )}
 
-                  {/* KDP handoff */}
+                  {/* Next steps */}
                   <div className="border border-[#1A1614]/10 bg-[#1A1614]/3 p-4 space-y-2">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A6B5E]">Next steps on KDP</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A6B5E]">
+                      Next steps on {selectedPlatform?.name}
+                    </p>
                     <ol className="text-xs text-[#7A6B5E] space-y-1.5 list-decimal list-inside leading-relaxed">
-                      <li>Sign in or create your account on Amazon KDP</li>
-                      <li>Click <strong className="text-[#1A1614]">+ Create</strong> → <strong className="text-[#1A1614]">Kindle eBook</strong></li>
-                      <li>Enter your title, author, description and keywords</li>
-                      <li>Upload your EPUB or DOCX file in the <em>Kindle eBook Content</em> step</li>
-                      <li>Set your pricing and territories, then publish</li>
+                      {nextSteps.steps.map((s, i) => (
+                        <li key={i} dangerouslySetInnerHTML={{ __html: s.replace(/\*\*(.+?)\*\*/g, '<strong class="text-[#1A1614]">$1</strong>') }} />
+                      ))}
                     </ol>
                     <a
-                      href="https://kdp.amazon.com/en_US/title-setup/kindle/new/details"
+                      href={nextSteps.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-3 flex items-center justify-center gap-2 w-full h-9 border border-[#1A1614]/25 text-xs font-bold uppercase tracking-[0.12em] text-[#1A1614] hover:bg-[#1A1614]/5 transition-colors"
                     >
-                      Open Amazon KDP <ExternalLink className="w-3.5 h-3.5" />
+                      {nextSteps.urlLabel} <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   </div>
+
+                  <button
+                    onClick={() => setStep("platform")}
+                    className="flex items-center gap-1.5 text-xs text-[#7A6B5E] hover:text-[#1A1614] transition-colors"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" /> Switch platform
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
