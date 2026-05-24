@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db, projectsTable, usersTable } from "@workspace/db";
 import { sha256 } from "./ip-protection";
 import JSZip from "jszip";
+import PDFDocument from "pdfkit";
 import {
   Document,
   Packer,
@@ -380,6 +381,140 @@ router.get("/projects/:id/export/docx", async (req, res): Promise<void> => {
   const filename = `${project.title.replace(/[^a-z0-9]/gi, "_")}.docx`;
 
   res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+  res.send(buffer);
+});
+
+// ─── PDF export ──────────────────────────────────────────────────────────────
+
+router.get("/projects/:id/export/pdf", async (req, res): Promise<void> => {
+  const projectId = parseInt(req.params.id, 10);
+  const userId = parseInt(req.query.userId as string, 10);
+
+  if (isNaN(projectId) || isNaN(userId)) {
+    res.status(400).json({ error: "Invalid projectId or userId" });
+    return;
+  }
+
+  const rows = await db
+    .select({
+      id: projectsTable.id,
+      title: projectsTable.title,
+      synopsis: projectsTable.synopsis,
+      content: projectsTable.content,
+      ownerId: projectsTable.ownerId,
+      ownerName: usersTable.name,
+    })
+    .from(projectsTable)
+    .innerJoin(usersTable, eq(projectsTable.ownerId, usersTable.id))
+    .where(eq(projectsTable.id, projectId))
+    .limit(1);
+
+  const project = rows[0];
+  if (!project) { res.status(404).json({ error: "Project not found" }); return; }
+  if (project.ownerId !== userId) { res.status(403).json({ error: "Forbidden" }); return; }
+  if (!project.content) { res.status(400).json({ error: "No content to export" }); return; }
+
+  const chapters = splitIntoChapters(project.content);
+  const contentHash = sha256(project.content ?? "");
+  const exportedAt = new Date().toISOString();
+
+  const doc = new PDFDocument({
+    size: "A4",
+    margins: { top: 72, bottom: 72, left: 85, right: 85 },
+    info: {
+      Title: project.title,
+      Author: project.ownerName ?? "Unknown Author",
+    },
+  });
+
+  const chunks: Buffer[] = [];
+  doc.on("data", (chunk: Buffer) => chunks.push(chunk));
+
+  // ── Copyright page ──
+  doc
+    .fontSize(10)
+    .font("Times-Roman")
+    .fillColor("#333333")
+    .text(`Copyright © ${new Date().getFullYear()} ${project.ownerName ?? "Unknown Author"}`, {
+      align: "center",
+    })
+    .moveDown(0.5)
+    .fontSize(9)
+    .fillColor("#666666")
+    .text(
+      "All rights reserved. No part of this publication may be reproduced, distributed, or transmitted in any form without the prior written permission of the author.",
+      { align: "center" }
+    )
+    .moveDown(1.5)
+    .fontSize(8)
+    .fillColor("#999999")
+    .text(`Exported via Writers Room · ${exportedAt}`, { align: "center" })
+    .moveDown(0.3)
+    .text(`Content fingerprint (SHA-256): ${contentHash}`, { align: "center" });
+
+  // ── Title page ──
+  doc.addPage();
+  const midY = doc.page.height / 2 - 80;
+  doc.y = midY;
+  doc
+    .fontSize(28)
+    .font("Times-Bold")
+    .fillColor("#1a1a1a")
+    .text(project.title, { align: "center" })
+    .moveDown(0.6)
+    .fontSize(14)
+    .font("Times-Roman")
+    .fillColor("#555555")
+    .text(project.ownerName ?? "Unknown Author", { align: "center" });
+
+  if (project.synopsis) {
+    doc
+      .moveDown(1.5)
+      .fontSize(11)
+      .font("Times-Italic")
+      .fillColor("#777777")
+      .text(project.synopsis, { align: "center", lineGap: 3 });
+  }
+
+  // ── Chapters ──
+  for (const ch of chapters) {
+    doc.addPage();
+
+    if (ch.title) {
+      doc
+        .fontSize(18)
+        .font("Times-Bold")
+        .fillColor("#1a1a1a")
+        .text(ch.title, { align: "left" })
+        .moveDown(1);
+    }
+
+    const blocks = ch.body.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
+    let firstBlock = true;
+    for (const block of blocks) {
+      doc
+        .fontSize(11)
+        .font("Times-Roman")
+        .fillColor("#1a1a1a")
+        .text(block.replace(/\n/g, " "), {
+          align: "justify",
+          lineGap: 3,
+          indent: firstBlock ? 0 : 28,
+        })
+        .moveDown(0.4);
+      firstBlock = false;
+    }
+  }
+
+  doc.end();
+
+  await new Promise<void>((resolve) => doc.on("end", resolve));
+
+  const buffer = Buffer.concat(chunks);
+  const filename = `${project.title.replace(/[^a-z0-9]/gi, "_")}.pdf`;
+
+  res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
   res.send(buffer);
 });

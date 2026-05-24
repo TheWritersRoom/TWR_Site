@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Download, BookOpen, CheckCircle2, AlertCircle,
-  ExternalLink, FileText, FileCode2, ChevronRight, ChevronLeft,
+  ExternalLink, FileText, FileCode2, ChevronRight, ChevronLeft, FileDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -16,7 +16,7 @@ type Project = {
   genres?: string | null;
 };
 
-type Platform = "kdp" | "kobo" | "apple";
+type Platform = "kdp" | "kobo" | "apple" | "pdf";
 
 type CheckItem = {
   label: string;
@@ -123,7 +123,7 @@ export function KdpExportModal({
   onClose: () => void;
 }) {
   const [platform, setPlatform] = useState<Platform | null>(null);
-  const [downloading, setDownloading] = useState<"epub" | "docx" | null>(null);
+  const [downloading, setDownloading] = useState<"epub" | "docx" | "pdf" | null>(null);
   const [step, setStep] = useState<"platform" | "checklist" | "export">("platform");
 
   const wordCount = useMemo(() => countWords(project.content ?? ""), [project.content]);
@@ -132,20 +132,20 @@ export function KdpExportModal({
   try { parsedGenres = JSON.parse(project.genres ?? "[]"); } catch {}
 
   const checks = useMemo(
-    () => platform ? buildChecks(platform, project, wordCount, parsedGenres) : [],
+    () => (platform && platform !== "pdf") ? buildChecks(platform, project, wordCount, parsedGenres) : [],
     [platform, project, wordCount, parsedGenres]
   );
 
   const passedCount = checks.filter((c) => c.passed).length;
   const allPassed = checks.length > 0 && passedCount === checks.length;
 
-  const handleDownload = async (format: "epub" | "docx") => {
+  const handleDownload = async (format: "epub" | "docx" | "pdf") => {
     setDownloading(format);
     try {
       const res = await fetch(`/api/projects/${project.id}/export/${format}?userId=${userId}`);
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
-      const ext = format === "epub" ? "epub" : "docx";
+      const ext = format;
       const filename = `${project.title.replace(/[^a-z0-9]/gi, "_")}.${ext}`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -262,10 +262,27 @@ export function KdpExportModal({
                     </button>
                   ))}
 
-                  <div className="pt-2 border-t border-[#1A1614]/10">
-                    <p className="text-[11px] text-[#7A6B5E]">
-                      All three platforms accept <strong className="text-[#1A1614]">EPUB</strong> format. Amazon KDP also accepts DOCX. The same exported file works everywhere.
-                    </p>
+                  <div className="pt-3 border-t border-[#1A1614]/10">
+                    <p className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#7A6B5E] mb-2">Or just download a copy</p>
+                    <button
+                      onClick={() => handleDownload("pdf")}
+                      disabled={downloading !== null}
+                      className="w-full flex items-center gap-4 p-4 border border-dashed border-[#1A1614]/20 bg-white text-left transition-all hover:border-[#1A1614]/40 hover:shadow-sm group"
+                    >
+                      <div className="w-8 h-8 bg-[#1A1614]/6 flex items-center justify-center shrink-0">
+                        <FileDown className="w-4 h-4 text-[#7A6B5E]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-[#1A1614]">
+                          {downloading === "pdf" ? "Generating PDF…" : "Download as PDF"}
+                        </p>
+                        <p className="text-xs text-[#7A6B5E]">A4, print-ready — no publishing submission needed</p>
+                      </div>
+                      {downloading === "pdf"
+                        ? <div className="w-4 h-4 border-2 border-[#7A6B5E]/30 border-t-[#7A6B5E] rounded-full animate-spin shrink-0" />
+                        : <Download className="w-4 h-4 text-[#7A6B5E]/40 group-hover:text-[#1A1614] shrink-0 transition-colors" />
+                      }
+                    </button>
                   </div>
                 </motion.div>
               )}
