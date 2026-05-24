@@ -3,10 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
 import router from "./routes";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app: Express = express();
 
@@ -19,7 +16,7 @@ app.use("/api", router);
 
 const frontendDist =
   process.env.FRONTEND_DIST ??
-  path.join(__dirname, "../../writers-room/dist/public");
+  path.join(process.cwd(), "artifacts/writers-room/dist/public");
 
 if (fs.existsSync(frontendDist)) {
   app.use(express.static(frontendDist));

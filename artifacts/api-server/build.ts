@@ -37,6 +37,9 @@ const allowlist = [
   "zod-validation-error",
 ];
 
+// Note: google-auth-library is intentionally NOT in the allowlist so it
+// remains in node_modules and is reachable by @google-cloud/storage at runtime.
+
 async function buildAll() {
   const distDir = path.resolve(__dirname, "dist");
   await rm(distDir, { recursive: true, force: true });
