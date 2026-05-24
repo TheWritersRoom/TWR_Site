@@ -135,7 +135,7 @@ if [ $PUSH_EXIT_CODE -ne 0 ]; then
 </html>"
 
     EMAIL_PAYLOAD=$(jq -n \
-      --arg from "The Writers Room <noreply@thewritersroom.online>" \
+      --arg from "The Writers Room <noreply@jointhewritersroom.com>" \
       --arg to "$ADMIN_EMAIL" \
       --arg subject "GitHub push failed — ${CURRENT_BRANCH} (${COMMIT_HASH})" \
       --arg html "$EMAIL_HTML" \
