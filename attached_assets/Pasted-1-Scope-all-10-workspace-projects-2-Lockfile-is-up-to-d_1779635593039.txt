@@ -1,0 +1,147 @@
+1
+
+Scope: all 10 workspace projects
+
+2
+
+Lockfile is up to date, resolution step is skipped
+
+3
+
+Progress: resolved 1, reused 0, downloaded 0, added 0
+
+4
+
+Packages: +668
+
+5
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+6
+
+Progress: resolved 668, reused 668, downloaded 0, added 337
+
+7
+
+Progress: resolved 668, reused 668, downloaded 0, added 492
+
+8
+
+Progress: resolved 668, reused 668, downloaded 0, added 607
+
+9
+
+Progress: resolved 668, reused 668, downloaded 0, added 666
+
+10
+
+Progress: resolved 668, reused 668, downloaded 0, added 668, done
+
+11
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall$ node install.js
+
+12
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: node:internal/child_process:1120
+
+13
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: result.error = new ErrnoException(result.error, 'spawnSync ' + options.file);
+
+14
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: ^
+
+15
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: Error: spawnSync /home/u247889094/domains/jointhewritersroom.com/public_html/.builds/source/repository/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/bin/esbuild EACCES
+
+16
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: at Object.spawnSync (node:internal/child_process:1120:20)
+
+17
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: at spawnSync (node:child_process:910:24)
+
+18
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: at Object.execFileSync (node:child_process:953:15)
+
+19
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: at validateBinaryVersion (/home/u247889094/domains/jointhewritersroom.com/public_html/.builds/source/repository/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/install.js:102:28)
+
+20
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: at /home/u247889094/domains/jointhewritersroom.com/public_html/.builds/source/repository/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/install.js:287:5 {
+
+21
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: errno: -13,
+
+22
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: code: 'EACCES',
+
+23
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: syscall: 'spawnSync /home/u247889094/domains/jointhewritersroom.com/public_html/.builds/source/repository/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/bin/esbuild',
+
+24
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: path: '/home/u247889094/domains/jointhewritersroom.com/public_html/.builds/source/repository/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/bin/esbuild',
+
+25
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: spawnargs: [ '--version' ],
+
+26
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: error: [Circular *1],
+
+27
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: status: null,
+
+28
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: signal: null,
+
+29
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: output: null,
+
+30
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: pid: 0,
+
+31
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: stdout: undefined,
+
+32
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: stderr: undefined
+
+33
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: }
+
+34
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: Node.js v24.6.0
+
+35
+
+.../esbuild@0.27.3/node_modules/esbuild postinstall: Failed
+
+36
+
+[ELIFECYCLE] Command failed with exit code 1.
+
+37
+
+ERROR: Failed to install dependencies

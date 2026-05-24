@@ -32,7 +32,7 @@ catalog:
 minimumReleaseAge: 1440
 
 allowBuilds:
-  esbuild: true
+  esbuild: false
 
 overrides:
   react: 19.1.0
