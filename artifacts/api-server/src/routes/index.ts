@@ -21,6 +21,7 @@ import inkRouter from "./ink";
 import referralsRouter from "./referrals";
 import settingsRouter from "./settings";
 import emailRouter from "./email";
+import platformFeedbackRouter from "./platform-feedback";
 
 const router: IRouter = Router();
 
@@ -46,5 +47,6 @@ router.use(inkRouter);
 router.use(referralsRouter);
 router.use(settingsRouter);
 router.use(emailRouter);
+router.use(platformFeedbackRouter);
 
 export default router;

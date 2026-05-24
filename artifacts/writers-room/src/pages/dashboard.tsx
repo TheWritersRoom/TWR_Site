@@ -6,6 +6,7 @@ import {
   Plus, BookText, FileText, MessageSquareQuote, Calendar,
   Upload, PenLine, X, FileUp, Loader2, ChevronRight, AlignLeft, Check,
   Shield, Users as UsersIcon, Zap, Trash2, LayoutGrid, Film, BookOpen, ArrowRight,
+  Send, MessageSquare,
 } from "lucide-react";
 import { InkBadge } from "@/components/ink-badge";
 
@@ -158,6 +159,38 @@ export default function Dashboard() {
   const [newPlannerTitle, setNewPlannerTitle] = useState("");
   const [newPlannerType, setNewPlannerType] = useState<"tv" | "book" | "serial" | "other">("tv");
   const [creatingPlanner, setCreatingPlanner] = useState(false);
+
+  const [feedbackCategory, setFeedbackCategory] = useState("general");
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const [feedbackSent, setFeedbackSent] = useState(false);
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
+
+  const submitFeedback = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!feedbackMessage.trim()) return;
+    setFeedbackSubmitting(true);
+    setFeedbackError(null);
+    try {
+      const res = await fetch("/api/feedback/platform", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ category: feedbackCategory, message: feedbackMessage.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Something went wrong");
+      }
+      setFeedbackSent(true);
+      setFeedbackMessage("");
+      setFeedbackCategory("general");
+    } catch (err) {
+      setFeedbackError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setFeedbackSubmitting(false);
+    }
+  };
 
   const createPlanner = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -931,6 +964,89 @@ export default function Dashboard() {
               );
             })}
           </div>
+        )}
+      </section>
+
+      {/* ── FEEDBACK ── */}
+      <section className="mt-10 border-t-2 border-[#1A1614]/10 pt-10 pb-4">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 border border-[#1A1614]/15 text-[#7A6B5E]">
+            <MessageSquare className="w-4 h-4" />
+          </div>
+          <div>
+            <h2 className="font-serif font-bold text-lg text-[#1A1614]">Send feedback</h2>
+            <p className="text-[12px] text-[#7A6B5E]">Tell us what's working, what's not, or what you'd like to see.</p>
+          </div>
+        </div>
+
+        {feedbackSent ? (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-start gap-4 bg-white border border-[#1A1614]/15 px-6 py-5"
+          >
+            <div className="p-2 bg-[#E8B84B] shrink-0">
+              <Check className="w-4 h-4 text-[#1A1614]" />
+            </div>
+            <div>
+              <p className="font-bold text-[#1A1614] text-sm">Feedback received — thank you.</p>
+              <p className="text-[12px] text-[#7A6B5E] mt-0.5">We read every message and will be in touch if we have questions.</p>
+            </div>
+            <button
+              onClick={() => setFeedbackSent(false)}
+              className="ml-auto text-[#7A6B5E] hover:text-[#1A1614] transition-colors shrink-0"
+              aria-label="Send another"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        ) : (
+          <form onSubmit={submitFeedback} className="bg-white border border-[#1A1614]/15 p-6 flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col gap-1.5 sm:w-56 shrink-0">
+                <label className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E]">Category</label>
+                <select
+                  value={feedbackCategory}
+                  onChange={(e) => setFeedbackCategory(e.target.value)}
+                  className="px-3 py-2.5 bg-[#F9F6EE] border border-[#1A1614]/20 focus:border-[#1A1614] outline-none text-sm text-[#1A1614] transition-colors"
+                >
+                  <option value="general">General feedback</option>
+                  <option value="bug">Bug report</option>
+                  <option value="feature">Feature request</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5 flex-1">
+                <label className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#7A6B5E]">Message</label>
+                <textarea
+                  value={feedbackMessage}
+                  onChange={(e) => setFeedbackMessage(e.target.value)}
+                  placeholder="What's on your mind?"
+                  rows={4}
+                  className="w-full px-4 py-3 bg-[#F9F6EE] border border-[#1A1614]/20 focus:border-[#1A1614] outline-none text-sm resize-none transition-colors text-[#1A1614] placeholder:text-[#7A6B5E]/50"
+                />
+              </div>
+            </div>
+
+            {feedbackError && (
+              <p className="text-red-600 text-xs">{feedbackError}</p>
+            )}
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={feedbackSubmitting || !feedbackMessage.trim()}
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors disabled:opacity-40"
+              >
+                {feedbackSubmitting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-3.5 h-3.5" />
+                )}
+                {feedbackSubmitting ? "Sending…" : "Send feedback"}
+              </button>
+            </div>
+          </form>
         )}
       </section>
     </div>
