@@ -1,14 +1,7 @@
 import app from "./app";
 import { applyMigrations } from "@workspace/db";
 
-const rawPort = process.env["PORT"];
-
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
+const rawPort = process.env["PORT"] ?? "3000";
 const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
@@ -17,7 +10,7 @@ if (Number.isNaN(port) || port <= 0) {
 
 applyMigrations()
   .then(() => {
-    app.listen(port, () => {
+    app.listen(port, "0.0.0.0", () => {
       console.log(`Server listening on port ${port}`);
     });
   })
