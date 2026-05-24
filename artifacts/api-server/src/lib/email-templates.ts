@@ -165,6 +165,59 @@ export function newSignupAdminTemplate(opts: {
   `);
 }
 
+export function githubPushFailedEmailTemplate(opts: {
+  commitHash: string;
+  branch: string;
+  exitCode: string;
+  errorOutput: string;
+}): string {
+  const { commitHash, branch, exitCode, errorOutput } = opts;
+  const safeCommit = escapeHtml(commitHash);
+  const safeBranch = escapeHtml(branch);
+  const safeExitCode = escapeHtml(exitCode);
+  const truncated = errorOutput.length > 3000 ? errorOutput.slice(0, 3000) + "\n… (truncated)" : errorOutput;
+  const safeError = escapeHtml(truncated);
+  return emailWrapper(`
+    <p style="margin:0 0 6px;font-size:10px;letter-spacing:0.2em;font-weight:700;text-transform:uppercase;color:#E8B84B;">GitHub sync</p>
+    <h1 style="margin:0 0 20px;font-size:22px;font-weight:700;color:#1A1614;font-family:Georgia,'Times New Roman',serif;">Push to GitHub failed</h1>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;border:1px solid rgba(26,22,20,0.15);">
+      <tr>
+        <td style="padding:8px 16px;background:#F9F6EE;border-bottom:1px solid rgba(26,22,20,0.1);width:30%;">
+          <span style="font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7A6B5E;">Commit</span>
+        </td>
+        <td style="padding:8px 16px;background:#ffffff;border-bottom:1px solid rgba(26,22,20,0.1);">
+          <span style="font-size:13px;font-family:monospace;color:#1A1614;">${safeCommit}</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px 16px;background:#F9F6EE;border-bottom:1px solid rgba(26,22,20,0.1);">
+          <span style="font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7A6B5E;">Branch</span>
+        </td>
+        <td style="padding:8px 16px;background:#ffffff;border-bottom:1px solid rgba(26,22,20,0.1);">
+          <span style="font-size:13px;font-family:monospace;color:#1A1614;">${safeBranch}</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px 16px;background:#F9F6EE;">
+          <span style="font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7A6B5E;">Exit code</span>
+        </td>
+        <td style="padding:8px 16px;background:#ffffff;">
+          <span style="font-size:13px;font-family:monospace;color:#1A1614;">${safeExitCode}</span>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#7A6B5E;">Error output</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+      <tr>
+        <td style="background:#1A1614;padding:16px 20px;">
+          <pre style="margin:0;font-size:12px;line-height:1.6;color:#F9F6EE;font-family:monospace;white-space:pre-wrap;word-break:break-all;">${safeError}</pre>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0;font-size:13px;color:#7A6B5E;">Check the deployment logs and retry the push once the issue is resolved.</p>
+  `);
+}
+
 export function inboxMessageEmailTemplate(opts: {
   recipientName: string;
   senderName: string;

@@ -49,7 +49,83 @@ if [ $PUSH_EXIT_CODE -ne 0 ]; then
       echo "[github-sync] Warning: could not send Slack notification (curl exit ${CURL_EXIT}): ${CURL_RESPONSE}" >&2
     fi
   else
-    echo "[github-sync] SLACK_WEBHOOK_URL is not set — skipping notification." >&2
+    echo "[github-sync] SLACK_WEBHOOK_URL is not set — skipping Slack notification." >&2
+  fi
+
+  # Send email notification via Resend if ADMIN_EMAIL and RESEND_API_KEY are set
+  if [ -n "$ADMIN_EMAIL" ] && [ -n "$RESEND_API_KEY" ]; then
+    # Truncate error output to 3000 chars for the email body
+    EMAIL_ERROR_OUTPUT="${PUSH_OUTPUT:0:3000}"
+    if [ ${#PUSH_OUTPUT} -gt 3000 ]; then
+      EMAIL_ERROR_OUTPUT="${EMAIL_ERROR_OUTPUT}
+... (truncated)"
+    fi
+
+    # Build HTML email body
+    EMAIL_HTML="<!DOCTYPE html>
+<html lang=\"en\">
+<head><meta charset=\"UTF-8\" /><title>GitHub Push Failed</title></head>
+<body style=\"margin:0;padding:0;background:#F9F6EE;font-family:'Helvetica Neue',Arial,sans-serif;color:#1A1614;\">
+  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#F9F6EE;padding:40px 20px;\">
+    <tr><td align=\"center\">
+      <table width=\"100%\" style=\"max-width:560px;background:#ffffff;border:2px solid #1A1614;\">
+        <tr><td style=\"background:#1A1614;padding:28px 36px;\">
+          <p style=\"margin:0 0 4px;font-size:10px;letter-spacing:0.24em;font-weight:700;color:#E8B84B;text-transform:uppercase;\">The Writers Room</p>
+          <p style=\"margin:0;font-size:20px;font-weight:700;color:#F9F6EE;font-family:Georgia,'Times New Roman',serif;\">A space for serious writers.</p>
+        </td></tr>
+        <tr><td style=\"padding:36px;\">
+          <p style=\"margin:0 0 6px;font-size:10px;letter-spacing:0.2em;font-weight:700;text-transform:uppercase;color:#E8B84B;\">GitHub sync</p>
+          <h1 style=\"margin:0 0 20px;font-size:22px;font-weight:700;color:#1A1614;font-family:Georgia,'Times New Roman',serif;\">Push to GitHub failed</h1>
+          <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:28px;border:1px solid rgba(26,22,20,0.15);\">
+            <tr>
+              <td style=\"padding:8px 16px;background:#F9F6EE;border-bottom:1px solid rgba(26,22,20,0.1);width:30%;\"><span style=\"font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7A6B5E;\">Commit</span></td>
+              <td style=\"padding:8px 16px;background:#ffffff;border-bottom:1px solid rgba(26,22,20,0.1);\"><span style=\"font-size:13px;font-family:monospace;color:#1A1614;\">${COMMIT_HASH}</span></td>
+            </tr>
+            <tr>
+              <td style=\"padding:8px 16px;background:#F9F6EE;border-bottom:1px solid rgba(26,22,20,0.1);\"><span style=\"font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7A6B5E;\">Branch</span></td>
+              <td style=\"padding:8px 16px;background:#ffffff;border-bottom:1px solid rgba(26,22,20,0.1);\"><span style=\"font-size:13px;font-family:monospace;color:#1A1614;\">${CURRENT_BRANCH}</span></td>
+            </tr>
+            <tr>
+              <td style=\"padding:8px 16px;background:#F9F6EE;\"><span style=\"font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7A6B5E;\">Exit code</span></td>
+              <td style=\"padding:8px 16px;background:#ffffff;\"><span style=\"font-size:13px;font-family:monospace;color:#1A1614;\">${PUSH_EXIT_CODE}</span></td>
+            </tr>
+          </table>
+          <p style=\"margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#7A6B5E;\">Error output</p>
+          <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:16px;\">
+            <tr><td style=\"background:#1A1614;padding:16px 20px;\">
+              <pre style=\"margin:0;font-size:12px;line-height:1.6;color:#F9F6EE;font-family:monospace;white-space:pre-wrap;word-break:break-all;\">${EMAIL_ERROR_OUTPUT}</pre>
+            </td></tr>
+          </table>
+          <p style=\"margin:0;font-size:13px;color:#7A6B5E;\">Check the deployment logs and retry the push once the issue is resolved.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"
+
+    EMAIL_PAYLOAD=$(jq -n \
+      --arg from "The Writers Room <noreply@thewritersroom.online>" \
+      --arg to "$ADMIN_EMAIL" \
+      --arg subject "GitHub push failed — ${CURRENT_BRANCH} (${COMMIT_HASH})" \
+      --arg html "$EMAIL_HTML" \
+      '{"from": $from, "to": [$to], "subject": $subject, "html": $html}')
+
+    EMAIL_RESPONSE=$(curl --fail --silent --show-error \
+      -X POST \
+      -H "Authorization: Bearer ${RESEND_API_KEY}" \
+      -H "Content-Type: application/json" \
+      --data "$EMAIL_PAYLOAD" \
+      "https://api.resend.com/emails" 2>&1)
+    EMAIL_CURL_EXIT=$?
+
+    if [ $EMAIL_CURL_EXIT -eq 0 ]; then
+      echo "[github-sync] Failure notification emailed to ${ADMIN_EMAIL}."
+    else
+      echo "[github-sync] Warning: could not send failure email (curl exit ${EMAIL_CURL_EXIT}): ${EMAIL_RESPONSE}" >&2
+    fi
+  else
+    echo "[github-sync] ADMIN_EMAIL or RESEND_API_KEY is not set — skipping email notification." >&2
   fi
 
   exit $PUSH_EXIT_CODE
