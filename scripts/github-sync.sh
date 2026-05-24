@@ -5,6 +5,36 @@ if [ -z "$GITHUB_TOKEN" ]; then
   exit 0
 fi
 
+# ---------------------------------------------------------------------------
+# Build dist files before pushing so Hostinger always gets pre-compiled output
+# ---------------------------------------------------------------------------
+echo "[github-sync] Building dist files..."
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+BUILD_OUTPUT=$(cd "$REPO_ROOT" && PORT=3000 BASE_PATH=/ pnpm --filter @workspace/writers-room run build 2>&1)
+BUILD_EXIT=$?
+if [ $BUILD_EXIT -ne 0 ]; then
+  echo "[github-sync] WARNING: Frontend build failed (exit ${BUILD_EXIT})" >&2
+  echo "[github-sync] Output: ${BUILD_OUTPUT}" >&2
+else
+  echo "[github-sync] Frontend built successfully."
+fi
+
+BUILD_OUTPUT=$(cd "$REPO_ROOT" && pnpm --filter @workspace/api-server run build 2>&1)
+BUILD_EXIT=$?
+if [ $BUILD_EXIT -ne 0 ]; then
+  echo "[github-sync] WARNING: API server build failed (exit ${BUILD_EXIT})" >&2
+  echo "[github-sync] Output: ${BUILD_OUTPUT}" >&2
+else
+  echo "[github-sync] API server built successfully."
+fi
+
+# Stage any updated dist files so they're included in the push
+cd "$REPO_ROOT" && git add artifacts/writers-room/dist artifacts/api-server/dist 2>/dev/null || true
+
+# ---------------------------------------------------------------------------
+
 AUTHENTICATED_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/TheWritersRoom/TWR_Site.git"
 
 CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "master")
