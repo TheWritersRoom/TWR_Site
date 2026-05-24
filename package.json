@@ -9,6 +9,7 @@
     "scripts"
   ],
   "scripts": {
+    "start": "node artifacts/api-server/dist/index.cjs",
     "preinstall": "sh -c 'rm -f yarn.lock; case \"$npm_config_user_agent\" in yarn/*) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
     "build": "pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
