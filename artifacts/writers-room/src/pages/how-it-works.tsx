@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import {
   ArrowRight, PenTool, Users, MessageSquare, Star, BookOpen,
   Check, Lightbulb, Award, Shield, Heart, Globe, ArrowLeft,
-  TrendingUp, Search, Mail, Handshake, Quote,
+  TrendingUp, Search, Mail, Handshake,
   Pencil, Eye, BadgeCheck, Crown, Repeat2, BookMarked, Droplets,
 } from "lucide-react";
 import { SEO, SOFTWARE_APP_SCHEMA } from "@/components/seo";
@@ -127,21 +127,6 @@ const COMMUNITY_FEATURES = [
     icon: Award,
     label: "Contribution certificates",
     desc: "Contributors can download a PDF certificate for every project — a permanent record of their creative contributions with a cryptographic content fingerprint. Recognition that exists outside the platform.",
-  },
-];
-
-const TESTIMONIAL_PAIRS = [
-  {
-    author: {
-      quote: "I had three beta readers before. Now I have eight collaborators who have collectively improved almost every chapter. The diff view means I can see every change at a glance and decide in seconds.",
-      name: "Fiction author",
-      role: "Novel in progress",
-    },
-    contributor: {
-      quote: "I've always wanted to get closer to the editing process, but there was never a real way in. The Writers Room gave me a place to show what I can do, and now I have an acceptance rate I'm genuinely proud of.",
-      name: "Literary contributor",
-      role: "47 accepted suggestions",
-    },
   },
 ];
 
@@ -564,49 +549,6 @@ export default function HowItWorks() {
               </motion.div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ── */}
-      <section className="py-20 px-6 md:px-14 bg-[#F9F6EE]">
-        <div className="max-w-5xl mx-auto">
-          <motion.div {...inView()} className="mb-12">
-            <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">From the community</p>
-            <ThickRule className="mb-2" />
-            <h2 className="font-serif font-bold text-4xl md:text-5xl text-[#1A1614] mt-4">In their own words</h2>
-            <Rule className="mt-4" />
-          </motion.div>
-
-          {TESTIMONIAL_PAIRS.map((pair, i) => (
-            <motion.div key={i} {...inView(i * 0.1)} className="grid md:grid-cols-2 gap-0 border-2 border-[#1A1614] mb-8">
-              <div className="p-8 md:p-10 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1614]">
-                <Quote className="w-6 h-6 text-[#E8B84B] mb-4" />
-                <p className="font-serif italic text-[#1A1614] text-base leading-relaxed mb-6">"{pair.author.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-[#FDDCB5] flex items-center justify-center">
-                    <BookOpen className="w-4 h-4 text-[#1A1614]" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-[#1A1614] uppercase tracking-[0.1em]">{pair.author.name}</p>
-                    <p className="text-[11px] text-[#7A6B5E]">{pair.author.role}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="p-8 md:p-10 bg-[#E8B84B]">
-                <Quote className="w-6 h-6 text-[#1A1614]/40 mb-4" />
-                <p className="font-serif italic text-[#1A1614] text-base leading-relaxed mb-6">"{pair.contributor.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-[#1A1614] flex items-center justify-center">
-                    <Star className="w-4 h-4 text-[#E8B84B]" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-[#1A1614] uppercase tracking-[0.1em]">{pair.contributor.name}</p>
-                    <p className="text-[11px] text-[#1A1614]/60">{pair.contributor.role}</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
         </div>
       </section>
 
