@@ -179,7 +179,7 @@ export default function Landing() {
               >
                 {freeSlots > 0 ? (
                   <div
-                    className="inline-flex flex-col sm:flex-row items-center gap-4 border border-[#E8B84B]/30 bg-[#E8B84B]/8 px-7 py-5 cursor-pointer"
+                    className="inline-flex flex-col sm:flex-row items-center gap-4 border border-[#E8B84B]/30 bg-[#1A1614]/80 backdrop-blur-sm px-7 py-5 cursor-pointer"
                     onClick={openAuthModal}
                   >
                     <span className="text-[9px] uppercase tracking-[0.24em] font-bold text-[#1A1614] bg-[#E8B84B] px-3 py-1 shrink-0">Beta</span>
