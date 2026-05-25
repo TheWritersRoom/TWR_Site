@@ -170,6 +170,28 @@ router.patch("/admin/users/:id/admin", requireAdmin, async (req, res): Promise<v
   res.json(updated);
 });
 
+// ── All project feedback ──────────────────────────────────────────────────────
+
+router.get("/admin/feedback", requireAdmin, async (_req, res): Promise<void> => {
+  const rows = await db
+    .select({
+      id: feedbackTable.id,
+      content: feedbackTable.content,
+      createdAt: feedbackTable.createdAt,
+      userName: usersTable.name,
+      userEmail: usersTable.email,
+      userId: usersTable.id,
+      projectTitle: projectsTable.title,
+      projectId: projectsTable.id,
+    })
+    .from(feedbackTable)
+    .innerJoin(usersTable, eq(feedbackTable.userId, usersTable.id))
+    .innerJoin(projectsTable, eq(feedbackTable.projectId, projectsTable.id))
+    .orderBy(desc(feedbackTable.createdAt));
+
+  res.json(rows);
+});
+
 // ── Delete user ───────────────────────────────────────────────────────────────
 
 router.delete("/admin/users/:id", requireAdmin, async (req, res): Promise<void> => {

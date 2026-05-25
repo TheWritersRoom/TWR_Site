@@ -7,7 +7,7 @@ import {
   Search, Users, BookText, Shield, ShieldOff, Activity,
   UserPlus, Globe, MessageSquare, TrendingUp, ChevronDown,
   ChevronUp, Trash2, X, Check, BarChart2, PenTool, Star,
-  AlertTriangle, RefreshCw, Zap, Mail, Send,
+  AlertTriangle, RefreshCw, Zap, Mail, Send, ChevronRight,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,17 @@ type ActivityEvent = {
   actorName: string;
   targetTitle?: string;
   timestamp: string;
+};
+
+type AdminFeedback = {
+  id: number;
+  content: string;
+  createdAt: string;
+  userName: string;
+  userEmail: string;
+  userId: number;
+  projectTitle: string;
+  projectId: number;
 };
 
 // ── Design helpers ─────────────────────────────────────────────────────────
@@ -787,10 +798,133 @@ function EmailTab() {
   );
 }
 
+// ── Feedback tab ────────────────────────────────────────────────────────────
+
+function FeedbackTab() {
+  const [query, setQuery] = useState("");
+  const [expanded, setExpanded] = useState<number | null>(null);
+
+  const { data: items = [], isLoading, isError, refetch, isFetching } = useQuery<AdminFeedback[]>({
+    queryKey: ["/api/admin/feedback"],
+    queryFn: async () => {
+      const r = await fetch("/api/admin/feedback", { credentials: "include" });
+      if (!r.ok) throw new Error(`${r.status}`);
+      return r.json();
+    },
+  });
+
+  const filtered = items.filter(f => {
+    const q = query.toLowerCase();
+    return !q
+      || f.userName.toLowerCase().includes(q)
+      || f.userEmail.toLowerCase().includes(q)
+      || f.projectTitle.toLowerCase().includes(q)
+      || f.content.toLowerCase().includes(q);
+  });
+
+  if (isLoading) return (
+    <div className="flex justify-center py-20">
+      <div className="w-6 h-6 border-2 border-[#1A1614] border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (isError) return (
+    <div className="border-2 border-red-200 bg-red-50 py-12 text-center space-y-2">
+      <p className="text-sm font-semibold text-red-700">Failed to load feedback</p>
+      <p className="text-xs text-red-500">Check your connection or try refreshing.</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7A6B5E]" />
+          <Input
+            placeholder="Search by reviewer, project, or content…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            className="pl-9 border-2 border-[#1A1614]/20 focus-visible:border-[#1A1614] focus-visible:ring-0 rounded-none h-9 text-sm"
+          />
+        </div>
+        <button
+          onClick={() => refetch()}
+          className="w-8 h-9 flex items-center justify-center border-2 border-[#1A1614]/20 hover:border-[#1A1614] text-[#7A6B5E] hover:text-[#1A1614] transition-colors"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
+        </button>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="border-2 border-[#1A1614]/15 py-16 text-center text-[#7A6B5E] text-sm">
+          {query ? "No feedback matches your search." : "No feedback submitted yet."}
+        </div>
+      ) : (
+        <div className="border-2 border-[#1A1614]/15 divide-y divide-[#1A1614]/8">
+          {filtered.map(f => {
+            const isOpen = expanded === f.id;
+            const preview = f.content.length > 160 ? f.content.slice(0, 160).trimEnd() + "…" : f.content;
+            const ago = formatDistanceToNow(new Date(f.createdAt), { addSuffix: true });
+            const exact = format(new Date(f.createdAt), "MMM d, yyyy 'at' h:mm a");
+
+            return (
+              <div key={f.id} className="px-5 py-4 hover:bg-[#F9F6EE] transition-colors">
+                {/* Row header */}
+                <div
+                  className="flex items-start gap-4 cursor-pointer"
+                  onClick={() => setExpanded(isOpen ? null : f.id)}
+                >
+                  {/* Avatar */}
+                  <div className="w-8 h-8 bg-[#1A1614] flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="font-bold text-[11px] text-[#F9F6EE]">{f.userName.charAt(0).toUpperCase()}</span>
+                  </div>
+
+                  {/* Main content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 mb-1">
+                      <span className="font-semibold text-sm text-[#1A1614]">{f.userName}</span>
+                      <span className="text-[11px] text-[#7A6B5E]">{f.userEmail}</span>
+                      <span className="text-[#1A1614]/25 text-xs">·</span>
+                      <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.1em] font-bold text-[#7A5A00]">
+                        <BookText className="w-3 h-3" />
+                        {f.projectTitle}
+                      </span>
+                    </div>
+                    <p className="text-sm text-[#1A1614] leading-relaxed">
+                      {isOpen ? f.content : preview}
+                    </p>
+                    {f.content.length > 160 && (
+                      <button className="mt-1 flex items-center gap-0.5 text-[10px] uppercase tracking-[0.1em] font-bold text-[#7A6B5E] hover:text-[#1A1614] transition-colors">
+                        {isOpen ? <><ChevronUp className="w-3 h-3" />Show less</> : <><ChevronRight className="w-3 h-3" />Read more</>}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Timestamp */}
+                  <div className="text-right shrink-0 pt-0.5">
+                    <p className="text-[11px] text-[#7A6B5E]" title={exact}>{ago}</p>
+                    <p className="text-[10px] text-[#1A1614]/30 mt-0.5 tabular-nums">{format(new Date(f.createdAt), "MMM d, yyyy")}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <p className="text-[10px] text-[#7A6B5E] tracking-[0.1em]">
+        {filtered.length} of {items.length} feedback entr{items.length !== 1 ? "ies" : "y"}
+      </p>
+    </div>
+  );
+}
+
 const TABS = [
   { id: "users",    label: "Users",    icon: Users },
   { id: "activity", label: "Activity", icon: Activity },
   { id: "projects", label: "Projects", icon: BookText },
+  { id: "feedback", label: "Feedback", icon: MessageSquare },
   { id: "email",    label: "Email",    icon: Mail },
 ] as const;
 
@@ -881,6 +1015,7 @@ export default function AdminDashboard() {
       {activeTab === "users"    && <UsersTab />}
       {activeTab === "activity" && <ActivityTab />}
       {activeTab === "projects" && <ProjectsTab />}
+      {activeTab === "feedback" && <FeedbackTab />}
       {activeTab === "email"    && <EmailTab />}
     </div>
   );
