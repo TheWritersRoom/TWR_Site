@@ -22,7 +22,7 @@ export interface SendEmailOptions {
 
 export async function sendEmail({ to, subject, html, from }: SendEmailOptions): Promise<void> {
   const client = getClient();
-  const sender = from ?? "The Writers Room <noreply@thewritersroom.online>";
+  const sender = from ?? "The Writers Room <noreply@jointhewritersroom.com>";
 
   const { error } = await client.emails.send({
     from: sender,
