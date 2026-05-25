@@ -12,6 +12,11 @@ app.use(cookieParser());
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 
+// Serve locally-uploaded avatars at /api/storage/local/*
+const uploadsDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+app.use("/api/storage/local", express.static(uploadsDir));
+
 app.use("/api", router);
 
 const frontendDist =

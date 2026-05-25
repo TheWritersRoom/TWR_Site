@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Camera } from "lucide-react";
-import { useUpload } from "@workspace/object-storage-web";
 
 interface AvatarProps {
   name: string;
@@ -16,9 +15,16 @@ const SIZE_MAP = {
   xl:  { outer: "w-20 h-20", text: "text-3xl",    img: "w-20 h-20" },
 };
 
+function avatarSrc(avatarUrl: string | null | undefined): string | null {
+  if (!avatarUrl) return null;
+  // Local uploads (/local/...) are served at /api/storage/local/...
+  // Legacy Replit object paths (/objects/...) are served at /api/storage/objects/...
+  return `/api/storage${avatarUrl}`;
+}
+
 export function Avatar({ name, avatarUrl, size = "md", className = "" }: AvatarProps) {
   const s = SIZE_MAP[size];
-  const src = avatarUrl ? `/api/storage${avatarUrl}` : null;
+  const src = avatarSrc(avatarUrl);
 
   return (
     <div className={`${s.outer} shrink-0 overflow-hidden bg-[#1A1614] flex items-center justify-center ${className}`}>
@@ -39,25 +45,37 @@ interface UploadableAvatarProps {
 
 export function UploadableAvatar({ userId, name, avatarUrl, onUpload }: UploadableAvatarProps) {
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
-  const src = previewSrc ?? (avatarUrl ? `/api/storage${avatarUrl}` : null);
-
-  const { uploadFile, isUploading } = useUpload({
-    onSuccess: async (response) => {
-      await fetch(`/api/users/${userId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ avatarUrl: response.objectPath }),
-      });
-      onUpload(response.objectPath);
-    },
-  });
+  const [isUploading, setIsUploading] = useState(false);
+  const src = previewSrc ?? avatarSrc(avatarUrl);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const preview = URL.createObjectURL(file);
-    setPreviewSrc(preview);
-    await uploadFile(file);
+    setPreviewSrc(URL.createObjectURL(file));
+    setIsUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const uploadRes = await fetch("/api/storage/upload", {
+        method: "POST",
+        body: form,
+        credentials: "include",
+      });
+      if (!uploadRes.ok) throw new Error("Upload failed");
+      const { objectPath } = await uploadRes.json() as { objectPath: string };
+      await fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ avatarUrl: objectPath }),
+      });
+      onUpload(objectPath);
+    } catch (err) {
+      console.error("[avatar] upload failed:", err);
+      setPreviewSrc(null);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
