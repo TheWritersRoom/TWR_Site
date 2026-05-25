@@ -12,7 +12,7 @@ const CATEGORIES: Record<string, string> = {
   other: "Other",
 };
 
-router.post("/api/feedback/platform", async (req, res): Promise<void> => {
+router.post("/feedback/platform", async (req, res): Promise<void> => {
   const sessionToken = req.cookies?.["wr_session"];
   if (!sessionToken) {
     res.status(401).json({ error: "Unauthorized" });
