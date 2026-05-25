@@ -734,16 +734,3 @@ export async function seedDemo(): Promise<{ created: boolean; message: string }>
   return { created: true, message: "Demo data seeded: 6 users + The Weight of Tides project." };
 }
 
-async function seed() {
-  console.log("🌱  Starting demo seed…\n");
-  const result = await seedDemo();
-  console.log(result.message);
-  console.log("  Password: demo1234  (all accounts)\n");
-  await pool.end();
-}
-
-seed().catch((err) => {
-  console.error("Seed failed:", err);
-  pool.end();
-  process.exit(1);
-});
