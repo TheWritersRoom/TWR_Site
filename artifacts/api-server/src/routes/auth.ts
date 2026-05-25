@@ -118,6 +118,7 @@ const SEED_PRO_EMAILS = new Set([
 
 // POST /auth/register
 router.post("/auth/register", async (req, res): Promise<void> => {
+  try {
   const { name, email, password, role, genres, mediaInterests, bio, credentials } = req.body ?? {};
 
   if (!name || typeof name !== "string" || !name.trim()) {
@@ -226,6 +227,10 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   notifyAdminOfSignup(user);
   await createSession(user.id, res);
   res.status(201).json(safeUser(user));
+  } catch (err) {
+    console.error("[register] Unhandled error:", err);
+    res.status(500).json({ error: "Registration failed. Please try again." });
+  }
 });
 
 // POST /auth/login
