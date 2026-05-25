@@ -179,24 +179,25 @@ export default function Landing() {
               >
                 {freeSlots > 0 ? (
                   <div
-                    className="inline-flex items-center gap-3 bg-[#1A1614]/80 backdrop-blur-sm px-5 py-2.5 cursor-pointer"
+                    className="inline-flex flex-col sm:flex-row items-center gap-4 border border-[#E8B84B]/30 bg-[#E8B84B]/8 px-7 py-5 cursor-pointer"
                     onClick={openAuthModal}
                   >
-                    <span className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#1A1614] bg-[#E8B84B] px-2 py-0.5">Beta</span>
-                    <span className="w-px h-3.5 bg-[#F9F6EE]/20" />
-                    <span className="relative flex h-2 w-2 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E8B84B] opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E8B84B]" />
-                    </span>
-                    <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#F9F6EE]/90">
-                      {freeSlots} free Pro {freeSlots === 1 ? "account" : "accounts"} for early signups
-                    </span>
+                    <span className="text-[9px] uppercase tracking-[0.24em] font-bold text-[#1A1614] bg-[#E8B84B] px-3 py-1 shrink-0">Beta</span>
+                    <div className="sm:border-l sm:border-[#F9F6EE]/15 sm:pl-4 text-center sm:text-left">
+                      <p className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#E8B84B] mb-1">
+                        We're in beta — testing the platform with early members
+                      </p>
+                      <p className="text-[11px] text-[#F9F6EE]/55 leading-relaxed">
+                        To thank you for joining early, new signups receive a free Pro account while
+                        {" "}<span className="text-[#E8B84B] font-semibold">{freeSlots} of 300 spots remain</span>.
+                        No catch, no credit card.
+                      </p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="inline-flex items-center gap-3 bg-[#1A1614]/60 backdrop-blur-sm px-5 py-2.5">
-                    <span className="text-[9px] uppercase tracking-[0.22em] font-bold text-[#1A1614] bg-[#E8B84B] px-2 py-0.5">Beta</span>
-                    <span className="w-px h-3.5 bg-[#F9F6EE]/20" />
-                    <span className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#F9F6EE]/55">Free Pro accounts fully claimed</span>
+                  <div className="inline-flex items-center gap-3 border border-[#F9F6EE]/15 px-6 py-3">
+                    <span className="text-[9px] uppercase tracking-[0.24em] font-bold text-[#1A1614] bg-[#E8B84B] px-3 py-1">Beta</span>
+                    <p className="text-[11px] uppercase tracking-[0.14em] font-semibold text-[#F9F6EE]/50">Free Pro accounts fully claimed — paid plans coming soon</p>
                   </div>
                 )}
               </motion.div>
