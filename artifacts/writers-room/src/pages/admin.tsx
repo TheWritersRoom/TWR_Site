@@ -7,7 +7,7 @@ import {
   Search, Users, BookText, Shield, ShieldOff, Activity,
   UserPlus, Globe, MessageSquare, TrendingUp, ChevronDown,
   ChevronUp, Trash2, X, Check, BarChart2, PenTool, Star,
-  AlertTriangle, RefreshCw, Zap, Mail, Send, ChevronRight,
+  AlertTriangle, RefreshCw, Zap, Mail, Send, ChevronRight, Database,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -728,6 +728,25 @@ function EmailTab() {
   const { toast } = useToast();
   const [to, setTo] = useState("");
   const [sending, setSending] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+
+  const handleReseed = async () => {
+    setSeeding(true);
+    try {
+      const r = await fetch("/api/admin/seed-demo", {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await r.json() as { created?: boolean; message?: string; error?: string };
+      if (!r.ok) throw new Error(data.error ?? "Seed failed");
+      toast({ title: data.created ? "Demo data seeded" : "Already seeded", description: data.message });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      toast({ title: "Seed failed", description: message, variant: "destructive" });
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const handleSend = async () => {
     if (!to.trim() || !to.includes("@")) {
@@ -793,6 +812,30 @@ function EmailTab() {
           <li>Update the <code className="bg-[#1A1614]/6 px-1 py-0.5 rounded text-xs font-mono">from</code> address in <code className="bg-[#1A1614]/6 px-1 py-0.5 rounded text-xs font-mono">lib/email.ts</code> to match your verified domain</li>
           <li>Use the smoke test above to confirm delivery</li>
         </ol>
+      </div>
+
+      <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-3 mt-8">Demo Data</p>
+      <div className="border-t-2 border-[#1A1614] mb-6" />
+      <div className="border border-[#1A1614]/15 p-6 bg-white">
+        <div className="flex items-center gap-3 mb-4">
+          <Database className="w-5 h-5 text-[#E8B84B]" />
+          <h2 className="font-serif font-bold text-xl text-[#1A1614]">Reseed demo users</h2>
+        </div>
+        <p className="text-sm text-[#7A6B5E] mb-5 leading-relaxed">
+          Creates the six demo accounts (Eleanor, James, Priya, Tom, Saoirse, David) and
+          the <em>Weight of Tides</em> project if they are missing. Safe to run multiple times — existing
+          records are left untouched.
+        </p>
+        <div className="text-xs text-[#7A6B5E] bg-[#FAF8F5] border border-[#1A1614]/10 p-3 mb-5 font-mono space-y-0.5">
+          <p>eleanor@demo.writersroom &nbsp;·&nbsp; Pro author / owner</p>
+          <p>james / priya / tom / saoirse / david @demo.writersroom</p>
+          <p className="pt-1 font-sans font-medium text-[#1A1614]">Password: demo1234</p>
+        </div>
+        <Button onClick={handleReseed} disabled={seeding} variant="outline"
+          className="border-2 border-[#1A1614] text-[#1A1614] hover:bg-[#1A1614] hover:text-[#F9F6EE] gap-2">
+          <RefreshCw className={`w-3.5 h-3.5 ${seeding ? "animate-spin" : ""}`} />
+          {seeding ? "Seeding…" : "Reseed demo data"}
+        </Button>
       </div>
     </div>
   );

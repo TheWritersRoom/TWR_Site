@@ -3,6 +3,7 @@ import { desc, eq, isNotNull, sql, count, or } from "drizzle-orm";
 import { db, usersTable, projectsTable, feedbackTable, collaboratorsTable, suggestionsTable, referredUsersTable, messagesTable, bookmarksTable, plannersTable, ratingsTable, joinRequestsTable, pitchResponsesTable, pitchesTable } from "@workspace/db";
 import { requireAdmin } from "../middleware/require-admin";
 import { awardInk } from "../lib/ink";
+import { seedDemo } from "../seed-demo";
 
 const router: IRouter = Router();
 
@@ -190,6 +191,18 @@ router.get("/admin/feedback", requireAdmin, async (_req, res): Promise<void> => 
     .orderBy(desc(feedbackTable.createdAt));
 
   res.json(rows);
+});
+
+// ── Reseed demo data ──────────────────────────────────────────────────────────
+
+router.post("/admin/seed-demo", requireAdmin, async (_req, res): Promise<void> => {
+  try {
+    const result = await seedDemo();
+    res.json(result);
+  } catch (err) {
+    console.error("[admin] seed-demo failed:", err);
+    res.status(500).json({ error: "Seed failed. Check server logs." });
+  }
 });
 
 // ── Delete user ───────────────────────────────────────────────────────────────

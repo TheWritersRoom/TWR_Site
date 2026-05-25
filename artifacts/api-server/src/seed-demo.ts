@@ -11,6 +11,7 @@ import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { db, pool } from "@workspace/db";
 import * as schema from "@workspace/db";
+import { eq, and, inArray } from "drizzle-orm";
 
 const scryptAsync = promisify(scrypt);
 
@@ -107,14 +108,20 @@ She turned and walked up the slipway toward the lights of Harbour Road, and the 
 
 // ─── Main seed function ───────────────────────────────────────────────────────
 
-async function seed() {
-  console.log("🌱  Starting demo seed…\n");
-
+export async function seedDemo(): Promise<{ created: boolean; message: string }> {
   // ── 1. Users ──────────────────────────────────────────────────────────────
-  console.log("Creating users…");
   const pw = await hashPassword("demo1234");
 
-  const [eleanor, james, priya, tom, saoirse, david] = await db
+  const DEMO_EMAILS = [
+    "eleanor@demo.writersroom",
+    "james@demo.writersroom",
+    "priya@demo.writersroom",
+    "tom@demo.writersroom",
+    "saoirse@demo.writersroom",
+    "david@demo.writersroom",
+  ];
+
+  await db
     .insert(schema.usersTable)
     .values([
       {
@@ -208,12 +215,40 @@ async function seed() {
         emailNotifications: true,
       },
     ])
-    .returning();
+    .onConflictDoNothing();
 
-  console.log(`  ✓ ${[eleanor, james, priya, tom, saoirse, david].map(u => u.name).join(", ")}`);
+  // Re-fetch users by email (handles both new inserts and pre-existing rows)
+  const allUsers = await db
+    .select()
+    .from(schema.usersTable)
+    .where(inArray(schema.usersTable.email, DEMO_EMAILS));
 
-  // ── 2. Project ────────────────────────────────────────────────────────────
-  console.log("Creating project…");
+  const byEmail = Object.fromEntries(allUsers.map(u => [u.email, u]));
+  const eleanor = byEmail["eleanor@demo.writersroom"];
+  const james    = byEmail["james@demo.writersroom"];
+  const priya    = byEmail["priya@demo.writersroom"];
+  const tom      = byEmail["tom@demo.writersroom"];
+  const saoirse  = byEmail["saoirse@demo.writersroom"];
+  const david    = byEmail["david@demo.writersroom"];
+
+  if (!eleanor || !james || !priya || !tom || !saoirse || !david) {
+    throw new Error("Failed to fetch demo users after insert.");
+  }
+
+  // ── 2. Project — skip if already exists ───────────────────────────────────
+  const existingProject = await db
+    .select({ id: schema.projectsTable.id })
+    .from(schema.projectsTable)
+    .where(and(
+      eq(schema.projectsTable.title, "The Weight of Tides"),
+      eq(schema.projectsTable.ownerId, eleanor.id),
+    ))
+    .limit(1);
+
+  if (existingProject.length > 0) {
+    return { created: false, message: "Demo users exist and project already seeded — nothing to do." };
+  }
+
   const [project] = await db
     .insert(schema.projectsTable)
     .values({
@@ -696,16 +731,14 @@ async function seed() {
   ]);
   console.log("  ✓ 11 ink ledger entries");
 
-  console.log("\n✅  Seed complete!\n");
-  console.log("  Project:  \"The Weight of Tides\"");
-  console.log("  Users:    eleanor@demo.writersroom  (author, Pro)");
-  console.log("            james@demo.writersroom    (contributor)");
-  console.log("            priya@demo.writersroom    (contributor)");
-  console.log("            tom@demo.writersroom      (contributor)");
-  console.log("            saoirse@demo.writersroom  (contributor)");
-  console.log("            david@demo.writersroom    (contributor)");
-  console.log("  Password: demo1234  (all accounts)\n");
+  return { created: true, message: "Demo data seeded: 6 users + The Weight of Tides project." };
+}
 
+async function seed() {
+  console.log("🌱  Starting demo seed…\n");
+  const result = await seedDemo();
+  console.log(result.message);
+  console.log("  Password: demo1234  (all accounts)\n");
   await pool.end();
 }
 
