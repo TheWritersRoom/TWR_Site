@@ -22,6 +22,7 @@ import HowItWorks from "@/pages/how-it-works";
 import Pricing from "@/pages/pricing";
 import PlannerPage from "@/pages/planner";
 import Inbox from "@/pages/inbox";
+import FeedbackPage from "@/pages/feedback";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +51,7 @@ function AuthenticatedRouter() {
         <Route path="/admin" component={Admin} />
         <Route path="/planner/:id" component={PlannerPage} />
         <Route path="/inbox" component={Inbox} />
+        <Route path="/feedback" component={FeedbackPage} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

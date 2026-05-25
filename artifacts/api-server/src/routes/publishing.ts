@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc, inArray, sql, count } from "drizzle-orm";
-import { db, projectsTable, usersTable, collaboratorsTable, feedbackTable } from "@workspace/db";
+import { eq, and, desc, inArray, sql, count, gt } from "drizzle-orm";
+import { db, projectsTable, usersTable, collaboratorsTable, feedbackTable, userSessionsTable } from "@workspace/db";
 import { awardInk } from "../lib/ink";
 import { createVersion } from "./versions";
 
@@ -200,6 +200,59 @@ router.get("/projects/discover", async (req, res): Promise<void> => {
   }
 
   res.json(results);
+});
+
+// ── My feedback (received on my projects + given by me) ──────────────────────
+
+router.get("/feedback/mine", async (req, res): Promise<void> => {
+  const sessionToken = req.cookies?.["wr_session"];
+  if (!sessionToken) { res.status(401).json({ error: "Unauthorized" }); return; }
+
+  const [session] = await db
+    .select({ userId: userSessionsTable.userId })
+    .from(userSessionsTable)
+    .where(and(eq(userSessionsTable.token, sessionToken), gt(userSessionsTable.expiresAt, new Date())));
+
+  if (!session) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = session.userId;
+
+  const usersAlias = usersTable;
+
+  const [received, given] = await Promise.all([
+    db.select({
+      id: feedbackTable.id,
+      content: feedbackTable.content,
+      createdAt: feedbackTable.createdAt,
+      projectId: projectsTable.id,
+      projectTitle: projectsTable.title,
+      fromUserId: feedbackTable.userId,
+      fromUserName: usersTable.name,
+    })
+    .from(feedbackTable)
+    .innerJoin(projectsTable, eq(feedbackTable.projectId, projectsTable.id))
+    .innerJoin(usersTable, eq(feedbackTable.userId, usersTable.id))
+    .where(eq(projectsTable.ownerId, userId))
+    .orderBy(desc(feedbackTable.createdAt)),
+
+    db.select({
+      id: feedbackTable.id,
+      content: feedbackTable.content,
+      createdAt: feedbackTable.createdAt,
+      projectId: projectsTable.id,
+      projectTitle: projectsTable.title,
+      ownerName: usersAlias.name,
+    })
+    .from(feedbackTable)
+    .innerJoin(projectsTable, eq(feedbackTable.projectId, projectsTable.id))
+    .innerJoin(usersAlias, eq(projectsTable.ownerId, usersAlias.id))
+    .where(eq(feedbackTable.userId, userId))
+    .orderBy(desc(feedbackTable.createdAt)),
+  ]);
+
+  res.json({
+    received: received.map(r => ({ ...r, createdAt: r.createdAt.toISOString() })),
+    given:    given.map(r => ({ ...r, createdAt: r.createdAt.toISOString() })),
+  });
 });
 
 router.get("/projects/:id/feedback", async (req, res): Promise<void> => {

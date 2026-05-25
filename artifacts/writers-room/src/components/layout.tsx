@@ -34,6 +34,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/pitches",      label: "Pitches"          },
     { href: "/discover",     label: "Browse & Rate"    },
     { href: "/inbox",        label: "Inbox",            badge: unreadCount > 0 ? unreadCount : undefined },
+    { href: "/feedback",     label: "Feedback"         },
     { href: "/profile",      label: "My Profile"       },
     { href: "/admin",        label: "Admin",            hidden: !user.isAdmin },
   ].filter((l) => !l.hidden);
