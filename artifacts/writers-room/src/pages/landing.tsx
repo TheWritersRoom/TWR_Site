@@ -63,7 +63,7 @@ const ThickRule = ({ className = "" }: { className?: string }) => (
 );
 
 export default function Landing() {
-  const { openAuthModal } = useAuth();
+  const { openAuthModal, user } = useAuth();
   const [, navigate] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const freeSlots = useFreeSlots();
@@ -79,8 +79,8 @@ export default function Landing() {
         schema={SOFTWARE_APP_SCHEMA}
       />
 
-      {/* ── MASTHEAD NAV ── */}
-      <header className="fixed top-0 inset-x-0 z-40 bg-[#F9F6EE]/95 backdrop-blur-sm">
+      {/* ── MASTHEAD NAV — hidden when signed in (sidebar takes over) ── */}
+      {!user && <header className="fixed top-0 inset-x-0 z-40 bg-[#F9F6EE]/95 backdrop-blur-sm">
         {/* Top metadata strip */}
         <div className="border-b border-[#1A1614]/15 px-6 md:px-14 py-1.5 flex items-center justify-between">
           <span className="text-[10px] uppercase tracking-[0.22em] text-[#7A6B5E] font-semibold">Collaborative Writing Platform</span>
@@ -134,11 +134,11 @@ export default function Landing() {
             </motion.div>
           )}
         </AnimatePresence>
-      </header>
+      </header>}
 
       <main id="main-content">
       {/* ── HERO ── */}
-      <section className="pt-[9.5rem] pb-0 min-h-screen flex flex-col">
+      <section className={`${user ? "pt-0" : "pt-[9.5rem]"} pb-0 min-h-screen flex flex-col`}>
 
         {/* Yellow cover band */}
         <div className="bg-[#E8B84B] px-6 md:px-14 pt-14 pb-16 flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden">
