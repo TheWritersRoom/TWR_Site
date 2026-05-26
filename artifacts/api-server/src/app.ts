@@ -1,4 +1,4 @@
-import express, { type Express } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
@@ -50,5 +50,18 @@ if (fs.existsSync(frontendDist)) {
     res.sendFile(path.join(frontendDist, "index.html"));
   });
 }
+
+// ── Global error handler — always returns JSON for /api routes ────────────────
+// Prevents Express's default HTML error page reaching the frontend.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+  const message = err instanceof Error ? err.message : "An unexpected error occurred.";
+  console.error("[api] Unhandled error:", err);
+  if (req.path.startsWith("/api")) {
+    res.status(500).json({ error: message });
+  } else {
+    res.status(500).send("Internal Server Error");
+  }
+});
 
 export default app;

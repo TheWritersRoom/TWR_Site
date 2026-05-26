@@ -235,41 +235,46 @@ router.post("/auth/register", async (req, res): Promise<void> => {
 
 // POST /auth/login
 router.post("/auth/login", async (req, res): Promise<void> => {
-  const { email, password } = req.body ?? {};
+  try {
+    const { email, password } = req.body ?? {};
 
-  if (!email || typeof email !== "string") {
-    res.status(400).json({ error: "Email is required." });
-    return;
+    if (!email || typeof email !== "string") {
+      res.status(400).json({ error: "Email is required." });
+      return;
+    }
+    if (!password || typeof password !== "string") {
+      res.status(400).json({ error: "Password is required." });
+      return;
+    }
+
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, email.toLowerCase()))
+      .limit(1);
+
+    if (!user) {
+      res.status(401).json({ error: "Invalid email or password." });
+      return;
+    }
+
+    if (!user.passwordHash) {
+      res.status(401).json({ error: "This account uses social sign-in. Please use the Google button to sign in." });
+      return;
+    }
+
+    const valid = await verifyPassword(password, user.passwordHash);
+    if (!valid) {
+      res.status(401).json({ error: "Invalid email or password." });
+      return;
+    }
+
+    await createSession(user.id, res);
+    res.status(200).json(safeUser(user));
+  } catch (err) {
+    console.error("[login] Unhandled error:", err);
+    res.status(500).json({ error: "Sign in failed. Please try again." });
   }
-  if (!password || typeof password !== "string") {
-    res.status(400).json({ error: "Password is required." });
-    return;
-  }
-
-  const [user] = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.email, email.toLowerCase()))
-    .limit(1);
-
-  if (!user) {
-    res.status(401).json({ error: "Invalid email or password." });
-    return;
-  }
-
-  if (!user.passwordHash) {
-    res.status(401).json({ error: "This account uses social sign-in. Please use the Google button to sign in." });
-    return;
-  }
-
-  const valid = await verifyPassword(password, user.passwordHash);
-  if (!valid) {
-    res.status(401).json({ error: "Invalid email or password." });
-    return;
-  }
-
-  await createSession(user.id, res);
-  res.status(200).json(safeUser(user));
 });
 
 // ── Token exchange (used after OAuth redirect) ──────────────────────────────
