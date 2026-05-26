@@ -111,7 +111,7 @@ router.post("/stripe/checkout/embedded", async (req: Request, res: Response) => 
     const params: Stripe.Checkout.SessionCreateParams = {
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
-      ui_mode: "embedded_page",
+      ui_mode: "form",
       return_url: `${baseUrl}/profile?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       metadata: { userId: String(user.id) },
     };
