@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
 import { BookText, FileText, Globe, Users, Star, Search, BadgeCheck, Lock } from "lucide-react";
+import { SEO } from "@/components/seo";
 
 type SearchProject = {
   id: number;
@@ -114,6 +115,11 @@ export default function Discover() {
 
   return (
     <div className="p-6 md:p-10 max-w-5xl mx-auto">
+      <SEO
+        title="Discover Published Works"
+        description="Browse published books and scripts from writers on The Writers Room. Read, rate, and give feedback across all genres."
+        canonicalPath="/discover"
+      />
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
         <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">Published Works</p>

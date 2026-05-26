@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
+import { SEO } from "@/components/seo";
 import {
   Lightbulb, Plus, Search, BookText, FileText, Shapes,
   MessageCircle, HandHeart, X, ChevronRight, Check
@@ -215,6 +216,11 @@ export default function Pitches() {
 
   return (
     <div className="p-6 md:p-10 max-w-5xl mx-auto">
+      <SEO
+        title="Open Pitches"
+        description="Explore open writing pitches from authors looking for contributors. Find your next collaborative book or script project on The Writers Room."
+        canonicalPath="/pitches"
+      />
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
         <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2">Ideas in progress</p>

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useRoute } from "wouter";
+import { SEO } from "@/components/seo";
 import { format, formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -590,9 +591,15 @@ export default function ProjectDetail() {
   }
 
   const isOwner = project.ownerId === user?.id;
+  const projectTypeLabel = project.type === "book" ? "Book" : "Script";
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#FAF8F5]">
+      <SEO
+        title={project.title}
+        description={`${projectTypeLabel} by ${project.ownerName} — collaborative writing project on The Writers Room.`}
+        noIndex={!project.isPublished}
+      />
       {/* Main Editor Area */}
       <div className="flex-1 overflow-y-auto relative scroll-smooth">
         <header className="sticky top-0 z-10 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-border/50">

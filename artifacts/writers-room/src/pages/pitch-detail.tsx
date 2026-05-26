@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
+import { SEO } from "@/components/seo";
 import {
   Lightbulb, BookText, FileText, Shapes, ArrowLeft,
   MessageCircle, HandHeart, Trash2, CheckCircle, XCircle,
@@ -320,8 +321,16 @@ export default function PitchDetail() {
 
   const hasResponded = pitch.responses.some((r) => r.userId === user?.id);
 
+  const pitchDesc = pitch.description.length > 155
+    ? pitch.description.slice(0, 152) + "..."
+    : pitch.description;
+
   return (
     <div className="p-6 md:p-10 max-w-3xl mx-auto">
+      <SEO
+        title={pitch.title}
+        description={pitchDesc}
+      />
       {/* Back */}
       <Link href="/pitches" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4" /> All Pitches

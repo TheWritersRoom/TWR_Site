@@ -1,4 +1,11 @@
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /project/
+Disallow: /planner/
+Disallow: /inbox
+Disallow: /admin
+Disallow: /auth/
 
-Sitemap: https://thewritersroom.replit.app/sitemap.xml
+Sitemap: https://jointhewritersroom.com/sitemap.xml

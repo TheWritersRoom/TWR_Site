@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useSearch } from "wouter";
+import { SEO } from "@/components/seo";
 import {
   Users, Search, Sparkles, X, BadgeCheck, Globe, CheckCircle2,
   BarChart2, Star, ChevronDown, ToggleLeft, ToggleRight, MessageSquare, Send, Briefcase,
@@ -170,6 +171,11 @@ export default function Contributors() {
 
   return (
     <div className="p-6 md:p-10 max-w-6xl mx-auto">
+      <SEO
+        title="Find Contributors"
+        description="Browse genre-matched writers, editors, and beta readers available for collaboration on The Writers Room."
+        canonicalPath="/contributors"
+      />
       {/* Header */}
       <header className="mb-8">
         <p className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#7A6B5E] mb-2 flex items-center gap-2">

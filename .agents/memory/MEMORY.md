@@ -1,1 +1,2 @@
 - [Age restriction system](age-restriction.md) — DOB on signup; under-18 blocked from adult projects; no-DOB users allowed through (legacy compat)
+- [Pitches page sub-component trap](pitches-subcomponent.md) — pitches.tsx has NewPitchForm() before export default Pitches(); always check function scope before editing a return statement.
