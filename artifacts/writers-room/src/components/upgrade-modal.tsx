@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { X, Check, Zap, BookText, Users, Shield, Award, ArrowRight } from "lucide-react";
+import { X, Check, Zap, Shield, ArrowRight, Loader2 } from "lucide-react";
 
 const FREE_FEATURES = [
   "1 active project",
@@ -18,7 +19,33 @@ const PRO_FEATURES = [
   "Early access to new features",
 ];
 
+async function startCheckout(plan: "monthly" | "yearly"): Promise<void> {
+  const res = await fetch("/api/stripe/checkout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ plan }),
+  });
+  const data = await res.json() as { url?: string; error?: string };
+  if (!res.ok || !data.url) throw new Error(data.error ?? "Failed to start checkout");
+  window.location.href = data.url;
+}
+
 export function UpgradeModal({ onClose }: { onClose: () => void }) {
+  const [loading, setLoading] = useState<"monthly" | "yearly" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleUpgrade = async (plan: "monthly" | "yearly") => {
+    setError(null);
+    setLoading(plan);
+    try {
+      await startCheckout(plan);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setLoading(null);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
@@ -27,7 +54,6 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="relative bg-[#F9F6EE] border-2 border-[#1A1614] w-full max-w-2xl shadow-2xl overflow-hidden"
       >
-        {/* Close */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-1.5 text-[#7A6B5E] hover:text-[#1A1614] hover:bg-[#1A1614]/5 transition-colors z-10"
@@ -83,7 +109,7 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
               </div>
               <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] bg-[#E8B84B] text-[#1A1614] border border-[#E8B84B]">Recommended</span>
             </div>
-            <ul className="space-y-2.5 mb-7">
+            <ul className="space-y-2.5 mb-6">
               {PRO_FEATURES.map(f => (
                 <li key={f} className="flex items-start gap-2.5 text-sm text-[#1A1614]">
                   <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-[#E8B84B]" />
@@ -91,15 +117,29 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
                 </li>
               ))}
             </ul>
-            <button
-              onClick={onClose}
-              disabled
-              className="w-full flex items-center justify-center gap-2 py-3 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Payments coming soon"
-            >
-              Upgrade to Pro <ArrowRight className="w-4 h-4" />
-            </button>
-            <p className="text-center text-[10px] text-[#7A6B5E] mt-2">Payments coming soon — we'll let you know.</p>
+
+            {error && (
+              <p className="text-xs text-red-600 mb-3 text-center">{error}</p>
+            )}
+
+            <div className="space-y-2">
+              <button
+                onClick={() => handleUpgrade("monthly")}
+                disabled={loading !== null}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loading === "monthly" ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+                Monthly — £5 / month
+              </button>
+              <button
+                onClick={() => handleUpgrade("yearly")}
+                disabled={loading !== null}
+                className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-[#1A1614] text-[#1A1614] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#1A1614] hover:text-[#F9F6EE] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loading === "yearly" ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                Yearly — £50 / year <span className="text-[#7A5A00] font-normal normal-case tracking-normal">save £10</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -107,7 +147,7 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
         <div className="border-t-2 border-[#1A1614]/10 px-8 py-4 flex items-center gap-3">
           <Shield className="w-4 h-4 text-[#7A6B5E] shrink-0" />
           <p className="text-xs text-[#7A6B5E] leading-relaxed">
-            Contributors are always free. Pro is only needed when you want to run more than one project as an author.
+            Secure payment via Stripe. Cancel any time from your profile. Contributors are always free.
           </p>
         </div>
       </motion.div>

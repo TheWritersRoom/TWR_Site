@@ -108,7 +108,13 @@ export async function applyMigrations(): Promise<void> {
       console.log("[migrate] One-time backfill: legacy users marked as email_verified.");
     }
 
-    // 5. Quick notes column on projects
+    // 5. Stripe customer ID on users
+    await client.query(`
+      ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
+    `);
+
+    // 6. Quick notes column on projects
     await client.query(`
       ALTER TABLE projects
         ADD COLUMN IF NOT EXISTS notes TEXT;

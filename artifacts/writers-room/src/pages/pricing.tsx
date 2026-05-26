@@ -1,10 +1,11 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useFreeSlots } from "@/hooks/use-free-slots";
 import {
   Check, Zap, ArrowLeft, ArrowRight, Shield, BookText,
-  Star, Crown,
+  Star, Crown, Loader2,
 } from "lucide-react";
 import { SEO } from "@/components/seo";
 
@@ -54,15 +55,40 @@ const FAQS = [
     a: "Yes, absolutely. Joining others' rooms — leaving suggestions, building your reputation, earning achievements, downloading certificates — is included in Free with no restrictions.",
   },
   {
-    q: "When will payments be available?",
-    a: "We're finalising the payment integration now. If you'd like to be notified when Pro launches, get in touch via the community.",
+    q: "How does payment work?",
+    a: "Payments are handled securely by Stripe. You can pay monthly (£5/month) or yearly (£50/year, saving £10). Cancel any time from your profile — no questions asked.",
   },
 ];
+
+async function startCheckout(plan: "monthly" | "yearly"): Promise<void> {
+  const res = await fetch("/api/stripe/checkout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ plan }),
+  });
+  const data = await res.json() as { url?: string; error?: string };
+  if (!res.ok || !data.url) throw new Error(data.error ?? "Failed to start checkout");
+  window.location.href = data.url;
+}
 
 export default function Pricing() {
   const [, navigate] = useLocation();
   const { user, openAuthModal } = useAuth();
   const freeSlots = useFreeSlots();
+  const [checkoutLoading, setCheckoutLoading] = useState<"monthly" | "yearly" | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  const handleCheckout = async (plan: "monthly" | "yearly") => {
+    setCheckoutError(null);
+    setCheckoutLoading(plan);
+    try {
+      await startCheckout(plan);
+    } catch (err) {
+      setCheckoutError(err instanceof Error ? err.message : "Something went wrong.");
+      setCheckoutLoading(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F9F6EE] text-[#1A1614] overflow-x-hidden">
@@ -207,26 +233,59 @@ export default function Pricing() {
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={openAuthModal}
-                className="w-full py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors"
-              >
-                {user ? "You're on Pro" : "Claim your free Pro account"}
-              </button>
+              {/* Not logged in — sign up flow */}
+              {!user && (
+                <>
+                  <button
+                    onClick={openAuthModal}
+                    className="w-full py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors"
+                  >
+                    {freeSlots && freeSlots > 0 ? "Claim your free Pro account" : "Upgrade to Pro"}
+                  </button>
+                  {freeSlots !== null && freeSlots > 0 && (
+                    <div className="mt-3 flex items-center justify-center gap-2">
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E8B84B] opacity-75" />
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#E8B84B]" />
+                      </span>
+                      <p className="text-[10px] text-[#7A5A00] font-bold uppercase tracking-[0.14em]">
+                        {freeSlots} of 300 free accounts remaining
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
 
-              {freeSlots !== null && freeSlots > 0 && (
-                <div className="mt-3 flex items-center justify-center gap-2">
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E8B84B] opacity-75" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#E8B84B]" />
-                  </span>
-                  <p className="text-[10px] text-[#7A5A00] font-bold uppercase tracking-[0.14em]">
-                    {freeSlots} of 300 free accounts remaining
-                  </p>
+              {/* Logged in, already Pro */}
+              {user && user.subscriptionTier === "pro" && (
+                <div className="w-full py-2.5 bg-[#E8B84B]/20 border border-[#E8B84B] text-[#7A5A00] text-[11px] uppercase tracking-[0.14em] font-bold text-center">
+                  ✓ You're on Pro
                 </div>
               )}
-              {freeSlots === 0 && (
-                <p className="text-center text-[10px] text-[#7A6B5E] mt-2">Free Pro accounts fully claimed — paid plans coming soon.</p>
+
+              {/* Logged in, free tier — show checkout options */}
+              {user && user.subscriptionTier !== "pro" && (
+                <div className="space-y-2">
+                  {checkoutError && (
+                    <p className="text-xs text-red-600 text-center">{checkoutError}</p>
+                  )}
+                  <button
+                    onClick={() => handleCheckout("monthly")}
+                    disabled={checkoutLoading !== null}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {checkoutLoading === "monthly" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRight className="w-3.5 h-3.5" />}
+                    Monthly — £5 / month
+                  </button>
+                  <button
+                    onClick={() => handleCheckout("yearly")}
+                    disabled={checkoutLoading !== null}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-[#1A1614] text-[#1A1614] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#1A1614] hover:text-[#F9F6EE] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {checkoutLoading === "yearly" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                    Yearly — £50 / year <span className="text-[#7A5A00] font-normal normal-case tracking-normal ml-1">save £10</span>
+                  </button>
+                </div>
               )}
             </motion.div>
           </div>

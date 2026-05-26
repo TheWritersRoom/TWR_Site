@@ -22,6 +22,7 @@ export const usersTable = pgTable("users", {
   emailVerificationTokenExpiresAt: timestamp("email_verification_token_expires_at", { withTimezone: true }),
   emailNotifications: boolean("email_notifications").notNull().default(true),
   subscriptionTier: text("subscription_tier", { enum: ["free", "pro"] }).notNull().default("free"),
+  stripeCustomerId: text("stripe_customer_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
