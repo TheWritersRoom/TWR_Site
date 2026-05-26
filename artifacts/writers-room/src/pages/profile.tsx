@@ -540,7 +540,7 @@ function SectionHeader({ label }: { label: string }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function Profile() {
-  const { user, updateUser, logout } = useAuth();
+  const { user, updateUser, refreshUser, logout } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
 
   const { data: activity = [], isLoading } = useQuery<ActivityItem[]>({
@@ -613,6 +613,12 @@ export default function Profile() {
   // Detect return from successful embedded checkout
   const search = useSearch();
   const checkoutSuccess = new URLSearchParams(search).get("checkout") === "success";
+
+  useEffect(() => {
+    if (checkoutSuccess && user?.email) {
+      refreshUser(user.email);
+    }
+  }, [checkoutSuccess, user?.email, refreshUser]);
 
   const [codeCopied, setCodeCopied] = useState(false);
   const copyCode = () => {
@@ -986,7 +992,7 @@ export default function Profile() {
         transition={{ delay: 0.03 }}
         className="mb-8"
       >
-        {user.subscriptionTier === "free" ? (
+        {user.subscriptionTier === "free" && !checkoutSuccess ? (
           <div className="bg-[#1A1614] border-2 border-[#1A1614] overflow-hidden">
             {/* Header */}
             <div className="px-7 py-5 flex items-start justify-between gap-4 flex-wrap">

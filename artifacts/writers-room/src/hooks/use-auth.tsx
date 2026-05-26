@@ -28,6 +28,7 @@ type AuthContextType = {
   signIn: (payload: SignInPayload) => Promise<void>;
   loginWithToken: (token: string) => Promise<void>;
   updateUser: (user: User) => void;
+  refreshUser: (email: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
   authModalOpen: boolean;
@@ -159,6 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signIn,
       loginWithToken,
       updateUser,
+      refreshUser,
       logout,
       isLoading,
       authModalOpen,
