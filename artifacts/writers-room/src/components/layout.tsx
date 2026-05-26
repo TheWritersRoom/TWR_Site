@@ -131,7 +131,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </button>
           </div>
           <p className="mt-2 text-[8px] text-[#7A6B5E]/60 tracking-[0.1em] text-center">
-            © {new Date().getFullYear()} The Writers Room
+            © {new Date().getFullYear()} Building Ink Ltd
           </p>
         </div>
       </aside>

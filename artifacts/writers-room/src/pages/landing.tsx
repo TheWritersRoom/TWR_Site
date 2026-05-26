@@ -417,8 +417,8 @@ export default function Landing() {
             </button>
           </div>
           <div className="border-t border-[#F9F6EE]/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-2 text-xs">
-            <span className="uppercase tracking-[0.12em] text-[10px]">© {new Date().getFullYear()} The Writers Room</span>
-            <span className="uppercase tracking-[0.12em] text-[10px]">Collaborative Writing Platform</span>
+            <span className="uppercase tracking-[0.12em] text-[10px]">© {new Date().getFullYear()} The Writers Room — Building Ink Ltd</span>
+            <a href="mailto:info@jointhewritersroom.com" className="uppercase tracking-[0.12em] text-[10px] hover:text-[#E8B84B] transition-colors">info@jointhewritersroom.com</a>
           </div>
         </div>
       </footer>
