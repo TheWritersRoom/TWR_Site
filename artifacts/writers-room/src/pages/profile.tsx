@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
@@ -14,6 +14,7 @@ import {
   Zap, Shield, Loader2, ExternalLink,
 } from "lucide-react";
 import { InkBadge } from "@/components/ink-badge";
+import { EmbeddedCheckoutModal } from "@/components/embedded-checkout-modal";
 
 type PublishedWork = { title: string; year?: number; publisher?: string };
 type WorkEntry    = { title: string; year: string; publisher: string };
@@ -588,31 +589,13 @@ export default function Profile() {
     queryFn: () => fetch(`/api/users/${user!.id}/referral-code`).then((r) => r.json()),
   });
 
-  const [subLoading, setSubLoading] = useState<"monthly" | "yearly" | "portal" | null>(null);
-  const [subError, setSubError] = useState<string | null>(null);
-
-  const handleCheckout = async (plan: "monthly" | "yearly") => {
-    setSubError(null);
-    setSubLoading(plan);
-    try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ plan }),
-      });
-      const data = await res.json() as { url?: string; error?: string };
-      if (!res.ok || !data.url) throw new Error(data.error ?? "Failed to start checkout");
-      window.location.href = data.url;
-    } catch (err) {
-      setSubError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
-      setSubLoading(null);
-    }
-  };
+  const [checkoutPlan, setCheckoutPlan] = useState<"monthly" | "yearly" | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState<string | null>(null);
 
   const handlePortal = async () => {
-    setSubError(null);
-    setSubLoading("portal");
+    setPortalError(null);
+    setPortalLoading(true);
     try {
       const res = await fetch("/api/stripe/portal", {
         method: "POST",
@@ -622,10 +605,14 @@ export default function Profile() {
       if (!res.ok || !data.url) throw new Error(data.error ?? "Failed to open portal");
       window.location.href = data.url;
     } catch (err) {
-      setSubError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
-      setSubLoading(null);
+      setPortalError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setPortalLoading(false);
     }
   };
+
+  // Detect return from successful embedded checkout
+  const search = useSearch();
+  const checkoutSuccess = new URLSearchParams(search).get("checkout") === "success";
 
   const [codeCopied, setCodeCopied] = useState(false);
   const copyCode = () => {
@@ -974,6 +961,24 @@ export default function Profile() {
         </div>
       </motion.div>
 
+      {/* Checkout success banner */}
+      <AnimatePresence>
+        {checkoutSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="mb-6 bg-emerald-50 border-2 border-emerald-400 px-6 py-4 flex items-center gap-3"
+          >
+            <CheckCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+            <div>
+              <p className="font-semibold text-emerald-800 text-sm">You're on Pro!</p>
+              <p className="text-xs text-emerald-700 mt-0.5">Your subscription is active. Unlimited projects are now unlocked.</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Subscription */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
@@ -999,28 +1004,20 @@ export default function Profile() {
             </div>
 
             {/* Actions */}
-            <div className="border-t border-[#F9F6EE]/10 px-7 py-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              {subError && (
-                <p className="text-xs text-red-400 sm:flex-1">{subError}</p>
-              )}
-              <div className="flex gap-3 sm:ml-auto">
-                <button
-                  onClick={() => handleCheckout("monthly")}
-                  disabled={subLoading !== null}
-                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#E8B84B] text-[#1A1614] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#f0c655] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {subLoading === "monthly" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRight className="w-3.5 h-3.5" />}
-                  Monthly — £5
-                </button>
-                <button
-                  onClick={() => handleCheckout("yearly")}
-                  disabled={subLoading !== null}
-                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 border-2 border-[#F9F6EE]/30 text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:border-[#F9F6EE] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {subLoading === "yearly" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                  Yearly — £50
-                </button>
-              </div>
+            <div className="border-t border-[#F9F6EE]/10 px-7 py-4 flex gap-3 sm:justify-end">
+              <button
+                onClick={() => setCheckoutPlan("monthly")}
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#E8B84B] text-[#1A1614] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#f0c655] transition-colors"
+              >
+                <ArrowRight className="w-3.5 h-3.5" />
+                Monthly — £5
+              </button>
+              <button
+                onClick={() => setCheckoutPlan("yearly")}
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 border-2 border-[#F9F6EE]/30 text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:border-[#F9F6EE] transition-colors"
+              >
+                Yearly — £50
+              </button>
             </div>
 
             {/* Footer */}
@@ -1039,16 +1036,26 @@ export default function Profile() {
             </div>
             <button
               onClick={handlePortal}
-              disabled={subLoading === "portal"}
+              disabled={portalLoading}
               className="inline-flex items-center gap-2 px-4 py-2 border-2 border-[#1A1614]/20 text-sm font-semibold text-[#7A6B5E] hover:border-[#1A1614] hover:text-[#1A1614] transition-colors disabled:opacity-60"
             >
-              {subLoading === "portal" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
+              {portalLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
               Manage subscription
             </button>
-            {subError && <p className="w-full text-xs text-red-600">{subError}</p>}
+            {portalError && <p className="w-full text-xs text-red-600">{portalError}</p>}
           </div>
         )}
       </motion.div>
+
+      {/* Embedded checkout overlay */}
+      <AnimatePresence>
+        {checkoutPlan && (
+          <EmbeddedCheckoutModal
+            plan={checkoutPlan}
+            onClose={() => setCheckoutPlan(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Ink Level */}
       <motion.div

@@ -53,7 +53,7 @@ router.get("/stripe/subscription", async (req: Request, res: Response) => {
   }
 });
 
-// POST /stripe/checkout — start a Stripe Checkout session
+// POST /stripe/checkout — start a Stripe Checkout session (redirect mode)
 router.post("/stripe/checkout", async (req: Request, res: Response) => {
   const user = await getSessionUser(req);
   if (!user) { res.status(401).json({ error: "Unauthorised" }); return; }
@@ -88,6 +88,45 @@ router.post("/stripe/checkout", async (req: Request, res: Response) => {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to create checkout session";
     console.error("[stripe] checkout error:", msg);
+    res.status(500).json({ error: msg });
+  }
+});
+
+// POST /stripe/checkout/embedded — embedded checkout (returns clientSecret for overlay UI)
+router.post("/stripe/checkout/embedded", async (req: Request, res: Response) => {
+  const user = await getSessionUser(req);
+  if (!user) { res.status(401).json({ error: "Unauthorised" }); return; }
+
+  const { plan } = req.body as { plan?: string };
+  if (plan !== "monthly" && plan !== "yearly") {
+    res.status(400).json({ error: "plan must be 'monthly' or 'yearly'" });
+    return;
+  }
+
+  try {
+    const stripe = getStripeClient();
+    const priceId = getPriceId(plan);
+    const baseUrl = getBaseUrl();
+
+    const params: Stripe.Checkout.SessionCreateParams = {
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: "subscription",
+      ui_mode: "embedded",
+      return_url: `${baseUrl}/profile?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      metadata: { userId: String(user.id) },
+    };
+
+    if (user.stripeCustomerId) {
+      params.customer = user.stripeCustomerId;
+    } else {
+      params.customer_email = user.email;
+    }
+
+    const session = await stripe.checkout.sessions.create(params);
+    res.json({ clientSecret: session.client_secret });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to create checkout session";
+    console.error("[stripe] embedded checkout error:", msg);
     res.status(500).json({ error: msg });
   }
 });

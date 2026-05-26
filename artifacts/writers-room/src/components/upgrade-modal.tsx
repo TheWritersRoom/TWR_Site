@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { X, Check, Zap, Shield, ArrowRight, Loader2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { X, Check, Zap, Shield, ArrowRight } from "lucide-react";
+import { EmbeddedCheckoutModal } from "@/components/embedded-checkout-modal";
 
 const FREE_FEATURES = [
   "1 active project",
@@ -19,32 +20,17 @@ const PRO_FEATURES = [
   "Early access to new features",
 ];
 
-async function startCheckout(plan: "monthly" | "yearly"): Promise<void> {
-  const res = await fetch("/api/stripe/checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ plan }),
-  });
-  const data = await res.json() as { url?: string; error?: string };
-  if (!res.ok || !data.url) throw new Error(data.error ?? "Failed to start checkout");
-  window.location.href = data.url;
-}
-
 export function UpgradeModal({ onClose }: { onClose: () => void }) {
-  const [loading, setLoading] = useState<"monthly" | "yearly" | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [checkoutPlan, setCheckoutPlan] = useState<"monthly" | "yearly" | null>(null);
 
-  const handleUpgrade = async (plan: "monthly" | "yearly") => {
-    setError(null);
-    setLoading(plan);
-    try {
-      await startCheckout(plan);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
-      setLoading(null);
-    }
-  };
+  if (checkoutPlan) {
+    return (
+      <EmbeddedCheckoutModal
+        plan={checkoutPlan}
+        onClose={() => setCheckoutPlan(null)}
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -118,25 +104,18 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
               ))}
             </ul>
 
-            {error && (
-              <p className="text-xs text-red-600 mb-3 text-center">{error}</p>
-            )}
-
             <div className="space-y-2">
               <button
-                onClick={() => handleUpgrade("monthly")}
-                disabled={loading !== null}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                onClick={() => setCheckoutPlan("monthly")}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors"
               >
-                {loading === "monthly" ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+                <ArrowRight className="w-4 h-4" />
                 Monthly — £5 / month
               </button>
               <button
-                onClick={() => handleUpgrade("yearly")}
-                disabled={loading !== null}
-                className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-[#1A1614] text-[#1A1614] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#1A1614] hover:text-[#F9F6EE] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                onClick={() => setCheckoutPlan("yearly")}
+                className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-[#1A1614] text-[#1A1614] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#1A1614] hover:text-[#F9F6EE] transition-colors"
               >
-                {loading === "yearly" ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 Yearly — £50 / year <span className="text-[#7A5A00] font-normal normal-case tracking-normal">save £10</span>
               </button>
             </div>
