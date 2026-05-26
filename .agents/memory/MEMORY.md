@@ -1,0 +1,1 @@
+- [Age restriction system](age-restriction.md) — DOB on signup; under-18 blocked from adult projects; no-DOB users allowed through (legacy compat)

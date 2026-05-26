@@ -119,7 +119,7 @@ const SEED_PRO_EMAILS = new Set([
 // POST /auth/register
 router.post("/auth/register", async (req, res): Promise<void> => {
   try {
-  const { name, email, password, role, genres, mediaInterests, bio, credentials } = req.body ?? {};
+  const { name, email, password, role, genres, mediaInterests, bio, credentials, dateOfBirth } = req.body ?? {};
 
   if (!name || typeof name !== "string" || !name.trim()) {
     res.status(400).json({ error: "Name is required." });
@@ -185,6 +185,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
       credentials: typeof credentials === "string" && credentials !== "{}" ? credentials : null,
       isAdmin: SEED_ADMIN_EMAILS.has(normalizedEmail),
       subscriptionTier: (SEED_PRO_EMAILS.has(normalizedEmail) || claimedProSlot) ? "pro" : "free",
+      dateOfBirth: typeof dateOfBirth === "string" && dateOfBirth ? dateOfBirth : null,
     })
     .returning();
 

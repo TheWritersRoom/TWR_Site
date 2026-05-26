@@ -15,6 +15,7 @@ export type RegisterPayload = {
   mediaInterests?: string;
   bio?: string;
   credentials?: string;
+  dateOfBirth?: string;
 };
 
 export type SignInPayload = {
@@ -113,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         mediaInterests: payload.mediaInterests ?? "",
         bio: payload.bio ?? "",
         credentials: payload.credentials ?? "{}",
+        dateOfBirth: payload.dateOfBirth ?? null,
       }),
     });
     const data = await res.json();

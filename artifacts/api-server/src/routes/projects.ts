@@ -9,6 +9,16 @@ import {
   DeleteProjectParams,
 } from "@workspace/api-zod";
 
+function isUnder18(dateOfBirth: string | null | undefined): boolean {
+  if (!dateOfBirth) return false;
+  const dob = new Date(dateOfBirth);
+  const now = new Date();
+  let age = now.getFullYear() - dob.getFullYear();
+  const m = now.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
+  return age < 18;
+}
+
 const router: IRouter = Router();
 
 router.get("/projects", async (req, res): Promise<void> => {
@@ -25,6 +35,7 @@ router.get("/projects", async (req, res): Promise<void> => {
     feedbackEnabled: projectsTable.feedbackEnabled,
     feedbackAudience: projectsTable.feedbackAudience,
     feedbackVisibility: projectsTable.feedbackVisibility,
+    isAdultContent: projectsTable.isAdultContent,
   };
 
   const owned = await db
@@ -180,6 +191,7 @@ router.get("/projects/:id", async (req, res): Promise<void> => {
       feedbackEnabled: projectsTable.feedbackEnabled,
       feedbackAudience: projectsTable.feedbackAudience,
       feedbackVisibility: projectsTable.feedbackVisibility,
+      isAdultContent: projectsTable.isAdultContent,
       collaboratorLimit: projectsTable.collaboratorLimit,
       createdAt: projectsTable.createdAt,
       updatedAt: projectsTable.updatedAt,
@@ -191,6 +203,18 @@ router.get("/projects/:id", async (req, res): Promise<void> => {
   if (!project) {
     res.status(404).json({ error: "Project not found" });
     return;
+  }
+
+  // Age gate: block confirmed under-18 users from adult content
+  if (project.isAdultContent && !isNaN(userId)) {
+    const [viewer] = await db
+      .select({ dateOfBirth: usersTable.dateOfBirth, id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId));
+    if (viewer && viewer.id !== project.ownerId && isUnder18(viewer.dateOfBirth)) {
+      res.status(403).json({ error: "age_restricted" });
+      return;
+    }
   }
 
   let role: "owner" | "collaborator" | "reader" = "reader";
@@ -305,11 +329,12 @@ router.patch("/projects/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const updateData: { title?: string; content?: string; synopsis?: string; notes?: string | null; collaboratorLimit?: number } = {};
+  const updateData: { title?: string; content?: string; synopsis?: string; notes?: string | null; collaboratorLimit?: number; isAdultContent?: boolean } = {};
   if (parsed.data.title != null) updateData.title = parsed.data.title;
   if (parsed.data.content != null) updateData.content = parsed.data.content;
   if (parsed.data.synopsis != null) updateData.synopsis = parsed.data.synopsis;
   if (parsed.data.notes !== undefined) updateData.notes = parsed.data.notes ?? null;
+  if (parsed.data.isAdultContent != null) updateData.isAdultContent = parsed.data.isAdultContent;
   const rawLimit = parseInt(req.body.collaboratorLimit, 10);
   if (!isNaN(rawLimit) && rawLimit >= 1 && rawLimit <= 50) updateData.collaboratorLimit = rawLimit;
 

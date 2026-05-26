@@ -90,6 +90,7 @@ export function AuthModal() {
   const [suExperience, setSuExperience] = useState("");
   const [suAvailableForWork, setSuAvailableForWork] = useState(true);
 
+  const [suDateOfBirth, setSuDateOfBirth] = useState("");
   const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
   const [registrationEmail, setRegistrationEmail] = useState("");
 
@@ -181,6 +182,7 @@ export function AuthModal() {
         genres: JSON.stringify(suGenres),
         mediaInterests: suMedia,
         credentials,
+        dateOfBirth: suDateOfBirth || undefined,
       });
       setRegistrationEmail(suEmail);
     } catch (err: any) {
@@ -424,10 +426,26 @@ export function AuthModal() {
                       <p className="text-xs text-muted-foreground mt-1 ml-1">Minimum 8 characters</p>
                     </div>
 
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1.5 ml-1">
+                        Date of Birth
+                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">— required for age verification</span>
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        value={suDateOfBirth}
+                        onChange={(e) => setSuDateOfBirth(e.target.value)}
+                        max={new Date().toISOString().split("T")[0]}
+                        className="w-full px-4 py-3 rounded-xl bg-background/50 border-2 border-input focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none"
+                        autoComplete="bday"
+                      />
+                    </div>
+
                     <Button
                       type="submit"
                       className="w-full mt-2 text-lg h-14"
-                      disabled={!suName || !suEmail || !suPassword}
+                      disabled={!suName || !suEmail || !suPassword || !suDateOfBirth}
                     >
                       <span className="flex items-center gap-2">
                         Continue

@@ -80,6 +80,7 @@ export const CreateProjectBody = zod.object({
   genres: zod.string().optional().default("[]"),
   ownershipTerms: zod.enum(["sole", "shared"]).optional().default("sole"),
   ownershipNotes: zod.string().nullish(),
+  isAdultContent: zod.boolean().optional().default(false),
 });
 
 /**
@@ -129,6 +130,7 @@ export const GetProjectResponse = zod.object({
   feedbackAudience: zod.enum(["all", "matched", "contributors"]),
   feedbackVisibility: zod.enum(["public", "private"]),
   canGiveFeedback: zod.boolean(),
+  isAdultContent: zod.boolean().optional(),
   createdAt: zod.date(),
   updatedAt: zod.date(),
 });
@@ -146,6 +148,7 @@ export const UpdateProjectBody = zod.object({
   synopsis: zod.string().nullish(),
   notes: zod.string().nullish(),
   userId: zod.number(),
+  isAdultContent: zod.boolean().nullish(),
 });
 
 export const UpdateProjectResponse = zod.object({

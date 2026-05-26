@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -23,6 +23,7 @@ export const usersTable = pgTable("users", {
   emailNotifications: boolean("email_notifications").notNull().default(true),
   subscriptionTier: text("subscription_tier", { enum: ["free", "pro"] }).notNull().default("free"),
   stripeCustomerId: text("stripe_customer_id"),
+  dateOfBirth: date("date_of_birth"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

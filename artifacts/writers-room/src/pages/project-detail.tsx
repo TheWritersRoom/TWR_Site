@@ -570,6 +570,25 @@ export default function ProjectDetail() {
 
   if (!project) return <div className="p-10 text-center">Project not found</div>;
 
+  if ((project as any).error === "age_restricted") {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#F9F6EE]">
+        <div className="text-center max-w-sm px-6">
+          <div className="w-14 h-14 border-2 border-[#1A1614]/20 flex items-center justify-center mx-auto mb-6">
+            <span className="text-2xl font-serif font-bold text-[#1A1614]">18+</span>
+          </div>
+          <h2 className="text-2xl font-serif font-bold text-[#1A1614] mb-3">Age-Restricted Content</h2>
+          <p className="text-[#7A6B5E] text-sm leading-relaxed mb-6">
+            This project has been marked as containing adult or mature content and is not available to readers under 18.
+          </p>
+          <Link href="/" className="inline-block px-6 py-2.5 bg-[#1A1614] text-[#F9F6EE] text-[11px] uppercase tracking-[0.14em] font-bold hover:bg-[#E8B84B] hover:text-[#1A1614] transition-colors">
+            Back to Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const isOwner = project.ownerId === user?.id;
 
   return (

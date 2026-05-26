@@ -228,6 +228,7 @@ export default function Dashboard() {
     setSelectedGenres((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]);
   const [ownershipTerms, setOwnershipTerms] = useState<"sole" | "shared">("sole");
   const [ownershipNotes, setOwnershipNotes] = useState("");
+  const [isAdultContent, setIsAdultContent] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ACCEPTED = ".txt,.md,.pdf,.docx,.rtf";
 
@@ -267,6 +268,7 @@ export default function Dashboard() {
     setSelectedGenres([]);
     setOwnershipTerms("sole");
     setOwnershipNotes("");
+    setIsAdultContent(false);
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -286,6 +288,7 @@ export default function Dashboard() {
           genres: JSON.stringify(selectedGenres),
           ownershipTerms,
           ownershipNotes: ownershipNotes.trim() || null,
+          isAdultContent,
         } as any,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/projects", user?.id] });
@@ -716,6 +719,33 @@ export default function Dashboard() {
                     />
                   </div>
                 )}
+              </div>
+
+              {/* Adult / Mature content */}
+              <div className="border-t border-[#1A1614]/10 pt-5">
+                <button
+                  type="button"
+                  onClick={() => setIsAdultContent((v) => !v)}
+                  className={`w-full flex items-start gap-4 px-5 py-4 text-left border-2 transition-all ${
+                    isAdultContent
+                      ? "border-[#1A1614] bg-[#1A1614]"
+                      : "border-[#1A1614]/20 bg-white hover:border-[#1A1614]/50"
+                  }`}
+                >
+                  <div className={`w-5 h-5 shrink-0 mt-0.5 border-2 flex items-center justify-center transition-colors ${
+                    isAdultContent ? "border-[#F9F6EE] bg-[#F9F6EE]" : "border-[#7A6B5E]"
+                  }`}>
+                    {isAdultContent && <Check className="w-3.5 h-3.5 text-[#1A1614]" />}
+                  </div>
+                  <div>
+                    <p className={`text-[11px] uppercase tracking-[0.16em] font-bold ${isAdultContent ? "text-[#F9F6EE]" : "text-[#1A1614]"}`}>
+                      Adult / Mature content
+                    </p>
+                    <p className={`text-xs mt-1 leading-relaxed ${isAdultContent ? "text-[#F9F6EE]/70" : "text-[#7A6B5E]"}`}>
+                      This project contains explicit language, violence, sexual content, or other material not suitable for readers under 18.
+                    </p>
+                  </div>
+                </button>
               </div>
 
               <div className="flex justify-end gap-3 pt-2 border-t border-[#1A1614]/10">
