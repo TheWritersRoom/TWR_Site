@@ -120,7 +120,17 @@ export async function applyMigrations(): Promise<void> {
         ADD COLUMN IF NOT EXISTS notes TEXT;
     `);
 
-    // 6. Suggestion voting
+    // 7. Age restriction columns
+    await client.query(`
+      ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS date_of_birth DATE;
+    `);
+    await client.query(`
+      ALTER TABLE projects
+        ADD COLUMN IF NOT EXISTS is_adult_content BOOLEAN NOT NULL DEFAULT FALSE;
+    `);
+
+    // 8. Suggestion voting
     await client.query(`
       ALTER TABLE suggestions
         ADD COLUMN IF NOT EXISTS voting_open BOOLEAN NOT NULL DEFAULT FALSE;
