@@ -72,3 +72,9 @@ id = "rGtxh75vs8IJrnyOpvbfH"
 uri = "file://writers-room-onepager.pdf"
 type = "pdf"
 title = "Writers Room — Investor One-Pager"
+
+[[outputs]]
+id = "lT9Yihj_RDjKUhcuRSl_K"
+uri = "file://.local/exports/writers-room-features-v1.1.tar.gz"
+type = "unspecified"
+title = "Writers Room Platform Features v1.1"
