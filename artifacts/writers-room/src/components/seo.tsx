@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 
 const SITE_URL = "https://jointhewritersroom.com";
-const DEFAULT_OG_IMAGE = `${SITE_URL}/opengraph.jpg`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/opengraph.png`;
 const SITE_NAME = "The Writers Room";
 
 interface SEOProps {
