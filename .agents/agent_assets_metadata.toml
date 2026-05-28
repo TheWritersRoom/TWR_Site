@@ -120,3 +120,9 @@ id = "ORgRK7EgixLn4Wpnxe4Pp"
 uri = "file://screenshots/06-discover.jpg"
 type = "image"
 title = "06 — Read what’s being written."
+
+[[outputs]]
+id = "hBADbMStFy62xJ4yM7EO_"
+uri = "file://screenshots/07-features-overview.jpg"
+type = "image"
+title = "07 — Features Overview"
