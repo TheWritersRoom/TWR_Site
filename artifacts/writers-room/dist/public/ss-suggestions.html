@@ -1,0 +1,126 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1080px;height:1080px;overflow:hidden;background:#F9F6EE;font-family:'Inter',sans-serif;color:#1A1614}
+.topbar{background:#1A1614;padding:14px 28px;display:flex;align-items:center;justify-content:space-between}
+.logo{color:#F9F6EE;font-family:'Playfair Display',serif;font-size:18px}.logo span{color:#E8B84B}
+.tabs{background:#fff;padding:0 28px;display:flex;gap:0;border-bottom:1px solid #E5E0D8}
+.tab{padding:14px 18px;font-size:12px;font-weight:600;color:#7A6B5E;border-bottom:2.5px solid transparent;display:flex;align-items:center;gap:6px}
+.tab.active{color:#1A1614;border-bottom-color:#E8B84B}
+.main{display:flex;height:calc(1080px - 52px - 49px)}
+.left{flex:1;padding:24px 28px;overflow:hidden}
+.right{width:420px;background:#fff;border-left:1px solid #E5E0D8;display:flex;flex-direction:column;overflow:hidden}
+.project-title{font-family:'Playfair Display',serif;font-size:24px;margin-bottom:4px}
+.project-sub{font-size:12px;color:#7A6B5E;margin-bottom:18px}
+.editor-box{background:#fff;border:1px solid #E5E0D8;border-radius:12px;padding:28px;font-size:14.5px;line-height:1.9;color:#1A1614;height:430px;overflow:hidden;font-family:'Georgia',serif}
+.editor-box p{margin-bottom:16px}
+mark{background:rgba(232,184,75,0.35);border-radius:2px;padding:1px 2px;cursor:pointer}
+mark.active{background:rgba(232,184,75,0.6);outline:2px solid #E8B84B;border-radius:2px}
+.suggest-popup{background:#1A1614;border-radius:10px;padding:10px 12px;display:inline-flex;align-items:center;gap:10px;margin-bottom:8px;font-size:11px;color:#F9F6EE;white-space:nowrap}
+.suggest-btn{background:#E8B84B;color:#1A1614;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer}
+.panel-header{padding:16px 20px 0;border-bottom:1px solid #E5E0D8;flex-shrink:0}
+.panel-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.panel-title h3{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.count-badge{background:#E8B84B;color:#1A1614;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px}
+.panel-body{padding:16px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.sug-card{background:#F9F6EE;border:1px solid #E5E0D8;border-radius:12px;overflow:hidden}
+.sug-card.active-card{border-color:#E8B84B;border-width:1.5px}
+.sug-header{padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #E5E0D8}
+.avatar{width:28px;height:28px;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.av-blue{background:#dbeafe;color:#1d4ed8}
+.av-green{background:#dcfce7;color:#166534}
+.av-purple{background:#ede9fe;color:#5b21b6}
+.sug-name{font-size:12px;font-weight:600;flex:1}
+.sug-time{font-size:10px;color:#7A6B5E}
+.sug-body{padding:12px 14px}
+.diff-label{font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#7A6B5E;margin-bottom:4px}
+.diff-orig{background:#fef2f2;border-left:3px solid #f87171;padding:7px 10px;border-radius:4px;font-size:12px;color:#991b1b;line-height:1.5;text-decoration:line-through;margin-bottom:6px}
+.diff-new{background:#f0fdf4;border-left:3px solid #4ade80;padding:7px 10px;border-radius:4px;font-size:12px;color:#166534;line-height:1.5;margin-bottom:8px}
+.sug-comment{font-size:11px;color:#7A6B5E;font-style:italic;margin-bottom:10px;line-height:1.5}
+.sug-actions{display:flex;gap:8px}
+.btn-accept{flex:1;padding:7px;border-radius:8px;background:#1A1614;color:#F9F6EE;font-size:11px;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.btn-discard{flex:1;padding:7px;border-radius:8px;background:#fff;color:#7A6B5E;font-size:11px;font-weight:600;border:1px solid #E5E0D8;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.sug-pending{padding:8px 14px 12px;display:flex;align-items:center;gap:8px}
+.pending-dot{width:7px;height:7px;border-radius:50%;background:#E8B84B;flex-shrink:0}
+.pending-text{font-size:11px;color:#7A6B5E}
+.watermark{position:fixed;bottom:18px;right:24px;font-size:11px;color:#7A6B5E;letter-spacing:0.08em}
+</style></head><body>
+<div class="topbar">
+  <div class="logo">The <span>Writers</span> Room</div>
+  <div style="display:flex;align-items:center;gap:16px"><div style="width:30px;height:30px;border-radius:50%;background:#E8B84B;color:#1A1614;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">J</div></div>
+</div>
+<div class="tabs">
+  <div class="tab">Editor</div>
+  <div class="tab active">Suggestions <span style="background:#E8B84B;color:#1A1614;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;margin-left:2px">4</span></div>
+  <div class="tab">Collaborators</div>
+  <div class="tab">IP Protection</div>
+  <div class="tab">History</div>
+</div>
+<div class="main">
+  <div class="left">
+    <div class="project-title">The Glass Meridian</div>
+    <div class="project-sub">Chapter 3 — The Antique Shop</div>
+    <div class="suggest-popup"><svg width="12" height="12" fill="none" stroke="#E8B84B" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Text selected · suggest a change? <button class="suggest-btn">+ Suggest</button></div>
+    <div class="editor-box">
+      <p>The city spread before Elara like a wound that had never quite healed — all cracked pavements and <mark class="active">dimly lit windows that flickered</mark> in the autumn rain, each one a small world unto itself, indifferent to the lives pressing against it.</p>
+      <p>She had walked this street <mark>a hundred times since the funeral</mark>, always at dusk, always alone. The habit had started as grief and hardened into ritual, the way all things do when we carry them long enough.</p>
+      <p>"You have to stop doing this to yourself," Marcus had told her that morning over cold coffee, his voice gentle but certain. <mark>She had nodded, the way she always nodded</mark>, and then put on her coat the moment he left.</p>
+      <p>The antique shop on the corner was still lit. Ferrante's. She had never gone in, though she'd stood at the window enough times to know the inventory by heart: a brass compass, three taxidermied birds under glass, a chessboard missing the black queen.</p>
+    </div>
+  </div>
+  <div class="right">
+    <div class="panel-header">
+      <div class="panel-title">
+        <h3><svg width="14" height="14" fill="none" stroke="#E8B84B" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Suggestions <span class="count-badge">4</span></h3>
+        <span style="font-size:11px;color:#7A6B5E">Pending review</span>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="sug-card active-card">
+        <div class="sug-header">
+          <div class="avatar av-blue">J</div>
+          <div class="sug-name">James Okafor</div>
+          <div class="sug-time">2h ago</div>
+        </div>
+        <div class="sug-body">
+          <div class="diff-label">Original</div>
+          <div class="diff-orig">dimly lit windows that flickered</div>
+          <div class="diff-label">Suggested</div>
+          <div class="diff-new">rain-blurred windows that shivered with light</div>
+          <div class="sug-comment">"Flickered feels too mechanical here — shivered is more atmospheric and links to the cold."</div>
+          <div class="sug-actions">
+            <button class="btn-accept"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Accept</button>
+            <button class="btn-discard"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Discard</button>
+          </div>
+        </div>
+      </div>
+      <div class="sug-card">
+        <div class="sug-header">
+          <div class="avatar av-green">R</div>
+          <div class="sug-name">Rosa Chen</div>
+          <div class="sug-time">5h ago</div>
+        </div>
+        <div class="sug-body">
+          <div class="diff-orig">a hundred times since the funeral</div>
+          <div class="diff-new">countless times since the burial</div>
+          <div class="sug-comment">"Burial feels more visceral and specific — reinforces that Elara is still in the raw stage of grief."</div>
+          <div class="sug-actions">
+            <button class="btn-accept"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Accept</button>
+            <button class="btn-discard"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Discard</button>
+          </div>
+        </div>
+      </div>
+      <div class="sug-card">
+        <div class="sug-header">
+          <div class="avatar av-purple">M</div>
+          <div class="sug-name">Marcus Bell</div>
+          <div class="sug-time">Yesterday</div>
+        </div>
+        <div class="sug-pending"><div class="pending-dot"></div><div class="pending-text">Suggested rephrasing for paragraph 3 — tap to review</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="watermark">jointhewritersroom.com</div>
+</body></html>

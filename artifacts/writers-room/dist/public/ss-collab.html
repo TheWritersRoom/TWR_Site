@@ -1,0 +1,146 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1080px;height:1080px;overflow:hidden;background:#F9F6EE;font-family:'Inter',sans-serif;color:#1A1614}
+.topbar{background:#1A1614;padding:14px 28px;display:flex;align-items:center;justify-content:space-between}
+.logo{color:#F9F6EE;font-family:'Playfair Display',serif;font-size:18px}.logo span{color:#E8B84B}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.tabs{background:#fff;padding:0 28px;display:flex;gap:0;border-bottom:1px solid #E5E0D8}
+.tab{padding:14px 18px;font-size:12px;font-weight:600;color:#7A6B5E;border-bottom:2.5px solid transparent;display:flex;align-items:center;gap:6px}
+.tab.active{color:#1A1614;border-bottom-color:#E8B84B}
+.main{display:flex;height:calc(1080px - 52px - 49px)}
+.left{flex:1;padding:24px 28px;overflow:hidden}
+.right{width:400px;background:#fff;border-left:1px solid #E5E0D8;display:flex;flex-direction:column;overflow:hidden}
+.project-title{font-family:'Playfair Display',serif;font-size:26px;margin-bottom:4px}
+.project-sub{font-size:12px;color:#7A6B5E;margin-bottom:20px}
+.editor-preview{background:#fff;border:1px solid #E5E0D8;border-radius:12px;padding:24px;font-size:14px;line-height:1.8;color:#1A1614;height:400px;overflow:hidden;opacity:0.5}
+.editor-preview p{margin-bottom:14px}
+.panel-header{padding:16px 20px 0;border-bottom:1px solid #E5E0D8;flex-shrink:0}
+.panel-title{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.panel-title h3{font-size:13px;font-weight:700}
+.ptabs{display:flex;gap:0}
+.ptab{padding:10px 14px;font-size:11px;font-weight:600;color:#7A6B5E;border-bottom:2px solid transparent}
+.ptab.active{color:#1A1614;border-bottom-color:#E8B84B}
+.panel-body{padding:16px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.section-label{font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#7A6B5E;margin-bottom:4px}
+.collab-card{background:#F9F6EE;border:1px solid #E5E0D8;border-radius:12px;padding:12px;display:flex;align-items:center;gap:12px}
+.avatar{width:38px;height:38px;border-radius:50%;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.av-gold{background:#E8B84B;color:#1A1614}
+.av-blue{background:#dbeafe;color:#1d4ed8}
+.av-green{background:#dcfce7;color:#166534}
+.av-purple{background:#ede9fe;color:#5b21b6}
+.collab-info{flex:1}
+.collab-name{font-size:13px;font-weight:600}
+.collab-meta{font-size:11px;color:#7A6B5E;margin-top:1px;display:flex;align-items:center;gap:6px}
+.pro-badge{background:#1A1614;color:#E8B84B;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;letter-spacing:0.06em}
+.role-owner{background:#fff8e6;color:#d97706;font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;border:1px solid #fde68a}
+.role-contrib{background:#F9F6EE;color:#7A6B5E;font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;border:1px solid #E5E0D8}
+.request-card{background:#fff;border:1.5px solid #E8B84B;border-radius:12px;padding:14px}
+.req-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.req-message{background:#F9F6EE;border-radius:8px;padding:10px;font-size:11px;color:#7A6B5E;line-height:1.6;margin-bottom:10px}
+.req-actions{display:flex;gap:8px}
+.btn-accept{flex:1;padding:8px;border-radius:8px;background:#1A1614;color:#F9F6EE;font-size:12px;font-weight:600;border:none;cursor:pointer}
+.btn-decline{flex:1;padding:8px;border-radius:8px;background:#F9F6EE;color:#7A6B5E;font-size:12px;font-weight:600;border:1px solid #E5E0D8;cursor:pointer}
+.invite-box{background:#F9F6EE;border:1px solid #E5E0D8;border-radius:12px;padding:14px}
+.invite-input{width:100%;background:#fff;border:1px solid #E5E0D8;border-radius:8px;padding:9px 12px;font-size:12px;outline:none;color:#1A1614;font-family:'Inter',sans-serif;margin-bottom:8px}
+.invite-btn{width:100%;padding:9px;background:#1A1614;color:#F9F6EE;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer}
+.watermark{position:fixed;bottom:18px;right:24px;font-size:11px;color:#7A6B5E;letter-spacing:0.08em}
+</style></head><body>
+<div class="topbar">
+  <div class="logo">The <span>Writers</span> Room</div>
+  <div class="topbar-right"><div style="width:30px;height:30px;border-radius:50%;background:#E8B84B;color:#1A1614;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">S</div></div>
+</div>
+<div class="tabs">
+  <div class="tab">Editor</div>
+  <div class="tab">Suggestions <span style="background:#E8B84B;color:#1A1614;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;margin-left:2px">4</span></div>
+  <div class="tab active">Collaborators</div>
+  <div class="tab">IP Protection</div>
+  <div class="tab">History</div>
+</div>
+<div class="main">
+  <div class="left">
+    <div class="project-title">The Glass Meridian</div>
+    <div class="project-sub">Literary Fiction · 73,420 words · 3 contributors</div>
+    <div class="editor-preview">
+      <p>The city spread before Elara like a wound that had never quite healed — all cracked pavements and dimly lit windows that flickered in the autumn rain, each one a small world unto itself, indifferent to the lives pressing against it.</p>
+      <p>She had walked this street a hundred times since the funeral, always at dusk, always alone. The habit had started as grief and hardened into ritual, the way all things do when we carry them long enough.</p>
+      <p>"You have to stop doing this to yourself," Marcus had told her that morning over cold coffee, his voice gentle but certain. She had nodded, the way she always nodded, and then put on her coat the moment he left.</p>
+      <p>The antique shop on the corner was still lit. Ferrante's. She had never gone in, though she'd stood at the window enough times to know the inventory by heart: a brass compass, three taxidermied birds under glass, a chessboard missing the black queen.</p>
+    </div>
+  </div>
+  <div class="right">
+    <div class="panel-header">
+      <div class="panel-title">
+        <svg width="16" height="16" fill="none" stroke="#E8B84B" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <h3>Collaborators</h3>
+      </div>
+      <div class="ptabs">
+        <div class="ptab active">Team</div>
+        <div class="ptab">Requests <span style="background:#E8B84B;color:#1A1614;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;margin-left:4px">1</span></div>
+        <div class="ptab">Invite</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div>
+        <div class="section-label">Active team · 4 members</div>
+      </div>
+      <div class="collab-card">
+        <div class="avatar av-gold">S</div>
+        <div class="collab-info">
+          <div class="collab-name">Sarah Mitchell <span class="pro-badge">PRO</span></div>
+          <div class="collab-meta">Author · Owner <span style="color:#E5E0D8">·</span> Joined Jan 2026</div>
+        </div>
+        <span class="role-owner">Owner</span>
+      </div>
+      <div class="collab-card">
+        <div class="avatar av-blue">J</div>
+        <div class="collab-info">
+          <div class="collab-name">James Okafor</div>
+          <div class="collab-meta">Developmental Editor · 14 suggestions accepted</div>
+        </div>
+        <span class="role-contrib">Contributor</span>
+      </div>
+      <div class="collab-card">
+        <div class="avatar av-green">R</div>
+        <div class="collab-info">
+          <div class="collab-name">Rosa Chen <span class="pro-badge">PRO</span></div>
+          <div class="collab-meta">Line Editor · 9 suggestions accepted</div>
+        </div>
+        <span class="role-contrib">Contributor</span>
+      </div>
+      <div class="collab-card">
+        <div class="avatar av-purple">M</div>
+        <div class="collab-info">
+          <div class="collab-name">Marcus Bell</div>
+          <div class="collab-meta">Beta Reader · 6 suggestions accepted</div>
+        </div>
+        <span class="role-contrib">Contributor</span>
+      </div>
+      <div>
+        <div class="section-label" style="margin-bottom:10px">Join request</div>
+        <div class="request-card">
+          <div class="req-header">
+            <div class="avatar av-blue" style="width:34px;height:34px;font-size:12px">A</div>
+            <div>
+              <div style="font-size:13px;font-weight:600">Amara Diallo</div>
+              <div style="font-size:11px;color:#7A6B5E">Copy Editor · Rep score: 84</div>
+            </div>
+          </div>
+          <div class="req-message">"I specialise in literary fiction and have worked with three debut novelists this year. I'd love to contribute to The Glass Meridian — the premise is striking."</div>
+          <div class="req-actions">
+            <button class="btn-accept">Accept</button>
+            <button class="btn-decline">Decline</button>
+          </div>
+        </div>
+      </div>
+      <div class="invite-box">
+        <div class="section-label" style="margin-bottom:8px">Invite by email</div>
+        <input class="invite-input" value="collaborator@email.com" readonly/>
+        <button class="invite-btn">Send invitation</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="watermark">jointhewritersroom.com</div>
+</body></html>
