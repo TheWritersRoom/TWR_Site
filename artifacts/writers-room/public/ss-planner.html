@@ -1,0 +1,137 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1080px;height:1080px;overflow:hidden;background:#F9F6EE;font-family:'Inter',sans-serif;color:#1A1614}
+.topbar{background:#1A1614;padding:14px 28px;display:flex;align-items:center;justify-content:space-between}
+.logo{color:#F9F6EE;font-family:'Playfair Display',serif;font-size:18px}
+.logo span{color:#E8B84B}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.toolbar{background:#fff;padding:12px 28px;border-bottom:1px solid #E5E0D8;display:flex;align-items:center;gap:14px}
+.back{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#7A6B5E}
+.divider{width:1px;height:18px;background:#E5E0D8}
+.project-name{font-family:'Playfair Display',serif;font-size:16px}
+.project-type{font-size:11px;color:#7A6B5E;display:flex;align-items:center;gap:4px;margin-left:4px}
+.toolbar-right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none}
+.btn-outline{background:transparent;border:1.5px solid #E5E0D8;color:#1A1614}
+.btn-primary{background:#1A1614;color:#F9F6EE}
+.stats-bar{padding:14px 28px;display:flex;gap:28px;border-bottom:1px solid #E5E0D8;background:#fff;align-items:center}
+.stat{text-align:center}
+.stat .num{font-size:22px;font-weight:700;font-family:'Playfair Display',serif;color:#1A1614}
+.stat .lbl{font-size:10px;color:#7A6B5E;letter-spacing:0.1em;text-transform:uppercase;margin-top:1px}
+.progress-wrap{flex:1;margin-left:12px}
+.progress-lbl{display:flex;justify-content:space-between;font-size:11px;color:#7A6B5E;margin-bottom:6px}
+.progress-track{height:6px;background:#E5E0D8;border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;background:#E8B84B;border-radius:99px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:22px 28px;overflow:hidden}
+.card{background:#fff;border:1px solid #E5E0D8;border-radius:14px;padding:16px;position:relative}
+.card-ep{font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#7A6B5E;margin-bottom:6px}
+.card-title{font-family:'Playfair Display',serif;font-size:16px;margin-bottom:6px;line-height:1.2}
+.card-logline{font-size:11px;color:#7A6B5E;line-height:1.5;margin-bottom:12px}
+.card-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:99px;font-size:10px;font-weight:600}
+.s-draft{background:#F9F6EE;color:#7A6B5E}
+.s-outline{background:#eff6ff;color:#2563eb}
+.s-writing{background:#fffbeb;color:#d97706}
+.s-complete{background:#ecfdf5;color:#16a34a}
+.card-wc{font-size:10px;color:#7A6B5E;margin-left:auto}
+.card-progress{height:3px;background:#E5E0D8;border-radius:99px;margin-top:12px;overflow:hidden}
+.card-progress-fill{height:100%;border-radius:99px;background:#E8B84B}
+.card-chars{display:flex;gap:-4px;margin-top:10px}
+.char-dot{width:20px;height:20px;border-radius:50%;border:2px solid #fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-left:-4px}
+.char-dot:first-child{margin-left:0}
+.add-card{background:#F9F6EE;border:1.5px dashed #E5E0D8;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;min-height:180px}
+.add-card span{font-size:12px;font-weight:600;color:#7A6B5E}
+.watermark{position:fixed;bottom:18px;right:24px;font-size:11px;color:#7A6B5E;letter-spacing:0.08em}
+</style></head><body>
+<div class="topbar">
+  <div class="logo">The <span>Writers</span> Room</div>
+  <div class="topbar-right">
+    <div style="width:30px;height:30px;border-radius:50%;background:#E8B84B;color:#1A1614;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">S</div>
+  </div>
+</div>
+<div class="toolbar">
+  <div class="back"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg> Dashboard</div>
+  <div class="divider"></div>
+  <div class="project-name">Hollow Empire</div>
+  <div class="project-type"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg> TV Series · Season 1</div>
+  <div class="toolbar-right">
+    <button class="btn btn-outline">+ Add episode</button>
+    <button class="btn btn-primary">Share planner</button>
+  </div>
+</div>
+<div class="stats-bar">
+  <div class="stat"><div class="num">8</div><div class="lbl">Episodes</div></div>
+  <div class="stat"><div class="num">5</div><div class="lbl">Writing</div></div>
+  <div class="stat"><div class="num">2</div><div class="lbl">Complete</div></div>
+  <div class="stat"><div class="num">51,240</div><div class="lbl">Total Words</div></div>
+  <div class="progress-wrap">
+    <div class="progress-lbl"><span>Overall progress</span><span style="font-weight:600;color:#1A1614">62%</span></div>
+    <div class="progress-track"><div class="progress-fill" style="width:62%"></div></div>
+  </div>
+</div>
+<div class="grid">
+  <div class="card">
+    <div class="card-ep">Episode 01</div>
+    <div class="card-title">The Fall of Caedric</div>
+    <div class="card-logline">The last legitimate heir to the Hollow Throne is assassinated on the night of his coronation.</div>
+    <div class="card-meta">
+      <span class="status-badge s-complete"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Complete</span>
+      <span class="card-wc">6,820 words</span>
+    </div>
+    <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:#16a34a"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-ep">Episode 02</div>
+    <div class="card-title">The Counsel of Wolves</div>
+    <div class="card-logline">Three noble houses convene to divide the empire — each harbouring a secret that could shatter the alliance.</div>
+    <div class="card-meta">
+      <span class="status-badge s-complete"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Complete</span>
+      <span class="card-wc">7,104 words</span>
+    </div>
+    <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:#16a34a"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-ep">Episode 03</div>
+    <div class="card-title">A Plague of Loyalties</div>
+    <div class="card-logline">As drought grips the eastern provinces, Commander Vael must choose between duty and the woman she loves.</div>
+    <div class="card-meta">
+      <span class="status-badge s-writing"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Writing</span>
+      <span class="card-wc">5,210 / 7,000</span>
+    </div>
+    <div class="card-progress"><div class="card-progress-fill" style="width:74%"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-ep">Episode 04</div>
+    <div class="card-title">Embers at the Gate</div>
+    <div class="card-logline">The siege of Ashport begins. Ser Davan's plan unravels when a spy inside the walls is unmasked.</div>
+    <div class="card-meta">
+      <span class="status-badge s-writing"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Writing</span>
+      <span class="card-wc">3,800 / 7,000</span>
+    </div>
+    <div class="card-progress"><div class="card-progress-fill" style="width:54%"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-ep">Episode 05</div>
+    <div class="card-title">Blood and Salt</div>
+    <div class="card-logline">The truth about the old king's death is finally revealed — and it implicates everyone at the council table.</div>
+    <div class="card-meta">
+      <span class="status-badge s-outline"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg> Outlined</span>
+      <span class="card-wc">0 / 7,500</span>
+    </div>
+    <div class="card-progress"><div class="card-progress-fill" style="width:8%;background:#2563eb"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-ep">Episode 06</div>
+    <div class="card-title">The Glass Throne</div>
+    <div class="card-logline">A new claimant emerges from the north — one nobody expected, and nobody is ready for.</div>
+    <div class="card-meta">
+      <span class="status-badge s-draft"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg> Draft</span>
+      <span class="card-wc">0 / 7,500</span>
+    </div>
+    <div class="card-progress"><div class="card-progress-fill" style="width:0%"></div></div>
+  </div>
+</div>
+<div class="watermark">jointhewritersroom.com</div>
+</body></html>

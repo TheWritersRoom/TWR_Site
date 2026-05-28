@@ -84,3 +84,39 @@ id = "gb3CtMxDV15p7-t74WL0W"
 uri = "file://.local/exports/building-ink-ltd-logo.svg"
 type = "image"
 title = "Building Ink Ltd — Logo (corrected)"
+
+[[outputs]]
+id = "WSpCJw_CcsN3iCtWqwe1c"
+uri = "file://screenshots/01-ip-protection.jpg"
+type = "image"
+title = "01 — IP Protection"
+
+[[outputs]]
+id = "vYtGHseC7y3LunhYrV6mn"
+uri = "file://screenshots/02-structure-planner.jpg"
+type = "image"
+title = "02 — Structure Planner"
+
+[[outputs]]
+id = "zlJAQtGSCG08USJYhdaqD"
+uri = "file://screenshots/03-collaborators.jpg"
+type = "image"
+title = "03 — Collaborators"
+
+[[outputs]]
+id = "Se0MOXpIlFWPfHbVSo6Dm"
+uri = "file://screenshots/04-suggestions.jpg"
+type = "image"
+title = "04 — Inline Suggestions"
+
+[[outputs]]
+id = "ad7z2Qxrgw7oc1fulfsFT"
+uri = "file://screenshots/05-pitches-board.jpg"
+type = "image"
+title = "05 — Open Pitches"
+
+[[outputs]]
+id = "ORgRK7EgixLn4Wpnxe4Pp"
+uri = "file://screenshots/06-discover.jpg"
+type = "image"
+title = "06 — Discover"

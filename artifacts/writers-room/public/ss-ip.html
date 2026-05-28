@@ -1,0 +1,136 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1080px;height:1080px;overflow:hidden;background:#F9F6EE;font-family:'Inter',sans-serif;color:#1A1614}
+.topbar{background:#1A1614;padding:14px 28px;display:flex;align-items:center;justify-content:space-between}
+.logo{color:#F9F6EE;font-family:'Playfair Display',serif;font-size:18px;letter-spacing:0.01em}
+.logo span{color:#E8B84B}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.tab-row{display:flex;gap:0;padding:0 28px;border-bottom:1px solid #E5E0D8;background:#fff}
+.tab{padding:14px 18px;font-size:12px;font-weight:600;color:#7A6B5E;border-bottom:2.5px solid transparent;display:flex;align-items:center;gap:6px;cursor:pointer}
+.tab.active{color:#1A1614;border-bottom-color:#E8B84B}
+.main{display:flex;height:calc(1080px - 52px - 49px);background:#F9F6EE}
+.left{flex:1;padding:24px 28px;overflow:hidden}
+.right{width:380px;background:#fff;border-left:1px solid #E5E0D8;display:flex;flex-direction:column}
+.project-title{font-family:'Playfair Display',serif;font-size:26px;margin-bottom:4px}
+.project-sub{font-size:12px;color:#7A6B5E;margin-bottom:18px}
+.editor-preview{background:#fff;border:1px solid #E5E0D8;border-radius:12px;padding:24px;font-size:14px;line-height:1.8;color:#1A1614;height:420px;overflow:hidden}
+.editor-preview p{margin-bottom:14px}
+mark{background:rgba(232,184,75,0.28);border-radius:2px;padding:1px 0}
+.panel-header{padding:16px 20px 0;border-bottom:1px solid #E5E0D8}
+.panel-title{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.panel-title svg{color:#E8B84B}
+.panel-title h3{font-size:13px;font-weight:700}
+.ptabs{display:flex;gap:0}
+.ptab{padding:10px 14px;font-size:11px;font-weight:600;color:#7A6B5E;border-bottom:2px solid transparent}
+.ptab.active{color:#1A1614;border-bottom-color:#E8B84B}
+.panel-body{padding:16px;flex:1;overflow:hidden;display:flex;flex-direction:column;gap:10px}
+.desc{font-size:11px;color:#7A6B5E;line-height:1.6;margin-bottom:4px}
+.ip-card{background:#fff;border:1px solid #E5E0D8;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:12px}
+.ip-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ip-icon.green{background:#ecfdf5;color:#16a34a}
+.ip-icon.blue{background:#eff6ff;color:#2563eb}
+.ip-icon.purple{background:#faf5ff;color:#7c3aed}
+.ip-icon.amber{background:#fffbeb;color:#d97706}
+.ip-card-info{flex:1}
+.ip-card-info strong{font-size:13px;font-weight:600;display:block;margin-bottom:2px}
+.ip-card-info span{font-size:11px;color:#7A6B5E}
+.ip-card-action{font-size:11px;font-weight:600;color:#1A1614;display:flex;align-items:center;gap:2px;white-space:nowrap;padding-top:2px}
+.fp-box{background:#1A1614;border-radius:12px;padding:14px}
+.fp-label{font-size:9px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#E8B84B;display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.fp-hash{font-family:monospace;font-size:10px;color:#F9F6EE;line-height:1.7;word-break:break-all}
+.fp-ts{font-size:10px;color:#7A6B5E;margin-top:6px}
+.watermark{position:absolute;bottom:18px;right:24px;font-size:11px;color:#7A6B5E;letter-spacing:0.08em}
+</style></head><body>
+<div class="topbar">
+  <div class="logo">The <span>Writers</span> Room</div>
+  <div class="topbar-right">
+    <svg width="14" height="14" fill="none" stroke="#E8B84B" stroke-width="2" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+    <div style="width:30px;height:30px;border-radius:50%;background:#E8B84B;color:#1A1614;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">S</div>
+  </div>
+</div>
+<div style="background:#fff;padding:0 28px;display:flex;gap:0;border-bottom:1px solid #E5E0D8;">
+  <div class="tab">
+    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg> Editor
+  </div>
+  <div class="tab">
+    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Suggestions
+  </div>
+  <div class="tab">
+    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> Collaborators
+  </div>
+  <div class="tab active" style="color:#1A1614;border-bottom:2.5px solid #E8B84B">
+    <svg width="12" height="12" fill="none" stroke="#E8B84B" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> IP Protection
+  </div>
+  <div class="tab">
+    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg> History
+  </div>
+</div>
+<div class="main">
+  <div class="left">
+    <div class="project-title">The Glass Meridian</div>
+    <div class="project-sub">Literary Fiction · 73,420 words · 3 contributors</div>
+    <div class="editor-preview">
+      <p>The city spread before Elara like a wound that had never quite healed — all cracked pavements and <mark>dimly lit windows that flickered in the autumn rain</mark>, each one a small world unto itself, indifferent to the lives pressing against it.</p>
+      <p>She had walked this street a hundred times since the funeral, always at dusk, always alone. The habit had started as grief and hardened into ritual, the way all things do when we carry them long enough.</p>
+      <p><mark>"You have to stop doing this to yourself,"</mark> Marcus had told her that morning over cold coffee, his voice gentle but certain. She had nodded, the way she always nodded, and then put on her coat the moment he left.</p>
+      <p>The antique shop on the corner was still lit. Ferrante's. She had never gone in, though she'd stood at the window enough times to know the inventory by heart: a brass compass, three taxidermied birds under glass, a chessboard missing the black queen.</p>
+    </div>
+  </div>
+  <div class="right">
+    <div class="panel-header">
+      <div class="panel-title">
+        <svg width="16" height="16" fill="none" stroke="#E8B84B" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <h3>IP Protection</h3>
+      </div>
+      <div class="ptabs">
+        <div class="ptab active">Overview</div>
+        <div class="ptab">IP Agreement</div>
+        <div class="ptab">Access Logs</div>
+        <div class="ptab">Certificates</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <p class="desc">Layered IP protection for your work. Each layer adds an additional record of authorship, access, and contribution.</p>
+      <div class="ip-card">
+        <div class="ip-icon green">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        </div>
+        <div class="ip-card-info"><strong>IP Agreement</strong><span>3 of 3 contributors signed</span></div>
+        <div class="ip-card-action">Manage <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg></div>
+      </div>
+      <div class="ip-card">
+        <div class="ip-icon blue">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+        </div>
+        <div class="ip-card-info"><strong>Content Fingerprinting</strong><span>SHA-256 hash generated on demand</span></div>
+        <div class="ip-card-action">Generate <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg></div>
+      </div>
+      <div class="ip-card">
+        <div class="ip-icon purple">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <div class="ip-card-info"><strong>Access Logging</strong><span>All content views are recorded automatically</span></div>
+        <div class="ip-card-action">View logs <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg></div>
+      </div>
+      <div class="ip-card">
+        <div class="ip-icon green">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+        </div>
+        <div class="ip-card-info"><strong>Contribution Certificates</strong><span>3 contributors eligible</span></div>
+        <div class="ip-card-action">Download <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg></div>
+      </div>
+      <div class="fp-box">
+        <div class="fp-label">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0110 10c0 5.52-4.48 10-10 10C6.48 22 2 17.52 2 12z"/><path d="M12 6v6l4 2"/></svg>
+          Content Fingerprint
+        </div>
+        <div class="fp-hash">a7f3d9e2b1c84f56890abc123def4567890abcdef1234567890abcdef12345678</div>
+        <div class="fp-ts">Generated 27 May 2026 at 09:41</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="watermark">jointhewritersroom.com</div>
+</body></html>
