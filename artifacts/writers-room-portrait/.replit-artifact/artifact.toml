@@ -1,0 +1,31 @@
+kind = "video"
+previewPath = "/writers-room-portrait/"
+title = "Writers Room — Portrait Video"
+version = "1.0.0"
+id = "artifacts/writers-room-portrait"
+router = "path"
+
+[[integratedSkills]]
+name = "video-js"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/writers-room-portrait/" ]
+localPort = 22006
+
+[services.development]
+run = "pnpm --filter @workspace/writers-room-portrait run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/writers-room-portrait", "run", "build" ]
+publicDir = "artifacts/writers-room-portrait/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22006"
+BASE_PATH = "/writers-room-portrait/"
