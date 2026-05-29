@@ -1,7 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Repeat, Volume2, VolumeX } from 'lucide-react';
 import VideoTemplate, { SCENE_DURATIONS } from './VideoTemplate';
+import PortraitVideoTemplate from './PortraitVideoTemplate';
 import { useSceneControls } from './useSceneControls';
+
+const isPortraitMode =
+  typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).has('portrait');
 
 const PROGRESS_TICK_MS = 60;
 
@@ -182,6 +187,69 @@ export default function VideoWithControls() {
 
   const barVisible = !collapsed || hovering || tapPinned;
 
+  /* ── Portrait mode ── */
+  if (isPortraitMode) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: '#1A1614',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {/* 9:16 video container */}
+        <div
+          style={{
+            height: isIframed ? '82vh' : '100vh',
+            aspectRatio: '9 / 16',
+            position: 'relative',
+            flexShrink: 0,
+            overflow: 'hidden',
+          }}
+        >
+          <PortraitVideoTemplate
+            key={mountKey}
+            durations={durations}
+            loop
+            muted={muted}
+            onSceneChange={onSceneChange}
+          />
+        </div>
+
+        {/* Controls bar — only when iframed (canvas/demo mode) */}
+        {isIframed && (
+          <div
+            ref={sensorRef}
+            style={{ width: '100%', flexShrink: 0 }}
+            onPointerEnter={handlePointerEnter}
+            onPointerLeave={handlePointerLeave}
+            onPointerDown={handlePointerDown}
+          >
+            <ControlBar
+              visible={barVisible}
+              collapsed={collapsed}
+              locked={locked}
+              muted={muted}
+              sceneKeys={sceneKeys}
+              activeIndex={activeIndex}
+              activeDuration={activeDuration}
+              tick={tick}
+              onToggleLock={toggleLock}
+              onToggleMute={() => setMuted((m) => !m)}
+              onJumpTo={jumpTo}
+              onToggleCollapsed={handleToggleCollapsed}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ── Landscape mode (default) ── */
   if (!isIframed) return <VideoTemplate />;
 
   return (
