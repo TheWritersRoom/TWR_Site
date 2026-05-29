@@ -104,7 +104,7 @@ export function SceneIntro() {
         animate={phase >= 3 ? { opacity: 1, filter: 'blur(0px)' } : { opacity: 0, filter: 'blur(12px)' }}
         transition={{ duration: 0.7, ease: 'circOut' }}
       >
-        Write. Protect. Collaborate.
+        Pitch. Write. Edit. Publish. Together.
       </motion.p>
     </motion.div>
   );

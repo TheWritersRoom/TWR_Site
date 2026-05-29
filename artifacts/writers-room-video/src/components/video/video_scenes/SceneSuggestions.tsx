@@ -64,7 +64,7 @@ export function SceneSuggestions() {
           animate={{ opacity: phase >= 2 ? 0.9 : 0 }}
           transition={{ duration: 0.4 }}
         >
-          04 / 06
+          04 / 07
         </motion.div>
 
         <div style={{ fontFamily: 'var(--font-display)', overflow: 'hidden' }}>

@@ -83,7 +83,7 @@ export function SceneOutro() {
         animate={phase >= 4 ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 0.6 }}
       >
-        Write. Protect. Collaborate.
+        Pitch. Write. Edit. Publish. Together.
       </motion.div>
     </motion.div>
   );

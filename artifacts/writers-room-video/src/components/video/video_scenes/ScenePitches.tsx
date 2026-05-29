@@ -36,7 +36,7 @@ export function ScenePitches() {
           animate={{ opacity: phase >= 2 ? 0.9 : 0 }}
           transition={{ duration: 0.4 }}
         >
-          05 / 06
+          06 / 07
         </motion.div>
 
         <div style={{ fontFamily: 'var(--font-display)', overflow: 'hidden' }}>

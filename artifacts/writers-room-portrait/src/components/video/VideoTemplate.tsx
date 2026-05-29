@@ -2,20 +2,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 import { useVideoPlayer } from '@/lib/video';
 import { SceneIntro } from './video_scenes/SceneIntro';
-import { SceneIP } from './video_scenes/SceneIP';
+import { SceneBuild } from './video_scenes/SceneBuild';
 import { ScenePlanner } from './video_scenes/ScenePlanner';
 import { SceneCollaborators } from './video_scenes/SceneCollaborators';
 import { SceneSuggestions } from './video_scenes/SceneSuggestions';
+import { SceneIP } from './video_scenes/SceneIP';
 import { ScenePitches } from './video_scenes/ScenePitches';
 import { SceneDiscover } from './video_scenes/SceneDiscover';
 import { SceneOutro } from './video_scenes/SceneOutro';
 
 export const SCENE_DURATIONS: Record<string, number> = {
   intro:         4000,
-  ip:            3500,
+  build:         3500,
   planner:       3500,
   collaborators: 3500,
   suggestions:   3500,
+  ip:            3500,
   pitches:       3500,
   discover:      3000,
   outro:         5000,
@@ -23,35 +25,39 @@ export const SCENE_DURATIONS: Record<string, number> = {
 
 const SCENE_COMPONENTS: Record<string, React.ComponentType> = {
   intro:         SceneIntro,
-  ip:            SceneIP,
+  build:         SceneBuild,
   planner:       ScenePlanner,
   collaborators: SceneCollaborators,
   suggestions:   SceneSuggestions,
+  ip:            SceneIP,
   pitches:       ScenePitches,
   discover:      SceneDiscover,
   outro:         SceneOutro,
 };
 
+/* Blob positions per scene index (0=intro … 8=outro) */
 const BLOB1_POS = [
-  { x: '75%', y: '18%', scale: 1.6 },
-  { x: '68%', y: '22%', scale: 1.4 },
-  { x: '20%', y: '28%', scale: 1.5 },
-  { x: '72%', y: '60%', scale: 1.35 },
-  { x: '30%', y: '20%', scale: 1.6 },
-  { x: '65%', y: '30%', scale: 1.45 },
-  { x: '22%', y: '55%', scale: 1.55 },
-  { x: '50%', y: '35%', scale: 1.7 },
+  { x: '75%', y: '18%', scale: 1.6 },  // intro
+  { x: '50%', y: '25%', scale: 1.8 },  // build
+  { x: '20%', y: '28%', scale: 1.5 },  // planner
+  { x: '72%', y: '60%', scale: 1.35 }, // collaborators
+  { x: '30%', y: '20%', scale: 1.6 },  // suggestions
+  { x: '68%', y: '22%', scale: 1.4 },  // ip
+  { x: '65%', y: '30%', scale: 1.45 }, // pitches
+  { x: '22%', y: '55%', scale: 1.55 }, // discover
+  { x: '50%', y: '35%', scale: 1.7 },  // outro
 ];
 
 const BLOB2_POS = [
-  { x: '20%', y: '80%', scale: 1.3 },
-  { x: '30%', y: '70%', scale: 1.2 },
-  { x: '75%', y: '68%', scale: 1.25 },
-  { x: '25%', y: '30%', scale: 1.1 },
-  { x: '72%', y: '75%', scale: 1.3 },
-  { x: '25%', y: '65%', scale: 1.2 },
-  { x: '70%', y: '22%', scale: 1.25 },
-  { x: '20%', y: '72%', scale: 1.4 },
+  { x: '20%', y: '80%', scale: 1.3 },  // intro
+  { x: '50%', y: '75%', scale: 1.4 },  // build
+  { x: '75%', y: '68%', scale: 1.25 }, // planner
+  { x: '25%', y: '30%', scale: 1.1 },  // collaborators
+  { x: '72%', y: '75%', scale: 1.3 },  // suggestions
+  { x: '30%', y: '70%', scale: 1.2 },  // ip
+  { x: '25%', y: '65%', scale: 1.2 },  // pitches
+  { x: '70%', y: '22%', scale: 1.25 }, // discover
+  { x: '20%', y: '72%', scale: 1.4 },  // outro
 ];
 
 const AUDIO_SEEK_EPSILON_SEC = 0.18;
@@ -108,7 +114,6 @@ export default function VideoTemplate({
 
       {/* Persistent background */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        {/* Noise texture */}
         <div
           style={{
             position: 'absolute', inset: 0,
@@ -117,7 +122,6 @@ export default function VideoTemplate({
           }}
         />
 
-        {/* Golden blob 1 */}
         <motion.div
           style={{
             position: 'absolute', width: '70%', aspectRatio: '1', borderRadius: '50%',
@@ -128,7 +132,6 @@ export default function VideoTemplate({
           transition={{ duration: 2.4, ease: [0.4, 0, 0.2, 1] }}
         />
 
-        {/* Cream blob 2 */}
         <motion.div
           style={{
             position: 'absolute', width: '55%', aspectRatio: '1', borderRadius: '50%',
@@ -139,7 +142,6 @@ export default function VideoTemplate({
           transition={{ duration: 3.0, ease: [0.4, 0, 0.2, 1] }}
         />
 
-        {/* Ambient glow */}
         <motion.div
           style={{
             position: 'absolute', inset: 0,

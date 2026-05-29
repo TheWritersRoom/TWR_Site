@@ -106,7 +106,7 @@ export function SceneIntro() {
         }
         transition={{ duration: 0.7, ease: 'circOut' }}
       >
-        Write. Protect. Collaborate.
+        Pitch. Write. Edit. Publish. Together.
       </motion.p>
     </motion.div>
   );

@@ -5,7 +5,7 @@ export function SceneSuggestions() {
     <PortraitFeatureScene
       imageSrc={`${import.meta.env.BASE_URL}images/04-suggestions.jpg`}
       imageAlt="Inline Suggestions"
-      counter="04 / 06"
+      counter="04 / 07"
       titleLines={[
         { text: 'Inline', color: '#E8B84B', size: '11vh' },
         { text: 'Suggestions', color: '#F9F6EE', size: '6.5vh' },

@@ -5,7 +5,7 @@ export function ScenePitches() {
     <PortraitFeatureScene
       imageSrc={`${import.meta.env.BASE_URL}images/05-pitches-board.jpg`}
       imageAlt="Open Pitches"
-      counter="05 / 06"
+      counter="06 / 07"
       titleLines={[
         { text: 'Open', color: '#F9F6EE', size: '12vh' },
         { text: 'Pitches', color: '#E8B84B', size: '10vh' },

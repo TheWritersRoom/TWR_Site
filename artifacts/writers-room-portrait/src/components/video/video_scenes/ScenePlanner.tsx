@@ -5,7 +5,7 @@ export function ScenePlanner() {
     <PortraitFeatureScene
       imageSrc={`${import.meta.env.BASE_URL}images/02-structure-planner.jpg`}
       imageAlt="Structure Planner"
-      counter="02 / 06"
+      counter="02 / 07"
       titleLines={[
         { text: 'Structure', color: '#F9F6EE', size: '8vh' },
         { text: 'Planner', color: '#E8B84B', size: '9.5vh' },

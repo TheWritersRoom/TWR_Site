@@ -36,7 +36,7 @@ export function SceneCollaborators() {
           animate={{ opacity: phase >= 2 ? 0.9 : 0 }}
           transition={{ duration: 0.4 }}
         >
-          03 / 06
+          03 / 07
         </motion.div>
 
         <div style={{ fontFamily: 'var(--font-display)', overflow: 'hidden' }}>

@@ -5,7 +5,7 @@ export function SceneCollaborators() {
     <PortraitFeatureScene
       imageSrc={`${import.meta.env.BASE_URL}images/03-collaborators.jpg`}
       imageAlt="Collaborators"
-      counter="03 / 06"
+      counter="03 / 07"
       titleLines={[
         { text: 'Collaborators', color: '#F9F6EE', size: '5.8vh' },
       ]}

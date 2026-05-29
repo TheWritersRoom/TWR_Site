@@ -5,7 +5,7 @@ export function SceneDiscover() {
     <PortraitFeatureScene
       imageSrc={`${import.meta.env.BASE_URL}images/06-discover.jpg`}
       imageAlt="Discover"
-      counter="06 / 06"
+      counter="07 / 07"
       titleLines={[
         { text: 'Discover', color: '#F9F6EE', size: '10vh' },
       ]}
