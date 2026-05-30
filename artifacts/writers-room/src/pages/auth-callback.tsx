@@ -35,7 +35,13 @@ export default function AuthCallback() {
     const verified = params.get("verified") === "1";
     loginWithToken(token)
       .then(() => {
-        setLocation(verified ? "/dashboard" : "/");
+        const pendingJoin = sessionStorage.getItem("pendingJoinToken");
+        if (pendingJoin) {
+          sessionStorage.removeItem("pendingJoinToken");
+          setLocation(`/join/${pendingJoin}`);
+        } else {
+          setLocation(verified ? "/dashboard" : "/");
+        }
       })
       .catch((err: Error) => {
         setErrorMsg(err.message || "Could not complete sign-in.");

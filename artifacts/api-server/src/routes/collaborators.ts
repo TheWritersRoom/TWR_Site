@@ -15,6 +15,29 @@ import {
 
 const router: IRouter = Router();
 
+// ── Pro ratio helper ───────────────────────────────────────────────────────────
+// Rule: ceil(totalMembers / 6) Pro accounts required.
+// totalMembers = owner + all collaborators (AFTER the new joiner is added).
+async function checkProRatio(projectId: number, ownerId: number, currentCollabCount: number) {
+  const newTotal = 1 + currentCollabCount + 1;
+  const requiredPros = Math.ceil(newTotal / 6);
+
+  const [owner] = await db.select({ subscriptionTier: usersTable.subscriptionTier })
+    .from(usersTable).where(eq(usersTable.id, ownerId));
+
+  const proCollabs = await db
+    .select({ tier: usersTable.subscriptionTier })
+    .from(collaboratorsTable)
+    .innerJoin(usersTable, eq(collaboratorsTable.userId, usersTable.id))
+    .where(and(
+      eq(collaboratorsTable.projectId, projectId),
+      eq(usersTable.subscriptionTier, "pro")
+    ));
+
+  const currentProCount = (owner?.subscriptionTier === "pro" ? 1 : 0) + proCollabs.length;
+  return { allowed: currentProCount >= requiredPros, requiredPros, currentProCount, newTotal };
+}
+
 router.get("/projects/:id/collaborators", async (req, res): Promise<void> => {
   const params = ListCollaboratorsParams.safeParse(req.params);
   if (!params.success) {
@@ -77,6 +100,14 @@ router.post("/projects/:id/invite", async (req, res): Promise<void> => {
   if (total >= limit) {
     res.status(400).json({
       error: `This room is full (${limit} collaborator${limit === 1 ? "" : "s"} max). Increase the room limit to invite more.`,
+    });
+    return;
+  }
+
+  const ratio = await checkProRatio(params.data.id, project.ownerId, Number(total));
+  if (!ratio.allowed) {
+    res.status(403).json({
+      error: `Adding a ${ratio.newTotal}${["st","nd","rd"][ratio.newTotal - 1] ?? "th"} member requires ${ratio.requiredPros} Pro ${ratio.requiredPros === 1 ? "account" : "accounts"} in this room, but there ${ratio.currentProCount === 1 ? "is" : "are"} only ${ratio.currentProCount}. Upgrade a member to Pro first — 1 Pro per 6 members.`,
     });
     return;
   }
@@ -318,6 +349,12 @@ router.patch("/projects/:id/join-requests/:requestId", async (req, res): Promise
     if (total >= limit) {
       res.status(400).json({ error: `Room is full (${limit} max). Increase the room limit first.` }); return;
     }
+    const ratio = await checkProRatio(projectId, project.ownerId, Number(total));
+    if (!ratio.allowed) {
+      res.status(403).json({
+        error: `Accepting this member would bring the room to ${ratio.newTotal} members, which requires ${ratio.requiredPros} Pro ${ratio.requiredPros === 1 ? "account" : "accounts"}. The room currently has ${ratio.currentProCount}. Upgrade a member to Pro first — 1 Pro per 6 members.`,
+      }); return;
+    }
     // Add as collaborator
     await db.insert(collaboratorsTable).values({ projectId, userId: joinReq.userId }).onConflictDoNothing();
 
@@ -451,6 +488,14 @@ router.post("/join/:token", async (req, res): Promise<void> => {
     .where(eq(collaboratorsTable.projectId, project.id));
   if (Number(total) >= limit) {
     res.status(400).json({ error: `This room is full (${limit} max). Ask the owner to increase the room limit.` });
+    return;
+  }
+
+  const ratio = await checkProRatio(project.id, project.ownerId, Number(total));
+  if (!ratio.allowed) {
+    res.status(403).json({
+      error: `This room needs ${ratio.requiredPros} Pro ${ratio.requiredPros === 1 ? "account" : "accounts"} to have ${ratio.newTotal} members (currently has ${ratio.currentProCount}). Ask the room owner to upgrade to Pro — 1 Pro account is required per 6 members.`,
+    });
     return;
   }
 

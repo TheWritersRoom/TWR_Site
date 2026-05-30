@@ -4,7 +4,7 @@ import { useFreeSlots } from "@/hooks/use-free-slots";
 import type { UserRole } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Check, X, Eye, EyeOff, ToggleLeft, ToggleRight } from "lucide-react";
+import { ChevronRight, Check, X, Eye, EyeOff, ToggleLeft, ToggleRight, Link2 } from "lucide-react";
 
 const WRITING_SPECIALTIES = [
   "Plotting & Structure", "Character Development", "Dialogue & Voice", "World-building",
@@ -91,6 +91,8 @@ export function AuthModal() {
   const [suAvailableForWork, setSuAvailableForWork] = useState(true);
 
   const [suDateOfBirth, setSuDateOfBirth] = useState("");
+  const [suInviteLink, setSuInviteLink] = useState("");
+  const [inviteLinkOpen, setInviteLinkOpen] = useState(false);
   const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
   const [registrationEmail, setRegistrationEmail] = useState("");
 
@@ -139,11 +141,23 @@ export function AuthModal() {
     }
   };
 
+  const parseInviteToken = (input: string): string | null => {
+    const trimmed = input.trim();
+    const match = trimmed.match(/\/join\/([0-9a-f-]{36})/i);
+    if (match) return match[1];
+    if (/^[0-9a-f-]{36}$/i.test(trimmed)) return trimmed;
+    return null;
+  };
+
   const handleSignUpStep1 = (e: React.FormEvent) => {
     e.preventDefault();
     if (suPassword.length < 8) {
       setError("Password must be at least 8 characters");
       return;
+    }
+    if (suInviteLink.trim()) {
+      const t = parseInviteToken(suInviteLink);
+      if (t) sessionStorage.setItem("pendingJoinToken", t);
     }
     setError("");
     setStep(2); // always advance — step 2 is interests (contributor/both) or credentials (author)
@@ -440,6 +454,35 @@ export function AuthModal() {
                         className="w-full px-4 py-3 rounded-xl bg-background/50 border-2 border-input focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none"
                         autoComplete="bday"
                       />
+                    </div>
+
+                    {/* Group invite link */}
+                    <div className="rounded-xl border border-dashed border-input overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setInviteLinkOpen((v) => !v)}
+                        className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Link2 className="w-3.5 h-3.5 text-primary" />
+                          Joining a group?
+                        </span>
+                        <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ${inviteLinkOpen ? "rotate-90" : ""}`} />
+                      </button>
+                      {inviteLinkOpen && (
+                        <div className="px-4 pb-3 space-y-1.5 border-t border-dashed border-input pt-2.5">
+                          <p className="text-xs text-muted-foreground">
+                            Paste your group invite link — you'll be added to the room automatically after verifying your email.
+                          </p>
+                          <input
+                            type="text"
+                            value={suInviteLink}
+                            onChange={(e) => setSuInviteLink(e.target.value)}
+                            placeholder="https://…/join/your-invite-link"
+                            className="w-full px-3 py-2 rounded-xl bg-background/50 border-2 border-input focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none text-sm"
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <Button

@@ -21,7 +21,7 @@ type ProjectInfo = {
 export default function JoinPage() {
   const [, params] = useRoute("/join/:token");
   const token = params?.token ?? "";
-  const { user } = useAuth();
+  const { user, openAuthModal } = useAuth();
   const [joined, setJoined] = useState(false);
   const [alreadyMember, setAlreadyMember] = useState(false);
 
@@ -187,12 +187,28 @@ export default function JoinPage() {
         ) : (
           <div className="space-y-3 text-center">
             <p className="text-sm text-[#7A6B5E]">Create your free account to join this room.</p>
-            <Link href="/">
-              <Button className="w-full rounded-xl bg-[#E8B84B] hover:bg-[#d4a53a] text-[#1A1614] font-semibold h-11">
-                Sign up — it's free <ArrowRight className="w-4 h-4 ml-1.5" />
-              </Button>
-            </Link>
-            <p className="text-xs text-[#7A6B5E]">Come back to this link after signing up to complete your join.</p>
+            <Button
+              className="w-full rounded-xl bg-[#E8B84B] hover:bg-[#d4a53a] text-[#1A1614] font-semibold h-11"
+              onClick={() => {
+                sessionStorage.setItem("pendingJoinToken", token);
+                openAuthModal();
+              }}
+            >
+              Sign up &amp; join — it's free <ArrowRight className="w-4 h-4 ml-1.5" />
+            </Button>
+            <p className="text-xs text-[#7A6B5E]">
+              Already have an account?{" "}
+              <button
+                className="underline font-semibold text-[#1A1614]"
+                onClick={() => {
+                  sessionStorage.setItem("pendingJoinToken", token);
+                  openAuthModal();
+                }}
+              >
+                Sign in
+              </button>{" "}
+              to continue.
+            </p>
           </div>
         )}
       </div>
