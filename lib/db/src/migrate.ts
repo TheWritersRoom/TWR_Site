@@ -146,6 +146,17 @@ export async function applyMigrations(): Promise<void> {
       );
     `);
 
+    // 9. Project group invite tokens
+    await client.query(`
+      ALTER TABLE projects
+        ADD COLUMN IF NOT EXISTS invite_token TEXT;
+    `);
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS projects_invite_token_idx
+        ON projects(invite_token)
+        WHERE invite_token IS NOT NULL;
+    `);
+
     console.log("[migrate] Schema up to date.");
   } catch (err) {
     console.error("[migrate] Migration failed:", err);

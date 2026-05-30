@@ -7,7 +7,8 @@ import {
   ChevronLeft, Users, MessageSquare, Check, X, 
   Send, AlertCircle, Edit3, BarChart2, Trophy, Mail,
   BookOpen, Globe, Lock, Eye, MessageCircle, Minus, Plus,
-  UserPlus, Clock, CheckCircle, XCircle, Film, Shield, AlignLeft, History, ShieldCheck, FileText, StickyNote
+  UserPlus, Clock, CheckCircle, XCircle, Film, Shield, AlignLeft, History, ShieldCheck, FileText, StickyNote,
+  Copy, Link2, RefreshCw
 } from "lucide-react";
 import { NotesPanel } from "@/components/notes-panel";
 import { VersionHistoryPanel } from "@/components/version-history-panel";
@@ -159,6 +160,7 @@ export default function ProjectDetail() {
   const [isSavingLimit, setIsSavingLimit] = useState(false);
   const [joinMessage, setJoinMessage] = useState("");
   const [joinMessageOpen, setJoinMessageOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const { data: project, isLoading: projectLoading } = useGetProject(projectId, {
     request: {} as RequestInit,
@@ -174,6 +176,27 @@ export default function ProjectDetail() {
     enabled: !!projectId,
   });
   const { data: collaborators } = useListCollaborators(projectId);
+
+  const INVITE_LINK_KEY = ["/api/projects", projectId, "invite-link"];
+  const { data: inviteLinkData } = useQuery<{ token: string } | null>({
+    queryKey: INVITE_LINK_KEY,
+    enabled: !!projectId && !!user,
+    queryFn: async () => {
+      const r = await fetch(`/api/projects/${projectId}/invite-link?userId=${user!.id}`);
+      if (!r.ok) return null;
+      return r.json();
+    },
+    retry: false,
+  });
+  const regenerateLink = useMutation({
+    mutationFn: () =>
+      fetch(`/api/projects/${projectId}/invite-link/regenerate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user!.id }),
+      }).then(async r => { if (!r.ok) throw new Error((await r.json()).error); return r.json(); }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: INVITE_LINK_KEY }),
+  });
 
   const createSuggestion = useCreateSuggestion();
   const updateSuggestion = useUpdateSuggestionStatus();
@@ -1274,6 +1297,60 @@ export default function ProjectDetail() {
                     Find collaborators for this project
                     <span className="ml-auto text-[10px] uppercase tracking-[0.12em] font-bold text-[#7A6B5E]">Browse →</span>
                   </Link>
+                );
+              })()}
+
+              {/* Group invite link — owners only */}
+              {isOwner && inviteLinkData?.token && (() => {
+                const base = `${window.location.origin}${import.meta.env.BASE_URL}`.replace(/\/+$/, "");
+                const joinUrl = `${base}/join/${inviteLinkData.token}`;
+                return (
+                  <div className="bg-card p-4 rounded-2xl border border-border shadow-sm space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Link2 className="w-4 h-4 text-primary shrink-0" />
+                      <h4 className="text-sm font-semibold">Group Invite Link</h4>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Share this with your writing group — anyone with the link can join directly.
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        readOnly
+                        value={joinUrl}
+                        className="flex-1 min-w-0 bg-background border border-input rounded-xl px-3 py-2 text-xs text-muted-foreground focus:outline-none select-all"
+                        onClick={e => (e.target as HTMLInputElement).select()}
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={copiedLink ? "default" : "outline"}
+                        className="rounded-xl px-3 shrink-0"
+                        onClick={() => {
+                          navigator.clipboard.writeText(joinUrl).then(() => {
+                            setCopiedLink(true);
+                            setTimeout(() => setCopiedLink(false), 2000);
+                          });
+                        }}
+                      >
+                        {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between pt-0.5">
+                      <p className="text-[10px] text-muted-foreground">Regenerate if the link is shared outside your group</p>
+                      <button
+                        type="button"
+                        className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1 disabled:opacity-50"
+                        disabled={regenerateLink.isPending}
+                        onClick={() => {
+                          if (confirm("This will invalidate the current link. Anyone who hasn't joined yet will need the new one. Continue?")) {
+                            regenerateLink.mutate();
+                          }
+                        }}
+                      >
+                        <RefreshCw className="w-3 h-3" /> Regenerate
+                      </button>
+                    </div>
+                  </div>
                 );
               })()}
 

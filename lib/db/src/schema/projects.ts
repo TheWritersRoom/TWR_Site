@@ -24,6 +24,7 @@ export const projectsTable = pgTable("projects", {
   feedbackAudience: text("feedback_audience", { enum: ["all", "matched", "contributors"] }).notNull().default("all"),
   feedbackVisibility: text("feedback_visibility", { enum: ["public", "private"] }).notNull().default("public"),
   isAdultContent: boolean("is_adult_content").notNull().default(false),
+  inviteToken: text("invite_token"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

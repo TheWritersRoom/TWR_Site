@@ -23,6 +23,7 @@ import Pricing from "@/pages/pricing";
 import PlannerPage from "@/pages/planner";
 import Inbox from "@/pages/inbox";
 import FeedbackPage from "@/pages/feedback";
+import JoinPage from "@/pages/join";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,6 +53,7 @@ function AuthenticatedRouter() {
         <Route path="/planner/:id" component={PlannerPage} />
         <Route path="/inbox" component={Inbox} />
         <Route path="/feedback" component={FeedbackPage} />
+        <Route path="/join/:token" component={JoinPage} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
@@ -82,6 +84,7 @@ function AppContent() {
           <Route path="/how-it-works" component={HowItWorks} />
           <Route path="/pricing" component={Pricing} />
           <Route path="/profile/:id" component={PublicProfile} />
+          <Route path="/join/:token" component={JoinPage} />
           <Route component={Landing} />
         </Switch>
         <AuthModal />

@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { randomUUID } from "crypto";
 import { eq, and, count, gt } from "drizzle-orm";
 import { db, collaboratorsTable, usersTable, projectsTable, joinRequestsTable, userSessionsTable } from "@workspace/db";
 import { createInboxMessageAndNotify } from "../lib/inbox";
@@ -350,6 +351,118 @@ router.patch("/projects/:id/join-requests/:requestId", async (req, res): Promise
     .returning();
 
   res.json(updated);
+});
+
+// ── Group invite link ──────────────────────────────────────────────────────────
+
+// GET /projects/:id/invite-link — owner gets (or auto-generates) the invite token
+router.get("/projects/:id/invite-link", async (req, res): Promise<void> => {
+  const projectId = parseInt(req.params.id, 10);
+  const ownerId = parseInt(req.query.userId as string, 10);
+  if (isNaN(projectId) || isNaN(ownerId)) { res.status(400).json({ error: "Invalid params" }); return; }
+
+  const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));
+  if (!project) { res.status(404).json({ error: "Project not found" }); return; }
+  if (project.ownerId !== ownerId) { res.status(403).json({ error: "Only the owner can view the invite link" }); return; }
+
+  let token = project.inviteToken;
+  if (!token) {
+    token = randomUUID();
+    await db.update(projectsTable).set({ inviteToken: token }).where(eq(projectsTable.id, projectId));
+  }
+  res.json({ token });
+});
+
+// POST /projects/:id/invite-link/regenerate — owner regenerates token
+router.post("/projects/:id/invite-link/regenerate", async (req, res): Promise<void> => {
+  const projectId = parseInt(req.params.id, 10);
+  const ownerId = parseInt(req.body.userId, 10);
+  if (isNaN(projectId) || isNaN(ownerId)) { res.status(400).json({ error: "Invalid params" }); return; }
+
+  const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));
+  if (!project) { res.status(404).json({ error: "Project not found" }); return; }
+  if (project.ownerId !== ownerId) { res.status(403).json({ error: "Only the owner can regenerate the invite link" }); return; }
+
+  const token = randomUUID();
+  await db.update(projectsTable).set({ inviteToken: token }).where(eq(projectsTable.id, projectId));
+  res.json({ token });
+});
+
+// GET /join/:token — public: look up project by invite token
+router.get("/join/:token", async (req, res): Promise<void> => {
+  const { token } = req.params;
+
+  const [row] = await db
+    .select({
+      id: projectsTable.id,
+      title: projectsTable.title,
+      type: projectsTable.type,
+      genres: projectsTable.genres,
+      synopsis: projectsTable.synopsis,
+      ownerName: usersTable.name,
+      ownerId: projectsTable.ownerId,
+      collaboratorLimit: projectsTable.collaboratorLimit,
+    })
+    .from(projectsTable)
+    .innerJoin(usersTable, eq(projectsTable.ownerId, usersTable.id))
+    .where(eq(projectsTable.inviteToken, token));
+
+  if (!row) { res.status(404).json({ error: "Invite link not found or has been reset" }); return; }
+
+  const [{ total }] = await db
+    .select({ total: count(collaboratorsTable.id) })
+    .from(collaboratorsTable)
+    .where(eq(collaboratorsTable.projectId, row.id));
+
+  const limit = row.collaboratorLimit ?? 6;
+  res.json({ ...row, collaboratorCount: Number(total), isFull: Number(total) >= limit });
+});
+
+// POST /join/:token — authenticated user joins via invite link
+router.post("/join/:token", async (req, res): Promise<void> => {
+  const { token } = req.params;
+  const userId = parseInt(req.body.userId, 10);
+  if (!token || isNaN(userId)) { res.status(400).json({ error: "Invalid params" }); return; }
+
+  const sessionToken = req.cookies?.["wr_session"];
+  if (!sessionToken) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const [session] = await db
+    .select({ userId: userSessionsTable.userId })
+    .from(userSessionsTable)
+    .where(and(eq(userSessionsTable.token, sessionToken), gt(userSessionsTable.expiresAt, new Date())))
+    .limit(1);
+  if (!session || session.userId !== userId) { res.status(403).json({ error: "Forbidden" }); return; }
+
+  const [project] = await db.select().from(projectsTable).where(eq(projectsTable.inviteToken, token));
+  if (!project) { res.status(404).json({ error: "Invite link not found or has been reset" }); return; }
+  if (project.ownerId === userId) { res.status(400).json({ error: "You own this project" }); return; }
+
+  const [existing] = await db.select().from(collaboratorsTable).where(
+    and(eq(collaboratorsTable.projectId, project.id), eq(collaboratorsTable.userId, userId))
+  );
+  if (existing) {
+    res.json({ alreadyMember: true, projectId: project.id, title: project.title });
+    return;
+  }
+
+  const limit = project.collaboratorLimit ?? 6;
+  const [{ total }] = await db.select({ total: count(collaboratorsTable.id) })
+    .from(collaboratorsTable)
+    .where(eq(collaboratorsTable.projectId, project.id));
+  if (Number(total) >= limit) {
+    res.status(400).json({ error: `This room is full (${limit} max). Ask the owner to increase the room limit.` });
+    return;
+  }
+
+  await db.insert(collaboratorsTable).values({ projectId: project.id, userId }).onConflictDoNothing();
+  await awardInk(userId, 5, "collaborator_added", project.id).catch(() => {});
+  await createInboxMessageAndNotify(
+    userId,
+    project.ownerId,
+    `A new member joined "${project.title}" via your group invite link.`
+  ).catch(() => {});
+
+  res.status(201).json({ success: true, projectId: project.id, title: project.title });
 });
 
 export default router;
