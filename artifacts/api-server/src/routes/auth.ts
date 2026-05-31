@@ -37,6 +37,7 @@ export function safeUser(user: typeof usersTable.$inferSelect) {
   const {
     passwordHash: _ph,
     googleId: _gi,
+    facebookId: _fi,
     emailVerificationToken: _evt,
     emailVerificationTokenExpiresAt: _evtea,
     ...rest
@@ -467,6 +468,147 @@ router.get("/auth/google/callback", async (req, res): Promise<void> => {
     res.redirect(`${frontendBase}/auth/callback?token=${loginToken}`);
   } catch (err) {
     console.error("Google OAuth error:", err);
+    res.redirect(`${frontendBase}/auth/callback?error=server_error`);
+  }
+});
+
+// ── Facebook OAuth ────────────────────────────────────────────────────────────
+
+// GET /auth/facebook — initiate the OAuth flow
+router.get("/auth/facebook", (req, res): void => {
+  const appId = process.env.FACEBOOK_APP_ID;
+  if (!appId) {
+    res.status(503).send("Facebook sign-in is not configured. Please set FACEBOOK_APP_ID.");
+    return;
+  }
+  const redirectUri = `${getBaseUrl()}/api/auth/facebook/callback`;
+  const params = new URLSearchParams({
+    client_id: appId,
+    redirect_uri: redirectUri,
+    scope: "email,public_profile",
+    response_type: "code",
+  });
+  res.redirect(`https://www.facebook.com/v19.0/dialog/oauth?${params.toString()}`);
+});
+
+// GET /auth/facebook/callback — Facebook redirects here after user grants permission
+router.get("/auth/facebook/callback", async (req, res): Promise<void> => {
+  const { code, error } = req.query as Record<string, string>;
+  const frontendBase = getFrontendBase();
+
+  if (error || !code) {
+    res.redirect(`${frontendBase}/auth/callback?error=${encodeURIComponent(error ?? "access_denied")}`);
+    return;
+  }
+
+  const appId = process.env.FACEBOOK_APP_ID;
+  const appSecret = process.env.FACEBOOK_APP_SECRET;
+  if (!appId || !appSecret) {
+    res.redirect(`${frontendBase}/auth/callback?error=not_configured`);
+    return;
+  }
+
+  try {
+    // Exchange code for access token
+    const redirectUri = `${getBaseUrl()}/api/auth/facebook/callback`;
+    const tokenUrl = new URL("https://graph.facebook.com/v19.0/oauth/access_token");
+    tokenUrl.searchParams.set("client_id", appId);
+    tokenUrl.searchParams.set("client_secret", appSecret);
+    tokenUrl.searchParams.set("redirect_uri", redirectUri);
+    tokenUrl.searchParams.set("code", code);
+
+    const tokenRes = await fetch(tokenUrl.toString());
+    if (!tokenRes.ok) {
+      const err = await tokenRes.text();
+      console.error("Facebook token exchange failed:", err);
+      res.redirect(`${frontendBase}/auth/callback?error=token_exchange_failed`);
+      return;
+    }
+    const tokens = await tokenRes.json() as { access_token: string };
+
+    // Get user profile
+    const profileUrl = new URL("https://graph.facebook.com/me");
+    profileUrl.searchParams.set("fields", "id,name,email,picture.type(large)");
+    profileUrl.searchParams.set("access_token", tokens.access_token);
+
+    const profileRes = await fetch(profileUrl.toString());
+    if (!profileRes.ok) {
+      res.redirect(`${frontendBase}/auth/callback?error=profile_fetch_failed`);
+      return;
+    }
+
+    const profile = await profileRes.json() as {
+      id: string;
+      name: string;
+      email?: string;
+      picture?: { data: { url: string } };
+    };
+
+    if (!profile.email) {
+      // Facebook accounts using phone-only won't have an email
+      res.redirect(`${frontendBase}/auth/callback?error=no_email`);
+      return;
+    }
+
+    const avatarUrl = profile.picture?.data?.url;
+    let user: typeof usersTable.$inferSelect | undefined;
+
+    // 1. Try by facebookId
+    const [byFbId] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.facebookId, profile.id))
+      .limit(1);
+
+    if (byFbId) {
+      const [updated] = await db
+        .update(usersTable)
+        .set({ avatarUrl: avatarUrl ?? byFbId.avatarUrl })
+        .where(eq(usersTable.id, byFbId.id))
+        .returning();
+      user = updated;
+    } else {
+      // 2. Try by email — link Facebook to an existing account
+      const [byEmail] = await db
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.email, profile.email.toLowerCase()))
+        .limit(1);
+
+      if (byEmail) {
+        const [updated] = await db
+          .update(usersTable)
+          .set({ facebookId: profile.id, avatarUrl: avatarUrl ?? byEmail.avatarUrl })
+          .where(eq(usersTable.id, byEmail.id))
+          .returning();
+        user = updated;
+      } else {
+        // 3. Create a brand-new account
+        const oauthEmail = profile.email.toLowerCase();
+        const [created] = await db
+          .insert(usersTable)
+          .values({
+            name: profile.name,
+            email: oauthEmail,
+            facebookId: profile.id,
+            avatarUrl,
+            role: "both",
+            genres: "[]",
+            mediaInterests: "",
+            isAdmin: SEED_ADMIN_EMAILS.has(oauthEmail),
+            subscriptionTier: SEED_PRO_EMAILS.has(oauthEmail) ? "pro" : "free",
+            emailVerified: true, // Facebook has already verified this
+          })
+          .returning();
+        user = created;
+        notifyAdminOfSignup(user);
+      }
+    }
+
+    const loginToken = await createLoginToken(user!.id);
+    res.redirect(`${frontendBase}/auth/callback?token=${loginToken}`);
+  } catch (err) {
+    console.error("Facebook OAuth error:", err);
     res.redirect(`${frontendBase}/auth/callback?error=server_error`);
   }
 });

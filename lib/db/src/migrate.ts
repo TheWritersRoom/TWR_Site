@@ -157,6 +157,17 @@ export async function applyMigrations(): Promise<void> {
         WHERE invite_token IS NOT NULL;
     `);
 
+    // 10. Facebook OAuth
+    await client.query(`
+      ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS facebook_id TEXT;
+    `);
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS users_facebook_id_idx
+        ON users(facebook_id)
+        WHERE facebook_id IS NOT NULL;
+    `);
+
     console.log("[migrate] Schema up to date.");
   } catch (err) {
     console.error("[migrate] Migration failed:", err);
